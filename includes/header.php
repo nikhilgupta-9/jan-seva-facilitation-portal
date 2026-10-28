@@ -124,9 +124,12 @@ $activeNav = $activeNav ?? '';
                     <small class="text-white-50" style="font-size: 0.65rem;"><?= htmlspecialchars(APP_TAGLINE) ?></small>
                 </div>
             </a>
-            <button type="button" class="navbar-toggler me-4" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
-                <span class="navbar-toggler-icon"></span>
+            <button type="button" class="navbar-toggler custom-hamburger me-4" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="hamburger-bar"></span>
+                <span class="hamburger-bar"></span>
+                <span class="hamburger-bar"></span>
             </button>
+            <div class="mobile-nav-backdrop" id="mobileNavBackdrop"></div>
             <div class="collapse navbar-collapse" id="navbarCollapse">
                 <div class="navbar-nav mx-auto p-4 p-lg-0 align-items-lg-center">
                     <!-- 1. Home -->

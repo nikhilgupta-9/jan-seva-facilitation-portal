@@ -169,7 +169,7 @@
             </div>
 
             <!-- Mandatory Non-Governmental Facilitator Compliance Notice -->
-            <div class="row mt-4 pt-3 border-top border-secondary">
+            <!-- <div class="row mt-4 pt-3 border-top border-secondary">
                 <div class="col-12">
                     <div class="p-3 rounded" style="background: rgba(255, 193, 7, 0.08); border-left: 4px solid #ffc107;">
                         <p class="mb-0 text-white-50 small" style="line-height: 1.6;">
@@ -178,7 +178,7 @@
                         </p>
                     </div>
                 </div>
-            </div>
+            </div> -->
         </div>
     </footer>
     <!-- Main Civic Footer End -->
@@ -300,18 +300,68 @@
         var savedLang = localStorage.getItem('site_lang') || 'en';
         applySiteLanguage(savedLang);
 
+        // Schemes & Updates marquee: pace the scroll to the list's
+        // actual width instead of a fixed CSS duration, so it reads at
+        // a steady, comfortable speed (~45px/s) regardless of how many
+        // updates are posted from admin/updates.php.
+        var noticeList = document.getElementById('noticeBoardList');
+        if (noticeList) {
+            var halfWidth = noticeList.scrollWidth / 2;
+            var pxPerSecond = 45;
+            var duration = Math.max(20, halfWidth / pxPerSecond);
+            noticeList.style.animationDuration = duration + 's';
+        }
+
+        // Mobile Nav Backdrop: dims the page behind the overlay menu
+        // and closes it on an outside tap. Also flips the hamburger
+        // icon into an X while the menu is open.
+        var navCollapseEl = document.getElementById('navbarCollapse');
+        var navBackdrop = document.getElementById('mobileNavBackdrop');
+        var navToggler = document.querySelector('.custom-hamburger');
+        if (navCollapseEl && navBackdrop) {
+            navCollapseEl.addEventListener('show.bs.collapse', function () {
+                navBackdrop.classList.add('show');
+                if (navToggler) navToggler.classList.add('is-active');
+            });
+            navCollapseEl.addEventListener('hidden.bs.collapse', function () {
+                navBackdrop.classList.remove('show');
+                if (navToggler) navToggler.classList.remove('is-active');
+            });
+            navBackdrop.addEventListener('click', function () {
+                if (window.bootstrap && window.bootstrap.Collapse) {
+                    // getOrCreateInstance() needs Bootstrap 5.2+; this
+                    // site loads 5.0.0, which only has getInstance().
+                    var instance = window.bootstrap.Collapse.getInstance(navCollapseEl)
+                        || new window.bootstrap.Collapse(navCollapseEl, { toggle: false });
+                    instance.hide();
+                }
+            });
+        }
+
         // Mobile Dropdown Smooth Tap Handler
+        // Bootstrap's dropdown plugin (loaded via bootstrap.bundle.min.js)
+        // auto-initializes a Dropdown instance on every
+        // [data-bs-toggle="dropdown"] element and attaches its own click
+        // listener directly to it. That runs on the SAME element/phase as
+        // ours, so plain stopPropagation() (which only blocks the event
+        // from reaching ancestors) did not stop it - confirmed by testing
+        // live: our handler added the "show" class, and in the same tick
+        // Bootstrap's own handler immediately removed it again (verified
+        // via a MutationObserver - two class mutations back-to-back on
+        // one tap). stopImmediatePropagation() is required to block
+        // other listeners bound to this same element.
         document.querySelectorAll('.navbar .dropdown-toggle').forEach(function(toggle) {
             toggle.addEventListener('click', function(e) {
                 if (window.innerWidth < 992) {
                     e.preventDefault();
+                    e.stopImmediatePropagation();
                     var menu = this.nextElementSibling;
                     if (menu && menu.classList.contains('dropdown-menu')) {
                         menu.classList.toggle('show');
                         this.classList.toggle('show');
                     }
                 }
-            });
+            }, true);
         });
     })();
     </script>

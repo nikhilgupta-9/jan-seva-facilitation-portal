@@ -259,18 +259,102 @@ body.gigw-high-contrast button {
         border-bottom: 3px solid #ffc107;
         padding-top: 10px;
         padding-bottom: 10px;
+        position: relative;
+    }
+
+    /* Mobile menu as a proper floating overlay panel instead of an
+       inline block that pushed the page content down - previously
+       the page content (service cards etc.) sat directly beneath the
+       open menu with no separation, making it look unfinished. */
+    .navbar-collapse {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        z-index: 1035;
+        max-height: calc(100vh - 80px);
+        overflow-y: auto;
+        box-shadow: 0 16px 32px rgba(15, 23, 42, 0.18);
+        border-radius: 0 0 16px 16px;
+        background: #ffffff;
+    }
+
+    .mobile-nav-backdrop {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.45);
+        z-index: 1030;
+    }
+    .mobile-nav-backdrop.show {
+        display: block;
     }
     .navbar.fixesnavbar {
         background: #ffffff !important;
     }
-    /* The <nav> carries Bootstrap's .navbar-dark class, which renders
-       a white hamburger icon for a dark bar - now that the bar is
-       white, swap in the dark-stroke icon so it stays visible. */
-    .navbar-toggler-icon {
-        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%2828, 27, 58, 0.85%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+    /* Custom hamburger button: rounded saffron-tint chip with three
+       animated bars that morph into an X when the menu is open,
+       replacing Bootstrap's plain bordered box + static SVG icon. */
+    .custom-hamburger.navbar-toggler {
+        width: 42px;
+        height: 42px;
+        padding: 0;
+        display: inline-flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        border: 1px solid rgba(243, 112, 33, 0.25) !important;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #fff1e6 0%, #ffe6d1 100%);
+        box-shadow: 0 2px 6px rgba(28, 27, 58, 0.08);
+        transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+        /* The backdrop is position:fixed + inset:0, covering the full
+           viewport including the navbar itself. The toggler had no
+           z-index of its own, so it lost to the backdrop's stacking
+           order and became unclickable once the menu was open -
+           confirmed live: a real click landed on the backdrop instead
+           of the button, so there was no way to close the menu by
+           tapping the hamburger again. */
+        position: relative;
+        z-index: 1040;
     }
-    .navbar-toggler {
-        border-color: rgba(28, 27, 58, 0.2) !important;
+    .custom-hamburger.navbar-toggler:focus {
+        box-shadow: 0 0 0 3px rgba(243, 112, 33, 0.25);
+    }
+    .custom-hamburger.navbar-toggler:active {
+        transform: scale(0.94);
+    }
+    .custom-hamburger .hamburger-bar {
+        display: block;
+        width: 20px;
+        height: 2.5px;
+        border-radius: 2px;
+        background: #d8570c;
+        transition: transform 0.28s ease, opacity 0.2s ease, width 0.2s ease;
+    }
+    .custom-hamburger .hamburger-bar:last-child {
+        width: 14px;
+        align-self: flex-start;
+        margin-left: 11px;
+    }
+    .custom-hamburger.is-active {
+        background: linear-gradient(135deg, #f37021 0%, #d8570c 100%);
+        border-color: #d8570c !important;
+    }
+    .custom-hamburger.is-active .hamburger-bar {
+        background: #ffffff;
+        width: 20px;
+        margin-left: 0;
+    }
+    .custom-hamburger.is-active .hamburger-bar:nth-child(1) {
+        transform: translateY(7.5px) rotate(45deg);
+    }
+    .custom-hamburger.is-active .hamburger-bar:nth-child(2) {
+        opacity: 0;
+    }
+    .custom-hamburger.is-active .hamburger-bar:nth-child(3) {
+        transform: translateY(-7.5px) rotate(-45deg);
     }
     /* Mobile brand lockup (logo + name) inside the nav was styled for
        the old dark bar (text-white / light-overlay icon chip) -
@@ -286,11 +370,11 @@ body.gigw-high-contrast button {
         color: var(--bs-primary) !important;
     }
     .navbar .navbar-nav {
-        margin-top: 12px;
-        padding: 12px 14px !important;
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
+        /* The panel itself (.navbar-collapse) now supplies the card
+           look (white bg, shadow, rounded corners) - an inner box
+           here too produced a nested "box inside a box" border. */
+        margin-top: 0;
+        padding: 10px 14px !important;
     }
     .navbar .navbar-nav .nav-link {
         margin-right: 0;
@@ -1919,7 +2003,12 @@ body.gigw-high-contrast button {
     display: flex;
     align-items: center;
     white-space: nowrap;
-    animation: noticeBoardMarquee 35s linear infinite;
+    /* Duration is set per-page via JS (see footer.php) based on the
+       list's actual width, so the scroll speed stays a steady, readable
+       pace (~45px/s) no matter how many updates admin/updates.php has -
+       a fixed 35s here looked fine with a few items but sped up
+       uncomfortably once more items made the list wider. */
+    animation: noticeBoardMarquee 70s linear infinite;
     will-change: transform;
 }
 .notice-board-body:hover .notice-board-list {
