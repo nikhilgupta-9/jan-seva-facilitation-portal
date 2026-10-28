@@ -1,6 +1,7 @@
 <?php
 // contact.php - Public Contact & Citizen Support Desk
 require_once __DIR__ . '/config/config.php';
+require_once __DIR__ . '/utils/mailer.php';
 
 $pageTitle = 'Contact Us - ' . APP_NAME;
 $metaDescription = 'Get in touch with our citizen facilitation desk for inquiries, doorstep appointments, or feedback.';
@@ -27,6 +28,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$name, $email ?: null, $phone, $service_interest, $subject, $message, $ip]);
             $inq_id = $pdo->lastInsertId();
             $success_msg = "Thank you, {$name}! Your inquiry has been registered under Reference Ticket #INQ-{$inq_id}. Our citizen support desk will respond shortly.";
+
+            // Email notification is best-effort only - the DB row above is
+            // the reliable record, so a mail failure must never surface
+            // as an error to the citizen or block their submission.
+            try {
+                send_contact_notification_email([
+                    'id' => $inq_id,
+                    'name' => $name,
+                    'email' => $email,
+                    'phone' => $phone,
+                    'service_interest' => $service_interest,
+                    'subject' => $subject,
+                    'message' => $message,
+                    'ip' => $ip,
+                ]);
+            } catch (Exception $e) {
+                error_log('Contact form email notification failed: ' . $e->getMessage());
+            }
         } catch (Exception $e) {
             $err_msg = 'Unable to save inquiry at this moment. Please try calling our helpline.';
         }
@@ -79,14 +98,14 @@ include __DIR__ . '/includes/header.php';
                         <div class="col-lg-8">
                             <div class="wow fadeIn" data-wow-delay="0.1s">
                                 <h5 class="mb-3 text-primary"><i class="fa fa-leaf text-primary me-2"></i>Contact Us</h5>
-                                <h1 class="display-5 mb-4">Any Query? Please Contact Us!</h1>
+                                <h2 class="display-5 mb-4" style="font-size: calc(1.5rem + 1.5vw);">Any Query? Please Contact Us!</h2>
                             </div>
-                            <h4 class="lh-base mb-4 fadeIn" data-wow-delay="0.2s">Please Get in Touch and Let's Assist You with Digital Services &amp; Facilitation</h4>
-                            <div class="d-flex">
-                                <a class="btn btn-lg-square btn-primary me-2" href="<?= htmlspecialchars(SOCIAL_TWITTER ?: '#') ?>" target="_blank" rel="noopener"><i class="fab fa-x-twitter"></i></a>
-                                <a class="btn btn-lg-square btn-primary me-2" href="<?= htmlspecialchars(SOCIAL_FACEBOOK ?: '#') ?>" target="_blank" rel="noopener"><i class="fab fa-facebook-f"></i></a>
-                                <a class="btn btn-lg-square btn-primary me-2" href="<?= htmlspecialchars(SOCIAL_YOUTUBE ?: '#') ?>" target="_blank" rel="noopener"><i class="fab fa-youtube"></i></a>
-                                <a class="btn btn-lg-square btn-primary me-2" href="<?= htmlspecialchars(SOCIAL_LINKEDIN ?: '#') ?>" target="_blank" rel="noopener"><i class="fab fa-linkedin-in"></i></a>
+                            <h4 class="lh-base mb-4 fadeIn" data-wow-delay="0.2s" style="font-size: 1.15rem;">Please Get in Touch and Let's Assist You with Digital Services &amp; Facilitation</h4>
+                            <div class="d-flex flex-wrap gap-2">
+                                <a class="btn btn-lg-square btn-primary" href="<?= htmlspecialchars(SOCIAL_TWITTER ?: '#') ?>" target="_blank" rel="noopener" aria-label="Twitter"><i class="fab fa-x-twitter"></i></a>
+                                <a class="btn btn-lg-square btn-primary" href="<?= htmlspecialchars(SOCIAL_FACEBOOK ?: '#') ?>" target="_blank" rel="noopener" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                                <a class="btn btn-lg-square btn-primary" href="<?= htmlspecialchars(SOCIAL_YOUTUBE ?: '#') ?>" target="_blank" rel="noopener" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+                                <a class="btn btn-lg-square btn-primary" href="<?= htmlspecialchars(SOCIAL_LINKEDIN ?: '#') ?>" target="_blank" rel="noopener" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
                             </div>
                         </div>
                     </div>
@@ -112,8 +131,8 @@ include __DIR__ . '/includes/header.php';
             <div class="row g-4 justify-content-center">
                 <div class="col-12 col-xl-8 wow fadeInUp" data-wow-delay="0.1s">
                     <div class="bg-white rounded p-4 p-md-5">
-                        <h1 class="display-5 mb-4">Send Us a Message</h1>
-                        <h4 class="lh-base mb-4">Complete this secure form to reach our dedicated citizen support desk. We typically respond within 24 business hours.</h4>
+                        <h2 class="mb-3" style="font-size: calc(1.4rem + 1vw); font-weight: 700;">Send Us a Message</h2>
+                        <p class="lh-base mb-4 text-muted" style="font-size: 1rem;">Complete this secure form to reach our dedicated citizen support desk. We typically respond within 24 business hours.</p>
 
                         <?php if ($success_msg): ?>
                             <div class="alert alert-success border-0 shadow-sm p-4 mb-4" style="border-radius: 10px;">

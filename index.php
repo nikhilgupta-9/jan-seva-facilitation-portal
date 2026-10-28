@@ -228,29 +228,29 @@ include __DIR__ . '/includes/header.php';
                         $fee = (float)($svc['fee'] ?? 0);
                         $btnText = $fee > 0 ? 'Apply Now (₹' . number_format($fee, 0) . ')' : 'View Guide (Free)';
                     ?>
-                    <div class="col-sm-12 col-md-6 col-lg-4 wow fadeIn" data-wow-delay="0.1s">
+                    <div class="col-6 col-md-6 col-lg-4 wow fadeIn service-col" data-wow-delay="0.1s">
                         <div class="service-item position-relative overflow-hidden bg-white h-100 rounded shadow-sm border d-flex flex-column">
                             <div class="position-relative overflow-hidden">
                                 <a href="<?= $detailUrl ?>">
-                                    <img class="img-fluid w-100" style="height: 200px; object-fit: cover;" src="<?= $svcImg ?>" alt="<?= htmlspecialchars($svc['service_name']) ?>" onerror="this.src='image/services/1.jpg'">
+                                    <img class="img-fluid w-100 service-item-img" style="height: 200px; object-fit: cover;" src="<?= $svcImg ?>" alt="<?= htmlspecialchars($svc['service_name']) ?>" onerror="this.src='image/services/1.jpg'">
                                 </a>
                                 <?php if (!empty($svc['badge_text'])): ?>
-                                    <span class="badge bg-primary position-absolute top-0 end-0 m-2 shadow-sm"><?= htmlspecialchars($svc['badge_text']) ?></span>
+                                    <span class="badge bg-primary position-absolute top-0 end-0 m-2 shadow-sm service-item-badge"><?= htmlspecialchars($svc['badge_text']) ?></span>
                                 <?php endif; ?>
                             </div>
-                            <div class="p-3 d-flex flex-column flex-grow-1">
+                            <div class="p-3 d-flex flex-column flex-grow-1 service-item-body">
                                 <div class="mb-1 fs-5 service-title fw-bold">
                                     <a href="<?= $detailUrl ?>" class="text-dark text-decoration-none"><?= htmlspecialchars($svc['service_name']) ?></a>
                                 </div>
                                 <?php if (!empty($svc['service_name_hi'])): ?>
-                                    <div class="text-muted small mb-2"><?= htmlspecialchars($svc['service_name_hi']) ?></div>
+                                    <div class="text-muted small mb-2 service-item-hindi"><?= htmlspecialchars($svc['service_name_hi']) ?></div>
                                 <?php endif; ?>
-                                <p class="text-muted small flex-grow-1 mb-3">
+                                <p class="text-muted small flex-grow-1 mb-3 service-item-desc">
                                     <?= htmlspecialchars(mb_substr($svc['short_desc'] ?? '', 0, 95)) ?><?= mb_strlen($svc['short_desc'] ?? '') > 95 ? '...' : '' ?>
                                 </p>
-                                <div class="d-flex align-items-center justify-content-between pt-2 border-top">
+                                <div class="d-flex align-items-center justify-content-between pt-2 border-top service-item-footer">
                                     <a class="btn btn-primary btn-custom rounded-pill btn-sm px-3" href="<?= $detailUrl ?>"><?= $btnText ?></a>
-                                    <span class="text-muted small"><i class="fas fa-clock text-primary me-1"></i><?= htmlspecialchars($svc['turnaround_time'] ?? '15 Mins') ?></span>
+                                    <span class="text-muted small service-item-time"><i class="fas fa-clock text-primary me-1"></i><?= htmlspecialchars($svc['turnaround_time'] ?? '15 Mins') ?></span>
                                 </div>
                             </div>
                         </div>
@@ -546,7 +546,7 @@ include __DIR__ . '/includes/header.php';
     <!-- About End -->
 
     <!-- Gov Banner Start -->
-    <section class="mt-5">
+    <section class="mt-5 p-2">
         <div class="container gov-banner">
             <div class="row g-0 align-items-stretch">
                 <!-- Left Content -->

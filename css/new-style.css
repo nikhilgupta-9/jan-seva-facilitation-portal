@@ -1849,10 +1849,9 @@ body.gigw-high-contrast button {
 .notice-board {
     display: flex;
     align-items: stretch;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
+    border: none;
+    border-radius: 0;
     overflow: hidden;
-    box-shadow: 0 2px 12px rgba(15, 23, 42, 0.05);
     background: #ffffff;
 }
 .notice-board-header {
@@ -1988,14 +1987,30 @@ body.gigw-high-contrast button {
     .header-center-body{
         display: none;
     }
-    .my-header{
+    header .my-header{
         border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .notice-board-header{
+        background: linear-gradient(135deg, var(--bs-primary) 0%, #141331 100%);
+    color: #ffffff;
+    padding: 10px 20px;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 800;
+    font-size: 0.92rem;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+    border-radius: 0%;
     }
 }
 
 
 /* ==========================================================================
-   HOMEPAGE HERO CAROUSEL: STANDARD 1920x600 UNIFORM SIZE & SMOOTH SCALING
+   HOMEPAGE HERO CAROUSEL: STANDARD 1920x913 (2.10:1) UNIFORM SIZE & ASPECT RATIO
    Eliminates layout shifts (jumping) caused by mismatched banner heights.
    Banners are 100% clickable with direct redirects configured in admin.
    ========================================================================== */
@@ -2014,7 +2029,8 @@ body.gigw-high-contrast button {
 }
 #header-carousel .hero-banner-slide {
     width: 100%;
-    height: 480px; /* Standard uniform desktop banner height */
+    aspect-ratio: 1920 / 913;
+    max-height: 85vh;
     overflow: hidden;
     position: relative;
     background-color: #0b192c;
@@ -2022,7 +2038,7 @@ body.gigw-high-contrast button {
 #header-carousel .hero-banner-img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
     object-position: center;
     display: block;
     transition: transform 0.4s ease;
@@ -2050,21 +2066,4 @@ body.gigw-high-contrast button {
     border-radius: 12px;
     background-color: #ffffff;
     box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-}
-
-/* Responsive Viewports - Uniform Aspect Ratio */
-@media (min-width: 1600px) {
-    #header-carousel .hero-banner-slide { height: 520px; }
-}
-@media (max-width: 1199.98px) {
-    #header-carousel .hero-banner-slide { height: 400px; }
-}
-@media (max-width: 991.98px) {
-    #header-carousel .hero-banner-slide { height: 310px; }
-}
-@media (max-width: 767.98px) {
-    #header-carousel .hero-banner-slide { height: 210px; }
-}
-@media (max-width: 575.98px) {
-    #header-carousel .hero-banner-slide { height: 160px; }
 }

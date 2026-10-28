@@ -72,7 +72,7 @@ include __DIR__ . '/includes/header.php';
                 <!-- Results Section -->
                 <?php if (!empty($query_input)): ?>
                     <?php if (!empty($orders_found)): ?>
-                        <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
                             <h4 class="fw-bold mb-0" style="font-size: 1.15rem; color: #1C1B3A;">
                                 <i class="fas fa-check-circle text-success me-2"></i> Found <?= count($orders_found) ?> Record(s)
                             </h4>

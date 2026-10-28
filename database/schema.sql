@@ -403,3 +403,28 @@ CREATE TABLE IF NOT EXISTS faqs (
     sort_order INT DEFAULT 10,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------------
+-- banners: Homepage Carousel Hero Banners (Standard 2.10:1 Aspect Ratio)
+-- ---------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS banners (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    subtitle VARCHAR(500) NULL,
+    image_url VARCHAR(500) NOT NULL,
+    link_url VARCHAR(500) NOT NULL DEFAULT '#',
+    target VARCHAR(20) NOT NULL DEFAULT '_self',
+    badge_text VARCHAR(100) NULL,
+    button_text VARCHAR(100) NOT NULL DEFAULT 'Apply Now',
+    sort_order INT NOT NULL DEFAULT 0,
+    is_active TINYINT(1) NOT NULL DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT INTO banners (id, title, subtitle, image_url, link_url, target, badge_text, button_text, sort_order, is_active)
+VALUES
+(1, 'Ayushman Bharat Health Account (ABHA)', 'Digital Healthcare Access & ABDM Electronic Health Records', 'image/banners/banner-abha-healthcare.webp', 'service/abha-card', '_self', 'ABDM Health ID', 'Apply Now', 1, 1),
+(2, 'e-Shram Card Benefits & Social Security', '₹2 Lakh Accidental Insurance & Direct Welfare Benefits for Workers', 'image/banners/banner-eshram-benefits.webp', 'service/eshram-card', '_self', 'Social Security', 'View Benefits', 2, 1),
+(3, 'e-Shram Instant Card Application', 'Simple Online Registration & Instant Digital Card Delivery', 'image/banners/banner-eshram-application.webp', 'service/eshram-card', '_self', 'Instant Apply', 'Apply Online', 3, 1)
+ON DUPLICATE KEY UPDATE title=VALUES(title), image_url=VALUES(image_url), link_url=VALUES(link_url);

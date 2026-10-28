@@ -4,7 +4,7 @@ require_once __DIR__ . '/auth.php';
 
 $page_title = 'Homepage Hero Banners';
 
-// Image processing helper: resize/crop to standard 1920x600 px using GD
+// Image processing helper: resize/crop to standard 1920x913 px (2.10:1 ratio) using GD
 function process_banner_upload($file_tmp, $dest_path) {
     list($orig_w, $orig_h, $type) = getimagesize($file_tmp);
     if (!$orig_w || !$orig_h) return false;
@@ -24,9 +24,9 @@ function process_banner_upload($file_tmp, $dest_path) {
     }
 
     $target_w = 1920;
-    $target_h = 600;
+    $target_h = 913;
 
-    // Calculate crop coordinates for aspect ratio 1920:600 (3.2:1)
+    // Calculate crop coordinates for aspect ratio 1920:913 (2.10:1)
     $target_ratio = $target_w / $target_h;
     $orig_ratio = $orig_w / $orig_h;
 
@@ -186,7 +186,7 @@ include __DIR__ . '/header.php';
       <i class="fas fa-images text-primary"></i> Homepage Hero Carousel Banners
     </h2>
     <p class="text-muted" style="margin-top: 4px; font-size: 0.9rem;">
-      Standardize banner sizes (1920x600 px), manage carousel order, update slide titles, and set redirect links.
+      Standardize banner sizes (1920x913 px, 2.10:1 ratio), manage carousel order, update slide titles, and set redirect links.
     </p>
   </div>
   <div class="col-sm-4 col-xs-12 text-right">
@@ -429,7 +429,7 @@ include __DIR__ . '/header.php';
           <div style="padding: 40px; text-align: center; color: #64748b;">
             <i class="fas fa-images" style="font-size: 3rem; color: #cbd5e1; margin-bottom: 10px;"></i>
             <h4>No banners configured</h4>
-            <p>Use the form on the left to create your first standard 1920x600 hero banner.</p>
+            <p>Use the form on the left to create your first standard 1920x913 hero banner.</p>
           </div>
         <?php endif; ?>
       </div>
