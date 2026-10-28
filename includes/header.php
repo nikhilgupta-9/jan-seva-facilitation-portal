@@ -111,7 +111,7 @@ $activeNav = $activeNav ?? '';
     </div>
 
     <!-- Navbar Start -->
-    <div class="container-fluid p-0">
+    <div class="container-fluid p-0 site-navbar-sticky-wrap">
         <nav class="navbar navbar-expand-lg navbar-dark px-lg-5">
             <a href="<?= BASE_URL ?>/index.php" class="navbar-brand ms-3 ms-lg-0 d-flex d-lg-none align-items-center gap-2 text-decoration-none">
                 <div class="brand-emblem-icon d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; border-radius: 8px; background: rgba(255,255,255,0.12); color: #ffc107; font-size: 1.15rem; flex-shrink: 0;">
@@ -250,6 +250,13 @@ $activeNav = $activeNav ?? '';
                                 <div>
                                     <div class="fw-bold srv-name">Doorstep Executive</div>
                                     <small class="text-muted d-block">Schedule home visit for documents</small>
+                                </div>
+                            </a>
+                            <a href="<?= BASE_URL ?>/feedback.php" class="dropdown-item d-flex align-items-center gap-2 <?= ($activeNav === 'feedback') ? 'active' : '' ?>">
+                                <span class="srv-icon-badge bg-success text-white"><i class="fas fa-star"></i></span>
+                                <div>
+                                    <div class="fw-bold srv-name">Citizen Feedback</div>
+                                    <small class="text-muted d-block">Verified reviews &amp; service ratings</small>
                                 </div>
                             </a>
                             <div class="dropdown-divider my-1"></div>

@@ -139,6 +139,7 @@
                         <li><a href="<?= BASE_URL ?>/all-scheme.php"><i class="fas fa-chevron-right me-2 text-warning small"></i>All Welfare Schemes</a></li>
                         <li><a href="<?= BASE_URL ?>/eligibility-checker.php"><i class="fas fa-chevron-right me-2 text-warning small"></i>Eligibility Checker</a></li>
                         <li><a href="<?= BASE_URL ?>/how-to-work.php"><i class="fas fa-chevron-right me-2 text-warning small"></i>How It Works Guide</a></li>
+                        <li><a href="<?= BASE_URL ?>/feedback.php"><i class="fas fa-chevron-right me-2 text-warning small"></i>Citizen Feedback &amp; Ratings</a></li>
                         <li><a href="<?= BASE_URL ?>/track-status.php"><i class="fas fa-chevron-right me-2 text-warning small"></i>Track Card Status</a></li>
                         <li><a href="<?= BASE_URL ?>/doorstep-booking.php"><i class="fas fa-chevron-right me-2 text-warning small"></i>Doorstep Executive</a></li>
                         <li><a href="<?= BASE_URL ?>/about.php"><i class="fas fa-chevron-right me-2 text-warning small"></i>About Our Mission</a></li>
@@ -221,17 +222,23 @@
     <script>
     (function() {
         var root = document.documentElement;
-        var currentFontSize = 100;
         var btnDec = document.getElementById('btn-font-dec');
         var btnInc = document.getElementById('btn-font-inc');
         var btnDark = document.getElementById('btn-theme-dark');
         var btnLight = document.getElementById('btn-theme-light');
+        var btnLangEn = document.getElementById('lang-en');
+        var btnLangHi = document.getElementById('lang-hi');
+
+        // --- Font size: persisted across pages ---
+        var currentFontSize = parseInt(localStorage.getItem('font_size'), 10) || 100;
+        root.style.fontSize = currentFontSize + '%';
 
         if (btnDec) {
             btnDec.addEventListener('click', function() {
                 if (currentFontSize > 85) {
                     currentFontSize -= 5;
                     root.style.fontSize = currentFontSize + '%';
+                    localStorage.setItem('font_size', currentFontSize);
                 }
             });
         }
@@ -240,9 +247,12 @@
                 if (currentFontSize < 125) {
                     currentFontSize += 5;
                     root.style.fontSize = currentFontSize + '%';
+                    localStorage.setItem('font_size', currentFontSize);
                 }
             });
         }
+
+        // --- High contrast mode ---
         if (btnDark) {
             btnDark.addEventListener('click', function() {
                 document.body.classList.add('gigw-high-contrast');
@@ -255,10 +265,39 @@
                 localStorage.setItem('contrast_mode', 'normal');
             });
         }
-
         if (localStorage.getItem('contrast_mode') === 'high') {
             document.body.classList.add('gigw-high-contrast');
         }
+
+        // --- Language switcher: swaps every .lang-text element on the
+        // page (data-en / data-hi attributes) and persists the choice. ---
+        function applySiteLanguage(lang) {
+            document.querySelectorAll('.lang-text').forEach(function(el) {
+                var text = el.getAttribute('data-' + lang);
+                if (text) {
+                    el.innerHTML = text;
+                }
+            });
+            if (btnLangEn) btnLangEn.classList.toggle('active', lang === 'en');
+            if (btnLangHi) btnLangHi.classList.toggle('active', lang === 'hi');
+            document.documentElement.setAttribute('lang', lang === 'hi' ? 'hi' : 'en');
+        }
+
+        if (btnLangEn) {
+            btnLangEn.addEventListener('click', function() {
+                localStorage.setItem('site_lang', 'en');
+                applySiteLanguage('en');
+            });
+        }
+        if (btnLangHi) {
+            btnLangHi.addEventListener('click', function() {
+                localStorage.setItem('site_lang', 'hi');
+                applySiteLanguage('hi');
+            });
+        }
+
+        var savedLang = localStorage.getItem('site_lang') || 'en';
+        applySiteLanguage(savedLang);
 
         // Mobile Dropdown Smooth Tap Handler
         document.querySelectorAll('.navbar .dropdown-toggle').forEach(function(toggle) {

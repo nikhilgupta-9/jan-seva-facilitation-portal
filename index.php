@@ -12,6 +12,18 @@ $featuredServices = array_slice($allServices, 0, 6);
 $allSchemes = get_all_schemes();
 $featuredSchemes = array_slice($allSchemes, 0, 6);
 
+// Fetch approved citizen feedbacks for homepage testimonials
+$homeFeedbacks = [];
+try {
+    $stmt_fb = $pdo->query("
+        SELECT * FROM feedbacks 
+        WHERE status = 'approved' 
+        ORDER BY is_featured DESC, id DESC 
+        LIMIT 6
+    ");
+    $homeFeedbacks = $stmt_fb->fetchAll(PDO::FETCH_ASSOC);
+} catch (Exception $e) {}
+
 // SEO Meta Variables
 $pageTitle = APP_NAME . ' - Government Schemes & Citizen Services Portal | Jan Seva Facilitation';
 $metaDescription = 'Single-window Indian citizen facilitation portal. Explore 20+ flagship Central & State schemes, check eligibility, and generate verified digital identity passes (ABHA, APAAR, e-Shram, Voter ID).';
@@ -648,56 +660,72 @@ include __DIR__ . '/includes/header.php';
     </section>
     <!-- FAQ Section End -->
 
-    <!-- Testimonial Start -->
-    <div class="container-fluid bg-light py-5">
+    <!-- Testimonial Start (Dynamic Approved Citizen Feedbacks) -->
+    <div class="container-fluid bg-light py-5" id="testimonials">
         <div class="container py-5">
-            <div class="section-title wow fadeIn" data-wow-delay="0.1s">
-                <h5 class="mb-3"><i class="fas fa-comments text-primary me-2"></i>Citizen Feedback</h5>
-                <h1 class="display-5 mb-5">What Citizens Say About Our Services</h1>
+            <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+                <div class="section-title wow fadeIn" data-wow-delay="0.1s" style="margin-bottom: 0;">
+                    <h5 class="mb-2"><i class="fas fa-comments text-primary me-2"></i>Citizen Feedback</h5>
+                    <h1 class="display-5 mb-0 fs-2">What Citizens Say About Our Services</h1>
+                </div>
+                <div class="wow fadeIn" data-wow-delay="0.2s">
+                    <a href="feedback.php" class="btn btn-primary rounded-pill px-4 py-2 fw-semibold" style="background: #1e3a8a; border-color: #1e3a8a;">
+                        <i class="fas fa-pen me-2"></i> Share Your Experience (फीडबैक दें) &rarr;
+                    </a>
+                </div>
             </div>
+
             <div class="row g-4">
-                <div class="col-md-6 col-lg-4 wow fadeIn" data-wow-delay="0.1s">
-                    <div class="bg-white rounded h-100 p-4 shadow-sm border">
-                        <i class="fa fa-quote-left fa-3x text-primary mb-3"></i>
-                        <p class="text-secondary">Got my ABHA Health Card in under 2 minutes with QR code. Very easy mobile OTP process.</p>
-                        <hr class="w-25 my-3">
-                        <div class="d-flex align-items-center">
-                            <img class="flex-shrink-0 rounded-circle" width="50" height="50" style="object-fit: cover;" src="img/testimonial-1.jpg" alt="Rajesh Kumar">
-                            <div class="ms-3">
-                                <h6 class="mb-0 fw-bold">Rajesh Kumar</h6>
-                                <span class="text-muted small">Delhi</span>
+                <?php if (!empty($homeFeedbacks)): ?>
+                    <?php 
+                    $delays = ['0.1s', '0.3s', '0.5s', '0.2s', '0.4s', '0.6s'];
+                    foreach ($homeFeedbacks as $idx => $fb): 
+                        $delay = $delays[$idx % count($delays)];
+                        $stars = max(1, min(5, (int)$fb['rating']));
+                        $initial = mb_strtoupper(mb_substr($fb['citizen_name'], 0, 1));
+                    ?>
+                    <div class="col-md-6 col-lg-4 wow fadeIn" data-wow-delay="<?= $delay ?>">
+                        <div class="bg-white rounded-4 h-100 p-4 shadow-sm border d-flex flex-column justify-content-between">
+                            <div>
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <div style="color: #f59e0b !important; font-size: 0.95rem;">
+                                        <?php for ($s = 1; $s <= 5; $s++): ?>
+                                            <i class="fas fa-star<?= $s <= $stars ? '' : ' text-muted' ?>" style="<?= $s <= $stars ? '' : 'color: #cbd5e1 !important;' ?>"></i>
+                                        <?php endfor; ?>
+                                    </div>
+                                    <span class="badge bg-success-subtle text-success small" style="font-size: 0.72rem;">
+                                        <i class="fas fa-check-circle me-1"></i> Verified Citizen
+                                    </span>
+                                </div>
+                                <?php if (!empty($fb['title'])): ?>
+                                    <h6 class="fw-bold text-dark mb-2">"<?= htmlspecialchars($fb['title']) ?>"</h6>
+                                <?php endif; ?>
+                                <p class="text-secondary small mb-3" style="line-height: 1.6;">
+                                    <?= htmlspecialchars($fb['comment']) ?>
+                                </p>
+                            </div>
+                            <div class="pt-3 border-top d-flex align-items-center">
+                                <div style="width: 46px; height: 46px; border-radius: 50%; background: #eff6ff; color: #1e3a8a; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem; border: 1.5px solid #bfdbfe; flex-shrink: 0;">
+                                    <?= $initial ?>
+                                </div>
+                                <div class="ms-3 flex-grow-1 overflow-hidden">
+                                    <h6 class="mb-0 fw-bold text-dark text-truncate"><?= htmlspecialchars($fb['citizen_name']) ?></h6>
+                                    <div class="text-muted small text-truncate">
+                                        <?= htmlspecialchars($fb['city'] ?? $fb['state'] ?? 'India') ?><?php if (!empty($fb['occupation'])): ?> • <span class="text-primary fw-semibold"><?= htmlspecialchars($fb['occupation']) ?></span><?php endif; ?>
+                                    </div>
+                                    <div class="text-muted text-truncate" style="font-size: 0.72rem;">
+                                        Service: <?= htmlspecialchars($fb['service_name']) ?>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="col-md-6 col-lg-4 wow fadeIn" data-wow-delay="0.3s">
-                    <div class="bg-white rounded h-100 p-4 shadow-sm border">
-                        <i class="fa fa-quote-left fa-3x text-primary mb-3"></i>
-                        <p class="text-secondary">The doorstep assistant visited my grandfather for pension and ration card guidance. Excellent initiative.</p>
-                        <hr class="w-25 my-3">
-                        <div class="d-flex align-items-center">
-                            <img class="flex-shrink-0 rounded-circle" width="50" height="50" style="object-fit: cover;" src="img/testimonial-2.jpg" alt="Pooja Sharma">
-                            <div class="ms-3">
-                                <h6 class="mb-0 fw-bold">Pooja Sharma</h6>
-                                <span class="text-muted small">Lucknow</span>
-                            </div>
-                        </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <div class="col-12 text-center py-4">
+                        <p class="text-muted">No approved reviews yet. Be the first to share your experience!</p>
                     </div>
-                </div>
-                <div class="col-md-6 col-lg-4 wow fadeIn" data-wow-delay="0.5s">
-                    <div class="bg-white rounded h-100 p-4 shadow-sm border">
-                        <i class="fa fa-quote-left fa-3x text-primary mb-3"></i>
-                        <p class="text-secondary">Generated my e-Shram card and downloaded the printable PVC format immediately. Very satisfied.</p>
-                        <hr class="w-25 my-3">
-                        <div class="d-flex align-items-center">
-                            <img class="flex-shrink-0 rounded-circle" width="50" height="50" style="object-fit: cover;" src="img/testimonial-3.jpg" alt="Manoj Verma">
-                            <div class="ms-3">
-                                <h6 class="mb-0 fw-bold">Manoj Verma</h6>
-                                <span class="text-muted small">Jaipur</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>

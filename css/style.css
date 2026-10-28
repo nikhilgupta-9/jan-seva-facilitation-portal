@@ -119,35 +119,63 @@ header .header-body{
     justify-content: space-between;
 }
 
+header {
+    min-height: 0;
+}
+
+header .my-header {
+    padding: 4px 0;
+}
+
 header .header-body .header-item{
     display: flex;
     align-items: center;
     justify-content: center;
-    /* gap: 10px; */
+    gap: 2px;
 }
 
 header .header-body .header-item a{
-    display: block-inline;
+    display: flex;
     align-items: center;
     justify-content: center;
-    height: 35px;
-    /* width: 35px; */
-    padding: 0  10px;
-    padding-top: 8px;
-border-right: 1px solid white;
-color: rgb(221, 220, 220);
+    height: 26px;
+    width: 26px;
+    padding: 0;
+    font-size: 0.82rem;
+    border-right: none;
+    color: rgb(221, 220, 220);
 }
 header .header-body .header-item .tagline{
      margin-left: 15px  ;
      color: var(--bs-warning);
+     font-size: 0.78rem;
 }
 header .header-body .header-item .element{
     color: #DDDCDC;
-    padding: 10px;
-border-right: 1px solid white;
-    display: block-inline;
-    height: 100%;
- 
+    padding: 0 10px;
+    border-right: 1px solid rgba(255,255,255,0.25);
+    display: flex;
+    align-items: center;
+    height: 22px;
+    font-size: 0.78rem;
+    line-height: 1;
+}
+header .header-body .header-item .element:last-child {
+    border-right: none;
+}
+
+/* Accessibility controls: visible clickable affordance + active state */
+header .header-body .header-item .element[id^="btn-"],
+header .header-body .header-item .element .english,
+header .header-body .header-item .element .hindi {
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.15s ease;
+}
+header .header-body .header-item .english.active,
+header .header-body .header-item .hindi.active {
+    color: var(--bs-warning);
+    font-weight: 700;
 }
 
 header .header-body .header-item .element .color-input-header{
@@ -160,12 +188,21 @@ header .header-body .header-item .element .color-input-header{
 }
 
 /*** Navbar ***/
-.navbar {
+/* The sticky position lives on this wrapper, not .navbar itself:
+   .navbar's own direct parent is exactly as tall as .navbar (nothing
+   else inside it), so position:sticky on .navbar had a ~0px stick
+   range and never visibly stuck. This wrapper's parent is <body>,
+   which spans the full page, so it sticks correctly across the
+   whole scroll. */
+.site-navbar-sticky-wrap {
     position: sticky;
-    width: 100%;
     top: 0;
-    left: 0;
     z-index: 1030;
+}
+
+.navbar {
+    position: relative;
+    width: 100%;
     transition: .5s;
     border-bottom: 1px solid rgba(255, 255, 255, .1);
     background-color:#bde0fe ;
