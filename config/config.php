@@ -31,7 +31,13 @@ define('APP_NAME_HI', get_setting('app_name_hi', 'राष्ट्रीय �
 define('COMPANY_NAME', get_setting('company_name', 'Jan Seva Digital Services Facilitator LLP'));
 define('APP_TAGLINE', get_setting('app_tagline', 'Digital Citizen Services & Identity Facilitation Gateway'));
 define('APP_VERSION', '1.0.0');
-define('BASE_URL', '/gp');
+// Was hardcoded to '/gp', which only matches the local XAMPP layout
+// (htdocs/gp/...). A git-deployed host (e.g. Hostinger) usually serves
+// the repo from the domain root, not a /gp subfolder, so every asset
+// URL built from BASE_URL ('/gp/css/...', '/gp/js/...') 404'd there.
+// Set BASE_URL in that host's own .env (empty string for a root
+// deployment); it still defaults to '/gp' for local XAMPP.
+define('BASE_URL', env('BASE_URL', '/gp'));
 
 // Legal & Compliance Notice
 define('LEGAL_DISCLAIMER', get_setting('legal_disclaimer', 'This is a private digital facilitator platform and is NOT officially affiliated with or endorsed by UIDAI, NHA (ABDM), Ministry of Labour, Ministry of Education, ECI, or any Government department. We charge a nominal service fee for platform maintenance, digital verification processing, and citizen assistance. Official Government portals remain accessible directly at zero cost.'));
