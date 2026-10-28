@@ -2,7 +2,7 @@ DirectoryIndex index.php
 
 Options -Indexes
 
-ErrorDocument 404 /gp/404.php
+ErrorDocument 404 /404.php
 
 <IfModule mod_headers.c>
     Header set X-Content-Type-Options "nosniff"
@@ -15,9 +15,13 @@ ErrorDocument 404 /gp/404.php
 
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    RewriteBase /gp/
+    # No RewriteBase: when omitted, Apache derives it from the physical
+    # directory serving the site, which works whether that's the domain
+    # root (Hostinger git deploy) or a /gp subfolder (local XAMPP). The
+    # hardcoded "RewriteBase /gp/" only matched the local layout, so on
+    # Hostinger every rewritten URL (/service/abha-card etc.) 404'd.
 
-    # SEO-friendly scheme detail URL: /gp/scheme/<slug> -> scheme_details.php?slug=<slug>
+    # SEO-friendly scheme detail URL: /scheme/<slug> -> scheme_details.php?slug=<slug>
     RewriteRule ^scheme/([a-zA-Z0-9-]+)/?$ scheme_details.php?slug=$1 [L,QSA]
 
     # SEO-friendly citizen service detail URLs: /gp/service/<slug> -> service-detail.php?slug=<slug>
