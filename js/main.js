@@ -53,7 +53,7 @@ const noResults = document.getElementById("noResults");
 let activeCategory = "all";
 
 function filterSchemes() {
-  const query = searchInput.value.trim().toLowerCase();
+  const query = searchInput ? searchInput.value.trim().toLowerCase() : "";
   let count = 0;
 
   cards.forEach(card => {
@@ -63,7 +63,7 @@ function filterSchemes() {
     const categoryMatch =
       activeCategory === "all" || category === activeCategory;
 
-    const searchMatch = text.includes(query);
+    const searchMatch = !query || text.includes(query);
     const show = categoryMatch && searchMatch;
 
     card.classList.toggle("d-none", !show);
@@ -71,7 +71,9 @@ function filterSchemes() {
     if (show) count++;
   });
 
-  noResults.hidden = count > 0;
+  if (noResults) {
+    noResults.hidden = count > 0;
+  }
 }
 
 filterButtons.forEach(button => {
@@ -90,8 +92,12 @@ filterButtons.forEach(button => {
   });
 });
 
-searchInput.addEventListener("input", filterSchemes);
-searchBtn.addEventListener("click", filterSchemes);
+if (searchInput) {
+  searchInput.addEventListener("input", filterSchemes);
+}
+if (searchBtn) {
+  searchBtn.addEventListener("click", filterSchemes);
+}
 
 
 document.querySelectorAll(".process-card").forEach(function(card) {
