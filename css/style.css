@@ -239,23 +239,9 @@ header .header-body .header-item .element .color-input-header{
     background-color:#bde0fe ;
 }
 
-@media (max-width: 991.98px) {
-    .navbar {
-        background: rgba(24, 24, 24, .5);
-        border-bottom: none;
-    }
-
-    .navbar .navbar-nav .nav-link,
-    .navbar.bg-dark .navbar-nav .nav-link {
-        margin-right: 0;
-        padding: 10px 0;
-    }
-
-    .navbar .navbar-nav {
-        margin-top: 8px;
-        border-top: 1px solid rgba(255, 255, 255, .1);
-    }
-}
+/* Mobile navbar light styling lives in new-style.css (loaded after
+   this file) - this old dark rgba(24,24,24,.5) block was dead/
+   conflicting, superseded there via !important. */
 
 @media (min-width: 992px) {
     .navbar.bg-dark .navbar-nav .nav-link {
@@ -306,13 +292,26 @@ header .header-body .header-item .element .color-input-header{
 #header-carousel .carousel-control-prev,
 #header-carousel .carousel-control-next {
     width: 10%;
-    margin-top: 100px;
+    /* No margin-top here: Bootstrap's own .carousel-control-prev/.next
+       already use top:0; bottom:0; display:flex; align-items:center
+       to center vertically. The old fixed "margin-top: 100px" pushed
+       it down by a flat pixel amount instead, which drifted off-center
+       once the banner's height became aspect-ratio-based (responsive)
+       instead of a fixed pixel height. */
 }
 
-.carousel-control-prev-icon,
-.carousel-control-next-icon {
+#header-carousel .carousel-control-prev-icon,
+#header-carousel .carousel-control-next-icon {
     width: 3rem;
     height: 3rem;
+    border-radius: 50%;
+    background-color: rgba(60, 60, 60, 0.4);
+    background-size: 55% 55%;
+    transition: background-color 0.2s ease;
+}
+#header-carousel .carousel-control-prev:hover .carousel-control-prev-icon,
+#header-carousel .carousel-control-next:hover .carousel-control-next-icon {
+    background-color: rgba(40, 40, 40, 0.6);
 }
 
 @media (max-width: 992px) {

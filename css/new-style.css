@@ -252,49 +252,79 @@ body.gigw-high-contrast button {
    FULL MOBILE RESPONSIVENESS SUITE (< 992px)
    ======================================================== */
 @media (max-width: 991.98px) {
-    /* Responsive Navbar Container & Collapse */
+    /* Responsive Navbar Container & Collapse - light theme to match
+       the rest of the site (was a dark navy/gold drawer before). */
     .navbar {
-        background: #1C1B3A !important;
-        border-bottom: 2px solid #ffc107;
+        background: #ffffff !important;
+        border-bottom: 3px solid #ffc107;
         padding-top: 10px;
         padding-bottom: 10px;
     }
     .navbar.fixesnavbar {
-        background: #1C1B3A !important;
+        background: #ffffff !important;
+    }
+    /* The <nav> carries Bootstrap's .navbar-dark class, which renders
+       a white hamburger icon for a dark bar - now that the bar is
+       white, swap in the dark-stroke icon so it stays visible. */
+    .navbar-toggler-icon {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%2828, 27, 58, 0.85%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+    }
+    .navbar-toggler {
+        border-color: rgba(28, 27, 58, 0.2) !important;
+    }
+    /* Mobile brand lockup (logo + name) inside the nav was styled for
+       the old dark bar (text-white / light-overlay icon chip) -
+       recolor for the new white bar. */
+    .navbar-brand.d-flex.d-lg-none .text-white {
+        color: var(--bs-primary) !important;
+    }
+    .navbar-brand.d-flex.d-lg-none .text-white-50 {
+        color: #64748b !important;
+    }
+    .navbar-brand.d-flex.d-lg-none .brand-emblem-icon {
+        background: #f0eefb !important;
+        color: var(--bs-primary) !important;
     }
     .navbar .navbar-nav {
         margin-top: 12px;
         padding: 12px 14px !important;
-        background: rgba(255, 255, 255, 0.04);
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
         border-radius: 12px;
     }
     .navbar .navbar-nav .nav-link {
         margin-right: 0;
         padding: 12px 14px;
-        color: #ffffff !important;
+        color: var(--bs-primary) !important;
         font-size: 0.96rem;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        border-bottom: 1px solid #e8e6f0;
         min-height: 44px;
         display: flex;
         align-items: center;
+        border-radius: 8px;
     }
     .navbar .navbar-nav .nav-link:last-child {
         border-bottom: none;
+    }
+    .navbar .navbar-nav .nav-link:hover,
+    .navbar .navbar-nav .nav-link.active {
+        background: #f0eefb;
+        color: var(--bs-primary) !important;
     }
     .nav-link-track {
         margin-top: 8px;
         margin-bottom: 8px;
         width: 100%;
         justify-content: center;
-        background: rgba(255, 193, 7, 0.15) !important;
+        background: #fff8e1 !important;
         border-color: #ffc107 !important;
-        color: #ffc107 !important;
+        color: #b45309 !important;
     }
-    
-    /* Mobile Dropdown Menu */
+
+    /* Mobile Dropdown Menu - same light corporate style as desktop */
     .navbar .nav-item .dropdown-menu.dropdown-menu-corporate {
-        background: rgba(15, 23, 42, 0.95) !important;
-        border: 1px solid rgba(255, 255, 255, 0.12) !important;
+        background: #ffffff !important;
+        border: 1px solid #e8e6f0 !important;
         box-shadow: none !important;
         padding: 10px !important;
         margin-top: 6px !important;
@@ -317,7 +347,7 @@ body.gigw-high-contrast button {
     .dropdown-menu-corporate .col-lg-6 {
         width: 100% !important;
         border-right: none !important;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        border-bottom: 1px solid #e8e6f0;
         padding-bottom: 10px;
         margin-bottom: 10px;
     }
@@ -327,21 +357,21 @@ body.gigw-high-contrast button {
         padding-bottom: 0;
     }
     .dropdown-menu-corporate .dropdown-item {
-        color: #e2e8f0 !important;
+        color: #1e293b !important;
         padding: 9px 10px !important;
     }
     .dropdown-menu-corporate .dropdown-item:hover {
-        background: rgba(255, 255, 255, 0.12) !important;
-        color: #ffc107 !important;
+        background: #f0eefb !important;
+        color: var(--bs-primary) !important;
     }
     .dropdown-menu-corporate .srv-name {
-        color: #ffffff !important;
+        color: #0f172a !important;
     }
     .dropdown-menu-corporate .text-muted {
-        color: #94a3b8 !important;
+        color: #64748b !important;
     }
     .dropdown-menu-corporate .dropdown-header {
-        color: #ffc107 !important;
+        color: var(--bs-primary) !important;
         padding-left: 0;
     }
 
@@ -2029,8 +2059,14 @@ body.gigw-high-contrast button {
 }
 #header-carousel .hero-banner-slide {
     width: 100%;
+    /* aspect-ratio alone keeps the slide box at exactly the same
+       2.1:1 ratio the admin upload pipeline crops every banner to,
+       so a correctly-sized image needs zero object-fit cropping.
+       The old max-height: 85vh could clamp the box shorter than
+       that ratio on short-viewport desktop screens, which made the
+       box wider than the image's own ratio and forced object-fit:
+       cover to crop the top and bottom to fill it. */
     aspect-ratio: 1920 / 913;
-    max-height: 85vh;
     overflow: hidden;
     position: relative;
     background-color: #0b192c;
@@ -2038,8 +2074,15 @@ body.gigw-high-contrast button {
 #header-carousel .hero-banner-img {
     width: 100%;
     height: 100%;
-    object-fit: contain;
-    object-position: center;
+    /* contain letterboxes whenever an uploaded banner's aspect ratio
+       isn't exactly 1920:913, exposing the slide's navy background
+       on the sides - cover fills the box (cropping as needed) with
+       no visible background. object-position is top (not center)
+       because most banner graphics carry their headline/logo near
+       the top; a center crop on a taller-than-target source was
+       cutting that content off. */
+    object-fit: cover;
+    object-position: top center;
     display: block;
     transition: transform 0.4s ease;
 }
@@ -2133,5 +2176,36 @@ body.gigw-high-contrast button {
     }
     .service-title {
         font-size: 0.8rem !important;
+    }
+}
+
+/* ========================================================
+   HOMEPAGE: "4-step process" cards - 2 per row on mobile
+   Columns switch from col-sm-6 (2/row from 576px) to col-6
+   (2/row from the smallest width), so padding/icon/text need to
+   shrink to fit the narrower card.
+   ======================================================== */
+@media (max-width: 575.98px) {
+    .process-col {
+        padding-left: 6px;
+        padding-right: 6px;
+    }
+    .process-card {
+        padding: 18px 12px;
+    }
+    .process-card .process-icon {
+        width: 46px;
+        height: 46px;
+        margin-bottom: 12px;
+        font-size: 17px;
+        border-radius: 10px;
+    }
+    .process-card h4 {
+        font-size: 0.92rem;
+        margin-bottom: 6px;
+    }
+    .process-card p {
+        font-size: 0.74rem;
+        line-height: 1.5;
     }
 }

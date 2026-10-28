@@ -29,7 +29,7 @@
 
 require_once __DIR__ . '/../config/config.php';
 
-const PIB_RSS_URL = 'https://pib.gov.in/RssMain.aspx?ModId=6&Lang=1&Regid=3'; // All Ministries, English
+const PIB_RSS_URL = 'https://www.pib.gov.in/RssMain.aspx?ModId=6&Lang=1&Regid=3'; // All Ministries, English (via www.pib.gov.in)
 const MAX_ITEMS_PER_RUN = 30;
 const FETCH_TIMEOUT_SECONDS = 20;
 
@@ -46,8 +46,11 @@ function fetch_rss(string $url): ?string
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_FOLLOWLOCATION => true,
         CURLOPT_TIMEOUT => FETCH_TIMEOUT_SECONDS,
-        CURLOPT_USERAGENT => 'JanSevaFacilitationPortal-UpdateFetcher/1.0 (+https://jan-seva-facilitation-portal; contact: ' . (defined('SUPPORT_EMAIL') ? SUPPORT_EMAIL : 'admin') . ')',
-        CURLOPT_HTTPHEADER => ['Accept: application/rss+xml, application/xml, text/xml'],
+        CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+        CURLOPT_HTTPHEADER => [
+            'Accept: application/rss+xml, application/xml, text/xml, */*',
+            'Accept-Language: en-US,en;q=0.9,hi;q=0.8'
+        ],
     ]);
     $body = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);

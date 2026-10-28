@@ -24,7 +24,7 @@ include __DIR__ . '/includes/header.php';
 ?>
 
 <!-- Breadcrumbs & Hero (Strict Light Theme with Banner Background) -->
-<section class="detail-hero" style="background: linear-gradient(120deg, rgba(248, 250, 252, 0.72) 0%, rgba(241, 245, 249, 0.68) 100%), url('<?= BASE_URL ?>/image/barr.png'); background-position: center 30%; background-size: cover; border-bottom: 1px solid #e2e8f0; padding: 28px 0 40px;">
+<section class="detail-hero" style="background: linear-gradient(120deg, rgba(248, 250, 252, 0.72) 0%, #f1f5f959), url('<?= BASE_URL ?>/image/barr.png'); background-position: center 30%; background-size: cover; border-bottom: 1px solid #e2e8f0; padding: 28px 0 40px;">
     <div class="container">
         <div aria-label="breadcrumb">
             <ol class="breadcrumb detail-breadcrumb" style="margin-bottom: 14px;">

@@ -38,6 +38,9 @@ include __DIR__ . '/includes/header.php';
                 <span class="detail-kicker"><i class="fas fa-search-location mr-2"></i> REAL-TIME QUERY</span>
                 <h1>Track Your Card Request</h1>
                 <p>Check the real-time issuance status of your digital PVC ID card or re-download your verified card.</p>
+                <p class="mb-0" style="font-size: 0.86rem; color: #166534; font-weight: 600;">
+                    <i class="fas fa-laptop-house me-1"></i> This is a 100% online self-service step &mdash; you can apply, pay, and generate your digital card directly on this platform. No doorstep visit is required to track or download your card.
+                </p>
             </div>
         </div>
     </div>

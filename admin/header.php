@@ -501,8 +501,12 @@ $admin_nav_items = [
 
   <nav class="admin-sidebar-nav">
     <ul class="admin-nav-list">
-      <?php foreach ($admin_nav_items as $item): ?>
-        <li class="<?php echo ($current_admin_page === $item['page']) ? 'active' : ''; ?>">
+      <?php foreach ($admin_nav_items as $item): 
+        $isActive = ($current_admin_page === $item['page'])
+          || ($item['page'] === 'services.php' && $current_admin_page === 'service-edit.php')
+          || ($item['page'] === 'schemes.php' && $current_admin_page === 'scheme-edit.php');
+      ?>
+        <li class="<?php echo $isActive ? 'active' : ''; ?>">
           <a href="<?php echo BASE_URL; ?>/admin/<?php echo $item['page']; ?>">
             <i class="fas <?php echo $item['icon']; ?>"></i>
             <?php echo htmlspecialchars($item['label']); ?>

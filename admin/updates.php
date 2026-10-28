@@ -35,6 +35,16 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && ($_POST['action'] ?? '')
     exit;
 }
 
+// Handle Manual One-Click PIB Sync
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && ($_POST['action'] ?? '') === 'sync_pib') {
+    ob_start();
+    include __DIR__ . '/../scripts/fetch_pib_updates.php';
+    $logOutput = ob_get_clean();
+    set_flash('success', 'PIB Feed synchronization completed! New updates have been fetched and updated.');
+    header('Location: ' . BASE_URL . '/admin/updates.php');
+    exit;
+}
+
 // Handle quick toggle / delete
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['quick_action'])) {
     $id = (int) ($_POST['update_id'] ?? 0);
@@ -192,8 +202,14 @@ include __DIR__ . '/header.php';
       <div class="adm-card-header"><h4 style="margin:0; font-weight:800; font-size: 0.95rem;"><i class="fas fa-robot text-warning"></i> Automated PIB Fetcher</h4></div>
       <div class="adm-card-body" style="font-size: 0.84rem; color: #475569;">
         <p>A scheduled script (<code>scripts/fetch_pib_updates.php</code>) pulls the latest releases from the official <strong>Press Information Bureau (PIB)</strong> RSS feed once a day and adds them here automatically, tagged <span class="upd-source-badge upd-source-cron">PIB</span>.</p>
-        <p class="mb-0">To run it manually right now for testing:</p>
-        <code style="display:block; background:#f1f5f9; padding:8px 10px; border-radius:6px; margin-top:6px; word-break:break-all;">php scripts/fetch_pib_updates.php</code>
+        <p class="mb-0">Run PIB fetch right now from the admin panel:</p>
+        <form method="POST" action="<?php echo BASE_URL; ?>/admin/updates.php" style="margin-top: 10px;">
+          <input type="hidden" name="action" value="sync_pib">
+          <button type="submit" class="btn btn-warning btn-sm w-100" style="font-weight: 700;">
+            <i class="fas fa-sync-alt me-1"></i> Sync Latest PIB Releases Now
+          </button>
+        </form>
+        <small class="text-muted" style="display:block; margin-top:8px;">CLI command: <code>php scripts/fetch_pib_updates.php</code></small>
       </div>
     </div>
   </div>

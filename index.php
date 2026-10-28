@@ -201,15 +201,19 @@ include __DIR__ . '/includes/header.php';
     </section>
     <!-- Notice Board End -->
 
+    
+
+    
+
     <!-- Services Category Section (Dynamic from Database) -->
     <div class="container-fluid light-bg cate-section py-5">
-        <div class="container">
+        <div class="container p-0">
 
             <div class="row mb-4 align-items-center">
                 <div class="col-sm-12 col-md-9">
                     <div class="wow fadeIn" data-wow-delay="0.1s">
                         <span class="text-primary text-uppercase fw-bold small"><i class="fas fa-shield-alt me-1"></i> Fast Digital Issuance &amp; Verification</span>
-                        <h1 class="display-5 mb-2 fs-2">Citizen Services &amp; Digital Identity Passes</h1>
+                        <h2 class="display-5 mb-2 fs-2">Citizen Services &amp; Digital Identity Passes</h2>
                         <p class="text-muted mb-0">Apply online for verified digital citizen identity documents and government welfare cards.</p>
                     </div>
                 </div>
@@ -221,7 +225,7 @@ include __DIR__ . '/includes/header.php';
 
             <div class="row g-2 g-md-4">
                 <?php if (!empty($featuredServices)): ?>
-                    <?php foreach ($featuredServices as $svc): 
+                    <?php foreach ($featuredServices as $svc):
                         $svcSlug = htmlspecialchars($svc['slug']);
                         $detailUrl = 'service/' . $svcSlug;
                         $svcImg = !empty($svc['image_url']) ? htmlspecialchars($svc['image_url']) : 'image/services/' . $svcSlug . '.jpg';
@@ -270,6 +274,58 @@ include __DIR__ . '/includes/header.php';
     </div>
     <!-- Services Category Section End -->
 
+    <!-- About Start -->
+    <div class="container-fluid py-5 about-section">
+        <div class="container">
+            <div class="row g-5">
+                <div class="col-xl-9">
+                    <div class="wow fadeIn" data-wow-delay="0.1s">
+                        <h5 class="mb-3" style="color: orange;"><i class="fa fa-leaf me-2"></i>About Us</h5>
+                        <h1 class="display-5 mb-5" style="color: white;">Empowering Citizens, Enabling a Better Future</h1>
+                    </div>
+                    <div class="row g-5">
+                        <div class="col-lg-4">
+                            <div class="position-relative h-100 wow fadeIn" data-wow-delay="0.1s">
+                                <img class="img-fluid rounded w-100 h-100" style="object-fit: cover;"
+                                    src="image/about-us-1.png" alt="Empowering Citizens">
+                            </div>
+                        </div>
+                        <div class="col-lg-8">
+                            <h4 class="lh-base mb-4 wow fadeIn" style="color: white;" data-wow-delay="0.1s">We help
+                                citizens discover government schemes and access important public services with ease</h4>
+                            <p class="mb-4 wow fadeIn text-light" data-wow-delay="0.2s">Our platform brings together scheme
+                                information, eligibility criteria, required documents and application procedures.</p>
+                            <div class="about-items-2 bg-light rounded">
+                                <div class="row g-0">
+                                    <div class="col-md-6 wow fadeIn" data-wow-delay="0.3s">
+                                        <div class="h-100 p-5 border-end border-bottom">
+                                            <i class="fa fa-seedling fa-3x text-primary mb-3"></i>
+                                            <h5>Easy Access to Schemes</h5>
+                                            <span>Comprehensive access to state and central digital schemes.</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 wow fadeIn" data-wow-delay="0.4s">
+                                        <div class="h-100 p-5">
+                                            <i class="fa fa-leaf fa-3x text-primary mb-3"></i>
+                                            <h5>Trusted Official Resources</h5>
+                                            <span>Direct official portal integration and document eligibility checks.</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 d-none d-xl-block">
+                    <div class="position-relative h-100 wow fadeIn" data-wow-delay="0.3s">
+                        <img class="img-fluid rounded w-100 h-100" style="object-fit: cover;" src="image/about-us.png" alt="Citizen Support">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- About End -->
+
     <!-- Schemes & Benefits Section (Dynamic from Database) -->
     <section class="py-5 bg-light" id="schemes">
         <div class="container">
@@ -298,7 +354,7 @@ include __DIR__ . '/includes/header.php';
             <!-- Scheme Cards Grid -->
             <div class="row g-4" id="schemeList">
                 <?php if (!empty($featuredSchemes)): ?>
-                    <?php foreach ($featuredSchemes as $sch): 
+                    <?php foreach ($featuredSchemes as $sch):
                         // Normalize category filter alias for instant JavaScript category filtering
                         $rawCat = $sch['category'] ?? '';
                         $filterCat = match($rawCat) {
@@ -318,9 +374,9 @@ include __DIR__ . '/includes/header.php';
                         <div class="card h-100 border-0 shadow-sm scheme-card rounded-4 overflow-hidden d-flex flex-column bg-white">
                             <div class="position-relative overflow-hidden" style="height: 175px; background: #f1f5f9;">
                                 <a href="<?= $detailLink ?>" class="d-block w-100 h-100">
-                                    <img src="<?= htmlspecialchars($schImg) ?>" 
-                                         alt="<?= htmlspecialchars($sch['title_en']) ?>" 
-                                         class="w-100 h-100" 
+                                    <img src="<?= htmlspecialchars($schImg) ?>"
+                                         alt="<?= htmlspecialchars($sch['title_en']) ?>"
+                                         class="w-100 h-100"
                                          style="object-fit: cover; transition: transform 0.3s ease;"
                                          onerror="this.src='image/section.png'">
                                 </a>
@@ -379,174 +435,8 @@ include __DIR__ . '/includes/header.php';
     </section>
     <!-- Schemes & Benefits Section End -->
 
-    <!-- Process Section Start (Rooted in Agriculture, Driven by Passion) -->
-    <section class="process-section"
-        style="background: linear-gradient(#d5e8f9eb,#d5e7f9eb) , url('image/Digital.jpg'); background-position: center; background-size: contain;">
-        <div class="container">
-
-            <div class="row process-row p-4 py-5 pb-3 mb-4">
-                <div class="row">
-                    <div class="col-sm-12 col-md-9">
-                        <div class="wow fadeIn" data-wow-delay="0.1s">
-                            <h1 class="display-5 mb-5 fs-2">Rooted in Agriculture, Driven by Passion</h1>
-                        </div>
-                    </div>
-                    <div class="col-sm-12 col-md-3">
-                        <a class="btn btn-primary btn-custom d-none d-lg-flex rounded-pill ms-auto me-0"
-                            href="contact.php" style="text-align: center; width: fit-content;">View All Services</a>
-                    </div>
-                </div>
-
-                <!-- Step 1 -->
-                <div class="col-lg-3 col-sm-6 mb-4">
-                    <div class="process-card">
-                        <div class="process-icon">
-                            <i class="fas fa-search"></i>
-                        </div>
-                        <span class="step-number">STEP 01</span>
-                        <h4>Explore Schemes</h4>
-                        <p>Discover government schemes according to your needs and category.</p>
-                    </div>
-                </div>
-
-                <!-- Step 2 -->
-                <div class="col-lg-3 col-sm-6 mb-4">
-                    <div class="process-card">
-                        <div class="process-icon">
-                            <i class="fas fa-clipboard-check"></i>
-                        </div>
-                        <span class="step-number">STEP 02</span>
-                        <h4>Check Eligibility</h4>
-                        <p>Review the eligibility criteria and benefits of each scheme.</p>
-                    </div>
-                </div>
-
-                <!-- Step 3 -->
-                <div class="col-lg-3 col-sm-6 mb-4">
-                    <div class="process-card">
-                        <div class="process-icon">
-                            <i class="fas fa-file-alt"></i>
-                        </div>
-                        <span class="step-number">STEP 03</span>
-                        <h4>Prepare Documents</h4>
-                        <p>Check the required documents before starting your application.</p>
-                    </div>
-                </div>
-
-                <!-- Step 4 -->
-                <div class="col-lg-3 col-sm-6 mb-4">
-                    <div class="process-card">
-                        <div class="process-icon">
-                            <i class="fas fa-external-link-alt"></i>
-                        </div>
-                        <span class="step-number">STEP 04</span>
-                        <h4>Visit Official Portal</h4>
-                        <p>Continue to the official government website for application instructions.</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row">
-                <!-- Government Scheme Documents -->
-                <div class="col-lg-4 col-md-6 mb-3 ps-0">
-                    <div class="p-4 rounded h-100 aadhaar-card aadhaar-card1 documents">
-                        <div class="fs-5 heading">Documents Required for Government Schemes</div>
-                        <p class="mb-4">
-                            Aadhaar Card | Income Certificate |
-                            Residence Proof | Bank Details
-                        </p>
-                        <a href="https://www.myscheme.gov.in/" class="scheme-btn" target="_blank" rel="noopener">
-                            Explore Scheme Requirements
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Government Service Centres -->
-                <div class="col-lg-4 col-md-6 mb-3">
-                    <div class="p-4 rounded h-100 aadhaar-card aadhaar-card1 centre">
-                        <div class="fs-5 heading">Find Your Nearest Government Service Centre</div>
-                        <p class="mb-4">
-                            Find official citizen service portals and information
-                            about government services available in your state.
-                        </p>
-                        <a href="https://services.india.gov.in/" class="scheme-btn" target="_blank" rel="noopener">
-                            Explore Government Services
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Citizen Help -->
-                <div class="col-lg-4 col-md-6 mb-3">
-                    <div class="p-4 rounded h-100 aadhaar-card aadhaar-card1 help">
-                        <div class="fs-5 heading">Need Help with Government Services?</div>
-                        <p class="mb-4">
-                            Find official helpline numbers, public grievance
-                            portals and citizen support resources.
-                        </p>
-                        <a href="https://pgportal.gov.in/" class="scheme-btn mt-3" target="_blank" rel="noopener">
-                            Submit a Grievance
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-    <!-- Process Section End -->
-
-    <!-- About Start -->
-    <div class="container-fluid py-5 about-section">
-        <div class="container">
-            <div class="row g-5">
-                <div class="col-xl-9">
-                    <div class="wow fadeIn" data-wow-delay="0.1s">
-                        <h5 class="mb-3" style="color: orange;"><i class="fa fa-leaf me-2"></i>About Us</h5>
-                        <h1 class="display-5 mb-5" style="color: white;">Empowering Citizens, Enabling a Better Future</h1>
-                    </div>
-                    <div class="row g-5">
-                        <div class="col-lg-4">
-                            <div class="position-relative h-100 wow fadeIn" data-wow-delay="0.1s">
-                                <img class="img-fluid rounded w-100 h-100" style="object-fit: cover;"
-                                    src="image/about-us-1.png" alt="Empowering Citizens">
-                            </div>
-                        </div>
-                        <div class="col-lg-8">
-                            <h4 class="lh-base mb-4 wow fadeIn" style="color: white;" data-wow-delay="0.1s">We help
-                                citizens discover government schemes and access important public services with ease</h4>
-                            <p class="mb-4 wow fadeIn text-light" data-wow-delay="0.2s">Our platform brings together scheme
-                                information, eligibility criteria, required documents and application procedures.</p>
-                            <div class="about-items-2 bg-light rounded">
-                                <div class="row g-0">
-                                    <div class="col-md-6 wow fadeIn" data-wow-delay="0.3s">
-                                        <div class="h-100 p-5 border-end border-bottom">
-                                            <i class="fa fa-seedling fa-3x text-primary mb-3"></i>
-                                            <h5>Easy Access to Schemes</h5>
-                                            <span>Comprehensive access to state and central digital schemes.</span>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6 wow fadeIn" data-wow-delay="0.4s">
-                                        <div class="h-100 p-5">
-                                            <i class="fa fa-leaf fa-3x text-primary mb-3"></i>
-                                            <h5>Trusted Official Resources</h5>
-                                            <span>Direct official portal integration and document eligibility checks.</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-xl-3 d-none d-xl-block">
-                    <div class="position-relative h-100 wow fadeIn" data-wow-delay="0.3s">
-                        <img class="img-fluid rounded w-100 h-100" style="object-fit: cover;" src="image/about-us.png" alt="Citizen Support">
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- About End -->
-
     <!-- Gov Banner Start -->
-    <section class="mt-5 p-2">
+    <section class="my-5">
         <div class="container gov-banner">
             <div class="row g-0 align-items-stretch">
                 <!-- Left Content -->
@@ -694,6 +584,120 @@ include __DIR__ . '/includes/header.php';
         </div>
     </section>
     <!-- FAQ Section End -->
+
+    <!-- Process Section Start (How Citizens Use This Portal) -->
+    <section class="process-section"
+        style="background: linear-gradient(#d5e8f9eb,#d5e7f9eb) , url('image/Digital.jpg'); background-position: center; background-size: contain;">
+        <div class="container">
+
+            <div class="row process-row p-3 mb-4">
+                <div class="row">
+                    <div class="col-sm-12 col-md-9">
+                        <div class="wow fadeIn" data-wow-delay="0.1s">
+                            <h2 class="display-5 mb-4 fs-2">Your Path to Government Benefits, Simplified</h2>
+                        </div>
+                    </div>
+                    <div class="col-sm-12 col-md-3">
+                        <a class="btn btn-primary btn-custom d-none d-lg-flex rounded-pill ms-auto me-0"
+                            href="<?= BASE_URL ?>/all-scheme.php" style="text-align: center; width: fit-content;">View All Schemes</a>
+                    </div>
+                </div>
+
+                <!-- Step 1 -->
+                <div class="col-lg-3 col-6 mb-4 process-col">
+                    <div class="process-card">
+                        <div class="process-icon">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <span class="step-number">STEP 01</span>
+                        <h4>Explore Schemes</h4>
+                        <p>Discover government schemes according to your needs and category.</p>
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="col-lg-3 col-6 mb-4 process-col">
+                    <div class="process-card">
+                        <div class="process-icon">
+                            <i class="fas fa-clipboard-check"></i>
+                        </div>
+                        <span class="step-number">STEP 02</span>
+                        <h4>Check Eligibility</h4>
+                        <p>Review the eligibility criteria and benefits of each scheme.</p>
+                    </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="col-lg-3 col-6 mb-4 process-col">
+                    <div class="process-card">
+                        <div class="process-icon">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <span class="step-number">STEP 03</span>
+                        <h4>Prepare Documents</h4>
+                        <p>Check the required documents before starting your application.</p>
+                    </div>
+                </div>
+
+                <!-- Step 4 -->
+                <div class="col-lg-3 col-6 mb-4 process-col">
+                    <div class="process-card">
+                        <div class="process-icon">
+                            <i class="fas fa-external-link-alt"></i>
+                        </div>
+                        <span class="step-number">STEP 04</span>
+                        <h4>Visit Official Portal</h4>
+                        <p>Continue to the official government website for application instructions.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Government Scheme Documents -->
+                <div class="col-lg-4 col-md-6 mb-3 ps-0">
+                    <div class="p-4 rounded h-100 aadhaar-card aadhaar-card1 documents">
+                        <div class="fs-5 heading">Documents Required for Government Schemes</div>
+                        <p class="mb-4">
+                            Aadhaar Card | Income Certificate |
+                            Residence Proof | Bank Details
+                        </p>
+                        <a href="https://www.myscheme.gov.in/" class="scheme-btn" target="_blank" rel="noopener">
+                            Explore Scheme Requirements
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Government Service Centres -->
+                <div class="col-lg-4 col-md-6 mb-3">
+                    <div class="p-4 rounded h-100 aadhaar-card aadhaar-card1 centre">
+                        <div class="fs-5 heading">Find Your Nearest Government Service Centre</div>
+                        <p class="mb-4">
+                            Find official citizen service portals and information
+                            about government services available in your state.
+                        </p>
+                        <a href="https://services.india.gov.in/" class="scheme-btn" target="_blank" rel="noopener">
+                            Explore Government Services
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Citizen Help -->
+                <div class="col-lg-4 col-md-6 mb-3">
+                    <div class="p-4 rounded h-100 aadhaar-card aadhaar-card1 help">
+                        <div class="fs-5 heading">Need Help with Government Services?</div>
+                        <p class="mb-4">
+                            Find official helpline numbers, public grievance
+                            portals and citizen support resources.
+                        </p>
+                        <a href="https://pgportal.gov.in/" class="scheme-btn mt-3" target="_blank" rel="noopener">
+                            Submit a Grievance
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- Process Section End -->
 
     <!-- Testimonial Start (Dynamic Approved Citizen Feedbacks) -->
     <div class="container-fluid bg-light py-5" id="testimonials">

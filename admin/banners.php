@@ -47,12 +47,15 @@ function process_banner_upload($file_tmp, $dest_path) {
     $dst = imagecreatetruecolor($target_w, $target_h);
     imagecopyresampled($dst, $src, 0, 0, $crop_x, $crop_y, $target_w, $target_h, $crop_w, $crop_h);
 
-    // Save as JPEG 90% quality
-    imagejpeg($dst, $dest_path, 90);
+    // Save as JPEG 90% quality - this previously always returned true
+    // regardless of whether the write succeeded, so a permission-denied
+    // failure on the destination folder was silently swallowed: the DB
+    // got a record pointing at a file that was never actually written.
+    $saved = imagejpeg($dst, $dest_path, 90);
 
     imagedestroy($src);
     imagedestroy($dst);
-    return true;
+    return $saved && is_file($dest_path);
 }
 
 // 1. Handle POST Actions (Add, Edit, Toggle, Delete)
@@ -96,11 +99,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 if (process_banner_upload($file_tmp, $dest_full)) {
                     $image_url = 'image/banners/' . $dest_filename;
+                } elseif (move_uploaded_file($file_tmp, $dest_full)) {
+                    // Fallback: raw copy if GD processing/cropping failed
+                    $image_url = 'image/banners/' . $dest_filename;
                 } else {
-                    // Fallback move
-                    if (move_uploaded_file($file_tmp, $dest_full)) {
-                        $image_url = 'image/banners/' . $dest_filename;
-                    }
+                    set_flash('error', "Upload failed: the server could not write to image/banners/. Check that the folder is writable by the web server.");
+                    header('Location: ' . BASE_URL . '/admin/banners.php');
+                    exit;
                 }
             }
         }
@@ -281,11 +286,11 @@ include __DIR__ . '/header.php';
           <!-- Image Upload / Path -->
           <div class="form-group">
             <label class="control-label" style="font-weight: 700;">
-              Banner Image (Standard Size: 1920 &times; 600 px)
+              Banner Image (Standard Size: 1920 &times; 913 px (2.10:1))
             </label>
             <input type="file" name="banner_image" class="form-control" accept="image/*">
             <small class="text-muted d-block" style="margin-top: 4px;">
-              Uploaded images are automatically scaled to standard 1920 &times; 600 widescreen ratio.
+              Uploaded images are automatically scaled to standard 1920 &times; 913 ratio (2.10:1).
             </small>
 
             <?php if (!empty($edit_banner['image_url'])): ?>
@@ -338,7 +343,7 @@ include __DIR__ . '/header.php';
       <div class="adm-card-header">
         <h4><i class="fas fa-sliders-h text-primary"></i> Active Carousel Slides (<?php echo count($banners); ?>)</h4>
         <span class="badge" style="background: #10b981; color: #fff;">
-          Standard Size: 1920 &times; 600 px
+          Standard Size: 1920 &times; 913 px
         </span>
       </div>
       <div class="adm-card-body" style="padding: 0;">
