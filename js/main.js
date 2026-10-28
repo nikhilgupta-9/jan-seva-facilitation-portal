@@ -81,10 +81,12 @@ filterButtons.forEach(button => {
     activeCategory = button.dataset.filter;
 
     filterButtons.forEach(btn => {
+      btn.classList.remove("active");
       btn.classList.remove("btn-primary");
       btn.classList.add("btn-outline-primary");
     });
 
+    button.classList.add("active");
     button.classList.add("btn-primary");
     button.classList.remove("btn-outline-primary");
 

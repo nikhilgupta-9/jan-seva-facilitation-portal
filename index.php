@@ -175,23 +175,23 @@ include __DIR__ . '/includes/header.php';
 
             <!-- Section Heading -->
             <div class="text-center mb-4">
-                <span class="badge bg-primary mb-3">
-                    GOVERNMENT OF INDIA
+                <span class="badge mb-2 scheme-gov-badge">
+                    <i class="fas fa-landmark me-1"></i> GOVERNMENT OF INDIA
                 </span>
-                <h2 class="fw-bold">Government Schemes</h2>
-                <p class="text-secondary">
-                    Explore government schemes, benefits and official application portals.
+                <h2 class="fw-bold text-dark mb-2">Government Schemes &amp; Welfare Initiatives</h2>
+                <p class="text-secondary mx-auto" style="max-width: 650px;">
+                    Explore flagship central &amp; state government schemes, check your eligibility, and visit official application portals.
                 </p>
             </div>
 
             <!-- Category Filter -->
             <div class="d-flex flex-wrap justify-content-center gap-2 mb-5" id="schemeFilters">
-                <button class="btn btn-primary rounded-pill filter-btn" data-filter="all">All Schemes</button>
-                <button class="btn btn-outline-primary rounded-pill filter-btn" data-filter="farmers">Farmers</button>
-                <button class="btn btn-outline-primary rounded-pill filter-btn" data-filter="health">Health</button>
-                <button class="btn btn-outline-primary rounded-pill filter-btn" data-filter="workers">Workers</button>
-                <button class="btn btn-outline-primary rounded-pill filter-btn" data-filter="business">Business</button>
-                <button class="btn btn-outline-primary rounded-pill filter-btn" data-filter="housing">Housing &amp; Infra</button>
+                <button type="button" class="btn rounded-pill filter-btn active" data-filter="all">All Schemes</button>
+                <button type="button" class="btn rounded-pill filter-btn" data-filter="farmers">Farmers</button>
+                <button type="button" class="btn rounded-pill filter-btn" data-filter="health">Health</button>
+                <button type="button" class="btn rounded-pill filter-btn" data-filter="workers">Workers</button>
+                <button type="button" class="btn rounded-pill filter-btn" data-filter="business">Business</button>
+                <button type="button" class="btn rounded-pill filter-btn" data-filter="housing">Housing &amp; Infra</button>
             </div>
 
             <!-- Scheme Cards Grid -->
@@ -214,42 +214,42 @@ include __DIR__ . '/includes/header.php';
                         $isCentralSector = ($sch['funding_type'] ?? '') === 'central_sector';
                     ?>
                     <div class="col-sm-6 col-lg-4 scheme-item" data-category="<?= htmlspecialchars($filterCat) ?>">
-                        <div class="card h-100 border-0 shadow-sm scheme-card rounded overflow-hidden d-flex flex-column">
-                            <div class="position-relative">
-                                <a href="<?= $detailLink ?>">
+                        <div class="card h-100 border-0 shadow-sm scheme-card rounded-4 overflow-hidden d-flex flex-column bg-white">
+                            <div class="position-relative overflow-hidden" style="height: 175px; background: #f1f5f9;">
+                                <a href="<?= $detailLink ?>" class="d-block w-100 h-100">
                                     <img src="<?= htmlspecialchars($schImg) ?>" 
                                          alt="<?= htmlspecialchars($sch['title_en']) ?>" 
-                                         class="card-img-top" 
-                                         style="height: 170px; object-fit: cover;"
+                                         class="w-100 h-100" 
+                                         style="object-fit: cover; transition: transform 0.3s ease;"
                                          onerror="this.src='image/section.png'">
                                 </a>
-                                <span class="badge position-absolute top-0 end-0 m-2 shadow-sm <?= $isCentralSector ? 'bg-success' : 'bg-primary' ?>">
-                                    <?= htmlspecialchars($fundingLabel) ?>
+                                <span class="badge position-absolute top-0 end-0 m-2 shadow-sm <?= $isCentralSector ? 'bg-success' : 'bg-primary' ?>" style="font-size: 0.72rem; padding: 5px 10px; border-radius: 20px;">
+                                    <i class="fas <?= $isCentralSector ? 'fa-landmark' : 'fa-handshake' ?> me-1"></i><?= htmlspecialchars($fundingLabel) ?>
                                 </span>
                             </div>
                             <div class="card-body p-4 d-flex flex-column flex-grow-1">
                                 <div class="d-flex align-items-center gap-2 mb-2">
-                                    <span class="fs-4"><?= htmlspecialchars($sch['icon'] ?? '🏛️') ?></span>
-                                    <span class="badge bg-primary-subtle text-primary">
+                                    <span class="fs-5"><?= htmlspecialchars($sch['icon'] ?? '🏛️') ?></span>
+                                    <span class="badge" style="background: #eff6ff; color: #1e3a8a; border: 1px solid #bfdbfe; font-size: 0.74rem; font-weight: 600; padding: 4px 10px; border-radius: 12px;">
                                         <?= htmlspecialchars($sch['category_name_en'] ?? ucfirst($rawCat)) ?>
                                     </span>
                                 </div>
-                                <h5 class="card-title fw-bold text-dark mb-1">
+                                <h5 class="card-title fw-bold text-dark mb-1" style="font-size: 1.05rem; min-height: 48px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
                                     <a href="<?= $detailLink ?>" class="text-dark text-decoration-none"><?= htmlspecialchars($sch['title_en']) ?></a>
                                 </h5>
-                                <?php if (!empty($sch['title_hi'])): ?>
-                                    <div class="text-muted small mb-2"><?= htmlspecialchars($sch['title_hi']) ?></div>
-                                <?php endif; ?>
-                                <p class="card-text text-secondary small flex-grow-1 mb-3">
+                                <div class="text-muted small mb-2 text-truncate" style="min-height: 20px; font-size: 0.82rem;">
+                                    <?= htmlspecialchars($sch['title_hi'] ?? '') ?>
+                                </div>
+                                <p class="card-text text-secondary small mb-3 flex-grow-1" style="min-height: 44px; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
                                     <?= htmlspecialchars(mb_substr($sch['tagline_en'] ?? $sch['overview_en'] ?? '', 0, 105)) ?>...
                                 </p>
-                                <div class="d-flex align-items-center justify-content-between pt-3 border-top gap-2">
-                                    <a href="<?= $detailLink ?>" class="btn btn-sm btn-outline-primary rounded-pill px-3 flex-grow-1">
-                                        Read Details
+                                <div class="scheme-card-btn-row pt-3 border-top mt-auto d-flex align-items-center gap-2">
+                                    <a href="<?= $detailLink ?>" class="btn-scheme-card-detail flex-grow-1">
+                                        <i class="fas fa-info-circle me-1"></i> Read Details
                                     </a>
                                     <?php if (!empty($sch['official_url'])): ?>
-                                    <a href="<?= htmlspecialchars($sch['official_url']) ?>" target="_blank" rel="noopener" class="scheme-btn btn-sm text-nowrap">
-                                        Official ↗
+                                    <a href="<?= htmlspecialchars($sch['official_url']) ?>" target="_blank" rel="noopener noreferrer" class="btn-scheme-card-official text-nowrap">
+                                        Official <i class="fas fa-external-link-alt ms-1" style="font-size: 0.75rem;"></i>
                                     </a>
                                     <?php endif; ?>
                                 </div>
@@ -264,11 +264,11 @@ include __DIR__ . '/includes/header.php';
 
             <!-- Bottom CTAs: All Schemes & Eligibility Checker -->
             <div class="text-center mt-5 d-flex flex-column flex-sm-row justify-content-center align-items-center gap-3">
-                <a href="all-scheme.php" class="scheme-btn btn-lg">
-                    Explore All 20+ Schemes &rarr;
+                <a href="all-scheme.php" class="btn-scheme-bottom-primary">
+                    Explore All 20+ Schemes <i class="fas fa-arrow-right ms-2"></i>
                 </a>
-                <a href="eligibility-checker.php" class="btn btn-outline-primary rounded-pill px-4 py-2 fw-semibold">
-                    <i class="fas fa-clipboard-check me-2"></i>Check Your Eligibility
+                <a href="eligibility-checker.php" class="btn-scheme-bottom-outline">
+                    <i class="fas fa-clipboard-check me-2"></i> Check Your Eligibility
                 </a>
             </div>
 

@@ -623,16 +623,19 @@ background-color: var(--bs-primary) !important;
 
 .scheme-btn{
     font-size: 13px !important;
-    border: 1px  solid var(--bs-primary);
+    border: 1px solid var(--bs-primary);
     padding: 8px 15px;
     font-weight: 500;
     border-radius: 30px;
-    margin-top: 30px !important;
+    display: inline-block;
     color: var(--bs-primary);
 }
 .scheme-btn:hover{
     background-color: var(--bs-primary);
     color: white;
+}
+.aadhaar-card .scheme-btn {
+    margin-top: 20px;
 }
 
 

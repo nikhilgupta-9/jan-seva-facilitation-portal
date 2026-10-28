@@ -141,7 +141,7 @@ body.gigw-high-contrast button {
    ======================================================== */
 .navbar .navbar-nav .nav-link {
     margin-right: 16px;
-    padding: 16px 4px;
+    padding: 10px 4px;
     font-size: 15px;
     font-weight: 600;
     letter-spacing: -0.2px;
@@ -1543,4 +1543,204 @@ body.gigw-high-contrast button {
     .audio-ctrl-group {
         justify-content: center;
     }
+}
+
+
+/* ==========================================================================
+   HOMEPAGE GOVERNMENT SCHEMES (#schemes) BUTTON ALIGNMENT & VISIBILITY FIXES
+   Replaces washed-out yellow text (#e7b961) with high-contrast authoritative
+   civic styling (Navy #1e3a8a, Deep Slate #1e293b, Pure White #ffffff).
+   Guarantees 100% equal card heights, pinned action buttons, and aligned CTAs.
+   ========================================================================== */
+
+/* Government of India Eyebrow Badge */
+.scheme-gov-badge {
+    background-color: #1e3a8a !important;
+    color: #ffffff !important;
+    font-size: 0.76rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.6px !important;
+    padding: 6px 16px !important;
+    border-radius: 30px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    box-shadow: 0 2px 6px rgba(30, 58, 138, 0.2);
+}
+
+/* Category Filter Buttons in #schemes - High Contrast & No Yellow */
+#schemeFilters {
+    gap: 10px !important;
+}
+#schemeFilters .filter-btn {
+    background-color: #ffffff !important;
+    border: 1.5px solid #cbd5e1 !important;
+    color: #1e293b !important;
+    font-weight: 600 !important;
+    font-size: 0.88rem !important;
+    padding: 7px 18px !important;
+    border-radius: 50px !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+    margin: 0 !important;
+}
+#schemeFilters .filter-btn:hover {
+    background-color: #eff6ff !important;
+    border-color: #93c5fd !important;
+    color: #1e3a8a !important;
+    transform: translateY(-1px);
+}
+#schemeFilters .filter-btn.active,
+#schemeFilters .filter-btn.btn-primary {
+    background-color: #1e3a8a !important;
+    border-color: #1e3a8a !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(30, 58, 138, 0.25) !important;
+}
+
+/* Override any default Bootstrap yellow in #schemes */
+#schemes .btn-outline-primary {
+    color: #1e3a8a !important;
+    border-color: #1e3a8a !important;
+    background-color: #ffffff !important;
+}
+#schemes .btn-outline-primary:hover {
+    background-color: #1e3a8a !important;
+    color: #ffffff !important;
+}
+#schemes .btn-primary {
+    background-color: #1e3a8a !important;
+    border-color: #1e3a8a !important;
+    color: #ffffff !important;
+}
+
+/* Scheme Card Structure: Perfect Height, Flex Flow & Alignment */
+#schemes .scheme-card {
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 14px !important;
+    transition: transform 0.25s ease, box-shadow 0.25s ease !important;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04) !important;
+}
+#schemes .scheme-card:hover {
+    transform: translateY(-4px) !important;
+    box-shadow: 0 12px 26px rgba(15, 23, 42, 0.09) !important;
+    border-color: #cbd5e1 !important;
+}
+#schemes .scheme-card .card-body {
+    display: flex !important;
+    flex-direction: column !important;
+    flex-grow: 1 !important;
+    padding: 20px !important;
+}
+
+/* Card Button Row: Pinned to bottom at the exact same vertical baseline across all cards */
+.scheme-card-btn-row {
+    margin-top: auto !important;
+    padding-top: 14px !important;
+    border-top: 1px solid #f1f5f9 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    width: 100% !important;
+}
+
+/* Card Left Button: Read Details */
+.btn-scheme-card-detail {
+    height: 38px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: #1e3a8a !important;
+    color: #ffffff !important;
+    border: 1px solid #1e3a8a !important;
+    border-radius: 50px !important;
+    font-size: 0.84rem !important;
+    font-weight: 600 !important;
+    text-decoration: none !important;
+    padding: 0 16px !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 2px 4px rgba(30, 58, 138, 0.15) !important;
+    margin: 0 !important;
+}
+.btn-scheme-card-detail:hover {
+    background: #0f172a !important;
+    border-color: #0f172a !important;
+    color: #ffffff !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.2) !important;
+}
+
+/* Card Right Button: Official Portal */
+.btn-scheme-card-official {
+    height: 38px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: #ffffff !important;
+    color: #1e293b !important;
+    border: 1.5px solid #cbd5e1 !important;
+    border-radius: 50px !important;
+    font-size: 0.84rem !important;
+    font-weight: 600 !important;
+    text-decoration: none !important;
+    padding: 0 14px !important;
+    transition: all 0.2s ease !important;
+    margin: 0 !important;
+}
+.btn-scheme-card-official:hover {
+    background: #f8fafc !important;
+    border-color: #94a3b8 !important;
+    color: #0f172a !important;
+    transform: translateY(-1px) !important;
+}
+
+/* Bottom CTA Buttons in #schemes: Aligned & Symmetrical */
+.btn-scheme-bottom-primary {
+    height: 46px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: #1e3a8a !important;
+    color: #ffffff !important;
+    border: 1.5px solid #1e3a8a !important;
+    border-radius: 50px !important;
+    padding: 0 26px !important;
+    font-weight: 600 !important;
+    font-size: 0.95rem !important;
+    text-decoration: none !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 3px 10px rgba(30, 58, 138, 0.2) !important;
+    margin: 0 !important;
+}
+.btn-scheme-bottom-primary:hover {
+    background: #0f172a !important;
+    border-color: #0f172a !important;
+    color: #ffffff !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.25) !important;
+}
+.btn-scheme-bottom-outline {
+    height: 46px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: #ffffff !important;
+    color: #1e3a8a !important;
+    border: 2px solid #1e3a8a !important;
+    border-radius: 50px !important;
+    padding: 0 24px !important;
+    font-weight: 600 !important;
+    font-size: 0.95rem !important;
+    text-decoration: none !important;
+    transition: all 0.2s ease !important;
+    margin: 0 !important;
+}
+.btn-scheme-bottom-outline:hover {
+    background: #eff6ff !important;
+    color: #1d4ed8 !important;
+    border-color: #1d4ed8 !important;
+    transform: translateY(-2px) !important;
 }

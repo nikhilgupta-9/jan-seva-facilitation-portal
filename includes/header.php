@@ -83,7 +83,7 @@ $activeNav = $activeNav ?? '';
 
     <div class="header-center-body">
         <div class="container">
-            <div class="header-center d-flex py-3 align-items-center justify-content-between">
+            <div class="header-center d-flex py-1 align-items-center justify-content-between">
                 <div>
                     <a href="<?= BASE_URL ?>/index.php" class="navbar-brand ms-4 ms-lg-0 d-none d-lg-flex align-items-center gap-3 text-decoration-none">
                         <div class="brand-emblem-icon d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; border-radius: 12px; background: #1C1B3A; color: #ffc107; font-size: 1.5rem; flex-shrink: 0; box-shadow: 0 4px 10px rgba(28,27,58,0.15);">
