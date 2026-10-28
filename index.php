@@ -219,7 +219,7 @@ include __DIR__ . '/includes/header.php';
                 </div>
             </div>
 
-            <div class="row g-4">
+            <div class="row g-2 g-md-4">
                 <?php if (!empty($featuredServices)): ?>
                     <?php foreach ($featuredServices as $svc): 
                         $svcSlug = htmlspecialchars($svc['slug']);
