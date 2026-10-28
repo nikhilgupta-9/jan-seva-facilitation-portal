@@ -368,3 +368,38 @@ UNLOCK TABLES;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
 -- Dump completed on 2026-10-28 10:17:23
+
+-- ---------------------------------------------------------------
+-- portal_updates: "Schemes & Updates" notice board on the homepage.
+-- Rows come from two sources: admin-entered (created_via='admin')
+-- and the PIB RSS cron ingester (created_via='cron').
+-- ---------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS portal_updates (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title_en VARCHAR(500) NOT NULL,
+    title_hi VARCHAR(500) NULL,
+    source_name VARCHAR(150) DEFAULT 'Admin',
+    source_url VARCHAR(500) NULL,
+    category VARCHAR(50) DEFAULT 'general',
+    is_active TINYINT(1) DEFAULT 1,
+    published_at DATE NOT NULL,
+    created_via ENUM('admin', 'cron') DEFAULT 'admin',
+    external_guid VARCHAR(300) NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uniq_external_guid (external_guid)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------------
+-- faqs: Homepage "Frequently Asked Questions" accordion, fully
+-- admin-managed via admin/faqs.php.
+-- ---------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS faqs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    question_en VARCHAR(500) NOT NULL,
+    question_hi VARCHAR(500) NULL,
+    answer_en TEXT NOT NULL,
+    answer_hi TEXT NULL,
+    is_active TINYINT(1) DEFAULT 1,
+    sort_order INT DEFAULT 10,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

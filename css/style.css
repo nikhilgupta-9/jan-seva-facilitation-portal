@@ -416,6 +416,22 @@ header .header-body .header-item .element .color-input-header{
 .service-item:hover .service-title{
     color: white !important;
 }
+/* The title text itself is an <a class="text-dark">, and Bootstrap's
+   .text-dark/.text-muted/.text-primary utilities carry !important
+   directly on those elements - the parent ".service-title" rule above
+   never reaches them because an element's own declared color always
+   wins over an inherited one, regardless of ancestor specificity.
+   Also cover the Hindi subtitle, turnaround-time text/icon, and the
+   divider line, which all stayed dark-on-dark against the hover
+   overlay. */
+.service-item:hover .service-title a,
+.service-item:hover .text-muted,
+.service-item:hover .text-primary {
+    color: #ffffff !important;
+}
+.service-item:hover .border-top {
+    border-color: rgba(255, 255, 255, 0.25) !important;
+}
 .service-item:hover .btn-custom {
     background: var(--bs-warning);
     font-family: var(--text-family);
@@ -927,7 +943,12 @@ background-color: var(--bs-primary) !important;
 /* Responsive */
 @media (max-width: 991px) {
     .gov-banner {
-        margin: 20px;
+        /* Horizontal margin here used to add on top of the
+           .container's own 100% width, pushing the banner past the
+           viewport edge and causing a horizontal scrollbar on
+           mobile. Vertical-only margin keeps the spacing without
+           the overflow. */
+        margin: 20px 0;
     }
 
     .gov-banner-content {
@@ -952,7 +973,7 @@ background-color: var(--bs-primary) !important;
 
 @media (max-width: 767px) {
     .gov-banner {
-        margin: 15px;
+        margin: 15px 0;
         border-radius: 20px;
     }
 
@@ -974,8 +995,54 @@ background-color: var(--bs-primary) !important;
         min-height: 250px;
     }
 
+    .gov-banner-image img {
+        /* The desktop 250px radius was fixed-pixel and didn't scale
+           down, so on a 250px-tall mobile image it curved away most
+           of the picture. Use a proportionate radius instead. */
+        border-top-left-radius: 24px;
+        border-bottom-left-radius: 24px;
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+
     .gov-btn {
         padding: 13px 24px;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .gov-banner {
+        margin: 10px 0;
+        border-radius: 16px;
+    }
+
+    .gov-banner-content {
+        padding: 24px 18px;
+        text-align: center;
+    }
+
+    .gov-banner-content h2 {
+        font-size: 24px;
+    }
+
+    .gov-tag {
+        font-size: 12px;
+    }
+
+    .gov-banner-image,
+    .gov-banner-image img {
+        height: 180px;
+        min-height: 180px;
+    }
+
+    .gov-banner-image img {
+        border-radius: 0;
+    }
+
+    .gov-btn {
+        width: 100%;
+        text-align: center;
+        padding: 12px 20px;
     }
 }
 
@@ -1170,6 +1237,34 @@ background-color: var(--bs-primary) !important;
     .faq-answer p {
         font-size: 13px;
     }
+
+    .faq-image,
+    .faq-image img {
+        min-height: 220px;
+        height: 220px;
+    }
+
+    .faq-image-content {
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
+        padding: 12px;
+        gap: 10px;
+    }
+
+    .faq-image-content > i {
+        width: 38px;
+        height: 38px;
+        font-size: 16px;
+    }
+
+    .faq-image-content h5 {
+        font-size: 14px;
+    }
+
+    .faq-image-content p {
+        font-size: 12px;
+    }
 }
 
 .active-faq{
@@ -1244,16 +1339,6 @@ background-color: var(--bs-primary) !important;
 .step-number { display: flex; flex: 0 0 42px; width: 42px; height: 42px; align-items: center; justify-content: center; border-radius: 12px; background: #f0eefb; color: var(--bs-primary); font-size: 14px; font-weight: 700; }
 .step-item h3 { margin: 2px 0 6px; font-size: 16px; font-weight: 700; }
 .step-item p { margin: 0; color: var(--portal-muted); font-size: 14px; line-height: 1.8; }
-
-.faq-item { margin-bottom: 10px; overflow: hidden; border: 1px solid var(--portal-border); border-radius: 9px; }
-.faq-item:last-child { margin-bottom: 0; }
-.faq-question { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 12px; padding: 16px; border: 0; background: #fff; color: var(--portal-text); text-align: left; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
-.faq-question:focus { outline: 2px solid #aaa4e2; outline-offset: -3px; }
-.faq-question i { flex-shrink: 0; color: var(--bs-primary); }
-.faq-answer { display: none; padding: 0 16px 16px; }
-.faq-answer p { margin: 0; color: var(--portal-muted); font-size: 14px; line-height: 1.8; }
-.faq-item.active { border-color: #d8d4f2; background: #fcfbff; }
-.faq-item.active .faq-question { background: #fcfbff; }
 
 .detail-sidebar { position: sticky; top: 20px; }
 .sidebar-card { margin-bottom: 18px; padding: 22px; border: 1px solid var(--portal-border); border-radius: 12px; background: #fff; }

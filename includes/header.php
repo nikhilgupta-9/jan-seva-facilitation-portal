@@ -38,6 +38,8 @@ $activeNav = $activeNav ?? '';
 
     <!-- Libraries Stylesheet -->
     <link href="<?= BASE_URL ?>/lib/animate/animate.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.theme.default.min.css" rel="stylesheet">
 
     <!-- Customized Bootstrap Stylesheet -->
     <link href="<?= BASE_URL ?>/css/bootstrap.min.css" rel="stylesheet">

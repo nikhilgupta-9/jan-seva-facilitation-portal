@@ -345,28 +345,29 @@ body.gigw-high-contrast button {
         padding-left: 0;
     }
 
-    /* Carousel Banner Fluid Scaling on Mobile - Never Crop */
+    /* Carousel Banner Standardized Scaling on Mobile - Uniform Height, Zero Jumping */
     #header-carousel .carousel-item {
         min-height: unset !important;
-        height: auto !important;
         position: relative !important;
     }
-    #header-carousel .carousel-item img {
-        position: relative !important;
+    #header-carousel .hero-banner-slide {
         width: 100% !important;
-        height: auto !important;
-        max-height: none !important;
-        object-fit: contain !important;
+        overflow: hidden !important;
+    }
+    #header-carousel .hero-banner-img {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
     }
     #header-carousel .carousel-control-prev,
     #header-carousel .carousel-control-next {
         margin-top: 0 !important;
-        width: 12% !important;
+        width: 10% !important;
     }
     #header-carousel .carousel-control-prev-icon,
     #header-carousel .carousel-control-next-icon {
-        width: 2rem !important;
-        height: 2rem !important;
+        width: 1.8rem !important;
+        height: 1.8rem !important;
     }
 
     /* Top Accessibility Bar (< 768px) */
@@ -852,6 +853,7 @@ body.gigw-high-contrast button {
     justify-content: center;
     font-size: 1.25rem;
     flex-shrink: 0;
+    transition: transform 0.25s ease, background 0.25s ease, color 0.25s ease;
 }
 
 .icon-central {
@@ -862,6 +864,19 @@ body.gigw-high-contrast button {
 .icon-sponsored {
     background: #ecfdf5;
     color: #059669;
+}
+
+/* Official-portal touch: the icon badge lifts/fills on card hover,
+   matching the saffron/navy or green ribbon already on the card. */
+#schemes .scheme-card:hover .icon-central {
+    background: #2563eb;
+    color: #ffffff;
+    transform: scale(1.1) rotate(-6deg);
+}
+#schemes .scheme-card:hover .icon-sponsored {
+    background: #059669;
+    color: #ffffff;
+    transform: scale(1.1) rotate(-6deg);
 }
 
 .scheme-ministry-name {
@@ -1743,4 +1758,310 @@ body.gigw-high-contrast button {
     color: #1d4ed8 !important;
     border-color: #1d4ed8 !important;
     transform: translateY(-2px) !important;
+}
+
+/* ========================================================
+   HOMEPAGE: CITIZEN FEEDBACK OWL CAROUSEL
+   ======================================================== */
+.citizen-feedback-carousel .feedback-item {
+    padding: 4px 2px 10px;
+}
+.citizen-feedback-carousel .owl-stage {
+    display: flex;
+    align-items: stretch;
+}
+.citizen-feedback-carousel .owl-item {
+    display: flex;
+    height: auto;
+}
+.citizen-feedback-carousel .owl-item > .feedback-item {
+    width: 100%;
+}
+.citizen-feedback-carousel .owl-dots {
+    text-align: center;
+    margin-top: 10px;
+}
+.citizen-feedback-carousel .owl-dot span {
+    width: 9px;
+    height: 9px;
+    margin: 4px;
+    background: #cbd5e1;
+    border-radius: 50%;
+    display: block;
+    transition: all 0.2s ease;
+}
+.citizen-feedback-carousel .owl-dot.active span,
+.citizen-feedback-carousel .owl-dot:hover span {
+    background: var(--bs-primary);
+    width: 22px;
+    border-radius: 5px;
+}
+.citizen-feedback-carousel .owl-nav button.owl-prev,
+.citizen-feedback-carousel .owl-nav button.owl-next {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #ffffff !important;
+    color: var(--bs-primary) !important;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+}
+.citizen-feedback-carousel .owl-nav button.owl-prev { left: -14px; }
+.citizen-feedback-carousel .owl-nav button.owl-next { right: -14px; }
+.citizen-feedback-carousel .owl-nav button.owl-prev:hover,
+.citizen-feedback-carousel .owl-nav button.owl-next:hover {
+    background: var(--bs-primary) !important;
+    color: #ffffff !important;
+}
+#testimonials {
+    position: relative;
+}
+@media (max-width: 575.98px) {
+    .citizen-feedback-carousel .owl-nav button.owl-prev,
+    .citizen-feedback-carousel .owl-nav button.owl-next {
+        width: 34px;
+        height: 34px;
+        font-size: 0.8rem;
+    }
+    .citizen-feedback-carousel .owl-nav button.owl-prev { left: 0; }
+    .citizen-feedback-carousel .owl-nav button.owl-next { right: 0; }
+}
+
+/* ========================================================
+   HOMEPAGE NOTICE BOARD (continuous horizontal marquee, boxed)
+   Same themed header bar as before, but the body is a single-line
+   strip that scrolls right-to-left continuously and seamlessly -
+   exactly like the original <marquee>, just CSS-driven and with a
+   proper hover-to-pause (the HTML <li> structure is unchanged;
+   only the layout direction changed from vertical list to inline
+   horizontal strip).
+   ======================================================== */
+.notice-board-section {
+    padding: 0px 0;
+}
+.notice-board {
+    display: flex;
+    align-items: stretch;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(15, 23, 42, 0.05);
+    background: #ffffff;
+}
+.notice-board-header {
+    background: linear-gradient(135deg, var(--bs-primary) 0%, #141331 100%);
+    color: #ffffff;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 800;
+    font-size: 0.92rem;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+}
+.notice-board-header i {
+    color: #ffc107;
+    font-size: 1rem;
+}
+.notice-board-body {
+    position: relative;
+    overflow: hidden;
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    min-width: 0;
+}
+.notice-board-empty {
+    padding: 0 20px;
+}
+.notice-board-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    animation: noticeBoardMarquee 35s linear infinite;
+    will-change: transform;
+}
+.notice-board-body:hover .notice-board-list {
+    animation-play-state: paused;
+}
+@keyframes noticeBoardMarquee {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+.notice-board-list li {
+    flex-shrink: 0;
+    border-right: 1px solid #e2e8f0;
+}
+.notice-board-list li > a,
+.notice-board-list li > span:first-child {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 13px 22px;
+    text-decoration: none;
+    color: #1e293b;
+    white-space: nowrap;
+    transition: background 0.15s ease;
+}
+.notice-board-list li > a:hover {
+    background: #f8fafc;
+}
+.notice-item-icon {
+    color: var(--bs-primary);
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+.notice-item-text {
+    font-size: 0.86rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.notice-item-date {
+    flex-shrink: 0;
+    font-size: 0.74rem;
+    color: #94a3b8;
+    font-weight: 600;
+}
+.notice-item-new {
+    flex-shrink: 0;
+    background: #dc2626;
+    color: #ffffff;
+    font-size: 0.64rem;
+    font-weight: 800;
+    padding: 2px 7px;
+    border-radius: 10px;
+    text-transform: uppercase;
+    animation: noticeNewPulse 1.6s ease-in-out infinite;
+}
+@keyframes noticeNewPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.55; }
+}
+.notice-item-src {
+    flex-shrink: 0;
+    background: var(--adm-saffron-tint, #fff1e6);
+    color: #d8570c;
+    font-size: 0.64rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 10px;
+}
+
+@media (max-width: 767.98px) {
+    .notice-board {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .notice-board-header {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .notice-board-header {
+        font-size: 0.82rem;
+        padding: 9px 14px;
+    }
+    .notice-board-list li > a,
+    .notice-board-list li > span:first-child {
+        padding: 10px 14px;
+        gap: 7px;
+    }
+    .notice-item-text {
+        font-size: 0.8rem;
+    }
+    .notice-item-src {
+        display: none;
+    }
+    .header-center-body{
+        display: none;
+    }
+}
+
+
+/* ==========================================================================
+   HOMEPAGE HERO CAROUSEL: STANDARD 1920x600 UNIFORM SIZE & SMOOTH SCALING
+   Eliminates layout shifts (jumping) caused by mismatched banner heights.
+   Banners are 100% clickable with direct redirects configured in admin.
+   ========================================================================== */
+.hero-carousel-wrapper {
+    background-color: #0b192c;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+}
+#header-carousel .hero-banner-link {
+    display: block;
+    width: 100%;
+    text-decoration: none;
+    cursor: pointer;
+    background: #0f172a;
+}
+#header-carousel .hero-banner-slide {
+    width: 100%;
+    height: 480px; /* Standard uniform desktop banner height */
+    overflow: hidden;
+    position: relative;
+    background-color: #0b192c;
+}
+#header-carousel .hero-banner-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+    transition: transform 0.4s ease;
+}
+#header-carousel .hero-banner-link:hover .hero-banner-img {
+    transform: scale(1.015);
+}
+
+/* Indicators */
+#header-carousel .carousel-indicators {
+    margin-bottom: 14px;
+    z-index: 5;
+}
+#header-carousel .carousel-indicators [data-bs-target] {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.55);
+    border: 2px solid transparent;
+    transition: all 0.25s ease;
+    margin: 0 5px;
+}
+#header-carousel .carousel-indicators .active {
+    width: 32px;
+    border-radius: 12px;
+    background-color: #ffffff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+
+/* Responsive Viewports - Uniform Aspect Ratio */
+@media (min-width: 1600px) {
+    #header-carousel .hero-banner-slide { height: 520px; }
+}
+@media (max-width: 1199.98px) {
+    #header-carousel .hero-banner-slide { height: 400px; }
+}
+@media (max-width: 991.98px) {
+    #header-carousel .hero-banner-slide { height: 310px; }
+}
+@media (max-width: 767.98px) {
+    #header-carousel .hero-banner-slide { height: 210px; }
+}
+@media (max-width: 575.98px) {
+    #header-carousel .hero-banner-slide { height: 160px; }
 }

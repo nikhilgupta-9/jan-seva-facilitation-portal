@@ -12,6 +12,25 @@ $featuredServices = array_slice($allServices, 0, 6);
 $allSchemes = get_all_schemes();
 $featuredSchemes = array_slice($allSchemes, 0, 6);
 
+// Fetch admin-managed homepage FAQs
+$homeFaqs = [];
+try {
+    $stmt_faq = $pdo->query("SELECT * FROM faqs WHERE is_active = 1 ORDER BY sort_order ASC, id ASC");
+    $homeFaqs = $stmt_faq->fetchAll(PDO::FETCH_ASSOC);
+} catch (Exception $e) {}
+
+// Fetch latest notice-board updates (admin-posted + PIB auto-fetched)
+$portalUpdates = [];
+try {
+    $stmt_upd = $pdo->query("
+        SELECT * FROM portal_updates
+        WHERE is_active = 1
+        ORDER BY published_at DESC, id DESC
+        LIMIT 10
+    ");
+    $portalUpdates = $stmt_upd->fetchAll(PDO::FETCH_ASSOC);
+} catch (Exception $e) {}
+
 // Fetch approved citizen feedbacks for homepage testimonials
 $homeFeedbacks = [];
 try {
@@ -22,6 +41,13 @@ try {
         LIMIT 6
     ");
     $homeFeedbacks = $stmt_fb->fetchAll(PDO::FETCH_ASSOC);
+} catch (Exception $e) {}
+
+// Fetch active hero banners from database (standard 1920x600 px)
+$activeBanners = [];
+try {
+    $stmt_b = $pdo->query("SELECT * FROM banners WHERE is_active = 1 ORDER BY sort_order ASC, id ASC");
+    $activeBanners = $stmt_b->fetchAll(PDO::FETCH_ASSOC);
 } catch (Exception $e) {}
 
 // SEO Meta Variables
@@ -63,26 +89,50 @@ include __DIR__ . '/includes/header.php';
 }
 </script>
 
-    <!-- Header Carousel Start -->
-    <div class="container-fluid p-0">
+    <!-- Header Carousel Start (Standard 1920x600 px Ratio, Dynamic from Admin) -->
+    <div class="container-fluid p-0 hero-carousel-wrapper">
         <div id="header-carousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
-            <div class="carousel-inner">
-                <div class="carousel-item active">
-                    <a href="service/abha-card">
-                        <img class="w-100" src="img/ABHA Card Apply Healthcare Banner.png" alt="ABHA Health Card">
-                    </a>
-                </div>
-                <div class="carousel-item">
-                    <a href="service/eshram-card">
-                        <img class="w-100" src="img/e-Shram Card Benefits Banner.png" alt="e-Shram Card Benefits">
-                    </a>
-                </div>
-                <div class="carousel-item">
-                    <a href="service/eshram-card">
-                        <img class="w-100" src="img/e-Shram Card Application Banner.png" alt="e-Shram Card Application">
-                    </a>
-                </div>
+            <?php if (!empty($activeBanners) && count($activeBanners) > 1): ?>
+            <div class="carousel-indicators">
+                <?php foreach ($activeBanners as $idx => $b): ?>
+                    <button type="button" data-bs-target="#header-carousel" data-bs-slide-to="<?= $idx ?>" class="<?= $idx === 0 ? 'active' : '' ?>" aria-current="<?= $idx === 0 ? 'true' : 'false' ?>" aria-label="Slide <?= $idx + 1 ?>"></button>
+                <?php endforeach; ?>
             </div>
+            <?php endif; ?>
+
+            <div class="carousel-inner">
+                <?php if (!empty($activeBanners)): ?>
+                    <?php foreach ($activeBanners as $idx => $b): 
+                        $targetUrl = (strpos($b['link_url'], 'http') === 0 ? '' : BASE_URL . '/') . ltrim($b['link_url'], '/');
+                        $targetAttr = ($b['target'] === '_blank') ? ' target="_blank" rel="noopener noreferrer"' : '';
+                        $imgUrl = (strpos($b['image_url'], 'http') === 0 ? '' : BASE_URL . '/') . ltrim($b['image_url'], '/');
+                    ?>
+                    <div class="carousel-item <?= $idx === 0 ? 'active' : '' ?>">
+                        <a href="<?= htmlspecialchars($targetUrl) ?>" class="hero-banner-link"<?= $targetAttr ?> title="<?= htmlspecialchars($b['title']) ?>">
+                            <div class="hero-banner-slide">
+                                <img src="<?= htmlspecialchars($imgUrl) ?>" alt="<?= htmlspecialchars($b['title']) ?>" class="hero-banner-img" onerror="this.src='image/section.png'">
+                            </div>
+                        </a>
+                    </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <div class="carousel-item active">
+                        <a href="<?= BASE_URL ?>/service/abha-card" class="hero-banner-link">
+                            <div class="hero-banner-slide">
+                                <img src="<?= BASE_URL ?>/image/banners/banner-abha-card.jpg" alt="ABHA Health Card" class="hero-banner-img">
+                            </div>
+                        </a>
+                    </div>
+                    <div class="carousel-item">
+                        <a href="<?= BASE_URL ?>/service/eshram-card" class="hero-banner-link">
+                            <div class="hero-banner-slide">
+                                <img src="<?= BASE_URL ?>/image/banners/banner-eshram-card.jpg" alt="e-Shram Card" class="hero-banner-img">
+                            </div>
+                        </a>
+                    </div>
+                <?php endif; ?>
+            </div>
+
             <button class="carousel-control-prev" type="button" data-bs-target="#header-carousel" data-bs-slide="prev">
                 <span class="carousel-control-prev-icon" aria-hidden="true"></span>
                 <span class="visually-hidden">Previous</span>
@@ -95,22 +145,61 @@ include __DIR__ . '/includes/header.php';
     </div>
     <!-- Header Carousel End -->
 
-    <!-- Update section (Marquee) Start -->
-    <section class="updata-section">
-        <div class="container">
-            <div class="updata-body row align-items-center">
-                <div class="updata-heading heading fs-4 fw-600 col-sm-12 col-md-4">
-                    <i class="fas fa-bullhorn text-primary me-2"></i>Schemes &amp; Updates
+    <!-- Notice Board (IGNOU-style scrolling updates) Start -->
+    <section class="notice-board-section" id="schemes-updates">
+        <div class="container-fluid p-0 m-0">
+            <div class="notice-board">
+                <div class="notice-board-header">
+                    <i class="fas fa-bullhorn"></i>
+                    <span>Schemes &amp; Updates</span>
                 </div>
-                <div class="marquee-body col-sm-12 col-md-8">
-                    <marquee behavior="scroll" direction="left" scrollamount="5" onmouseover="this.stop();" onmouseout="this.start();">
-                        Get the latest updates on government schemes, public services, application processes, eligibility criteria, and important notifications. Verified digital issuance for ABHA, APAAR, e-Shram &amp; Voter ID.
-                    </marquee>
+                <?php if (!empty($portalUpdates)): ?>
+                <div class="notice-board-body">
+                    <ul class="notice-board-list" id="noticeBoardList">
+                        <?php
+                        $catIcon = ['scheme' => 'fa-landmark', 'deadline' => 'fa-hourglass-half', 'service' => 'fa-id-card', 'notice' => 'fa-info-circle', 'general' => 'fa-circle-dot'];
+
+                        function render_notice_item(array $u, array $catIcon, bool $hidden = false): void {
+                            $isNew = (strtotime($u['published_at']) >= strtotime('-3 days'));
+                            $icon = $catIcon[$u['category']] ?? 'fa-circle-dot';
+                            $tag = $u['created_via'] === 'cron' ? htmlspecialchars($u['source_name'] ?: 'PIB') : null;
+                            $hasLink = !empty($u['source_url']);
+                            $tagName = $hasLink ? 'a' : 'span';
+                            $extraAttrs = $hasLink
+                                ? ' href="' . htmlspecialchars($u['source_url']) . '" target="_blank" rel="noopener noreferrer"' . ($hidden ? ' tabindex="-1"' : '')
+                                : '';
+                            ?>
+                        <li<?= $hidden ? ' aria-hidden="true"' : '' ?>>
+                            <<?= $tagName ?><?= $extraAttrs ?>>
+                                <i class="fas <?= $icon ?> notice-item-icon"></i>
+                                <span class="notice-item-text"><?= htmlspecialchars($u['title_en']) ?></span>
+                                <span class="notice-item-date"><?= date('d M', strtotime($u['published_at'])) ?></span>
+                                <?php if ($isNew): ?><span class="notice-item-new">New</span><?php endif; ?>
+                                <?php if ($tag): ?><span class="notice-item-src"><?= $tag ?></span><?php endif; ?>
+                            </<?= $tagName ?>>
+                        </li>
+                            <?php
+                        }
+
+                        foreach ($portalUpdates as $u) {
+                            render_notice_item($u, $catIcon);
+                        }
+                        // Duplicate the list right after itself so the CSS loop-scroll has no visible seam
+                        foreach ($portalUpdates as $u) {
+                            render_notice_item($u, $catIcon, true);
+                        }
+                        ?>
+                    </ul>
                 </div>
+                <?php else: ?>
+                <div class="notice-board-body notice-board-empty">
+                    <p class="text-muted mb-0">No updates posted yet.</p>
+                </div>
+                <?php endif; ?>
             </div>
         </div>
     </section>
-    <!-- Update section End -->
+    <!-- Notice Board End -->
 
     <!-- Services Category Section (Dynamic from Database) -->
     <div class="container-fluid light-bg cate-section py-5">
@@ -241,7 +330,9 @@ include __DIR__ . '/includes/header.php';
                             </div>
                             <div class="card-body p-4 d-flex flex-column flex-grow-1">
                                 <div class="d-flex align-items-center gap-2 mb-2">
-                                    <span class="fs-5"><?= htmlspecialchars($sch['icon'] ?? '🏛️') ?></span>
+                                    <span class="scheme-card-icon-box <?= $isCentralSector ? 'icon-central' : 'icon-sponsored' ?>">
+                                        <i class="fas <?= htmlspecialchars($sch['icon'] ?: 'fa-landmark') ?>"></i>
+                                    </span>
                                     <span class="badge" style="background: #eff6ff; color: #1e3a8a; border: 1px solid #bfdbfe; font-size: 0.74rem; font-weight: 600; padding: 4px 10px; border-radius: 12px;">
                                         <?= htmlspecialchars($sch['category_name_en'] ?? ucfirst($rawCat)) ?>
                                     </span>
@@ -457,12 +548,12 @@ include __DIR__ . '/includes/header.php';
     <!-- Gov Banner Start -->
     <section class="mt-5">
         <div class="container gov-banner">
-            <div class="row no-gutters align-items-stretch">
+            <div class="row g-0 align-items-stretch">
                 <!-- Left Content -->
                 <div class="col-lg-6 col-md-6">
                     <div class="gov-banner-content">
                         <span class="gov-tag">
-                            <i class="fas fa-landmark mr-2"></i>
+                            <i class="fas fa-landmark me-2"></i>
                             Digital India | Citizen Services
                         </span>
                         <h2>Government Services Made Simple</h2>
@@ -473,7 +564,7 @@ include __DIR__ . '/includes/header.php';
                         </p>
                         <a href="all-scheme.php" class="gov-btn">
                             Explore Our Services
-                            <i class="fas fa-arrow-right ml-2"></i>
+                            <i class="fas fa-arrow-right ms-2"></i>
                         </a>
                     </div>
                 </div>
@@ -582,77 +673,21 @@ include __DIR__ . '/includes/header.php';
 
                 <div class="col-lg-7">
                     <div class="faq-list" id="govFaqAccordion">
-                        <div class="faq-item active-faq">
-                            <button class="faq-question" type="button" aria-expanded="true">
-                                <span>1. What services are available on this portal?</span>
-                                <i class="fas fa-minus faq-icon"></i>
-                            </button>
-                            <div class="faq-answer" style="display:block;">
-                                <p>
-                                    The portal provides digital generation assistance for ABHA Health Card, APAAR Student ID, e-Shram Card, and Voter ID, along with assisted guidance for Aadhaar and Ration Card services.
-                                </p>
-                            </div>
-                        </div>
-
-                        <div class="faq-item">
-                            <button class="faq-question" type="button" aria-expanded="false">
-                                <span>2. How can I apply for an ABHA Card?</span>
-                                <i class="fas fa-plus faq-icon"></i>
-                            </button>
-                            <div class="faq-answer">
-                                <p>
-                                    Visit the ABHA service page, enter your basic details, verify your mobile number with OTP, pay the nominal ₹50 facilitation fee, and download your verified PVC Health Card instantly.
-                                </p>
-                            </div>
-                        </div>
-
-                        <div class="faq-item">
-                            <button class="faq-question" type="button" aria-expanded="false">
-                                <span>3. Who can apply for an e-Shram Card?</span>
-                                <i class="fas fa-plus faq-icon"></i>
-                            </button>
-                            <div class="faq-answer">
-                                <p>
-                                    Any unorganised worker between 16 and 59 years of age who is not an income tax payee or EPFO/ESIC member can register and obtain a 12-digit UAN Card.
-                                </p>
-                            </div>
-                        </div>
-
-                        <div class="faq-item">
-                            <button class="faq-question" type="button" aria-expanded="false">
-                                <span>4. Which documents are required?</span>
-                                <i class="fas fa-plus faq-icon"></i>
-                            </button>
-                            <div class="faq-answer">
-                                <p>
-                                    Basic identity proof (Aadhaar or Voter ID), active mobile number for OTP verification, and scheme-specific details such as school registration or occupation details.
-                                </p>
-                            </div>
-                        </div>
-
-                        <div class="faq-item">
-                            <button class="faq-question" type="button" aria-expanded="false">
-                                <span>5. How can I check my application status?</span>
-                                <i class="fas fa-plus faq-icon"></i>
-                            </button>
-                            <div class="faq-answer">
-                                <p>
-                                    You can check the real-time issuance status or re-download your PVC card anytime using your 10-digit mobile number on our <a href="track-status.php">Track Status</a> page.
-                                </p>
-                            </div>
-                        </div>
-
-                        <div class="faq-item">
-                            <button class="faq-question" type="button" aria-expanded="false">
-                                <span>6. Is this an official government website?</span>
-                                <i class="fas fa-plus faq-icon"></i>
-                            </button>
-                            <div class="faq-answer">
-                                <p>
-                                    No, this is a private citizen facilitation platform. We charge a nominal service fee of ₹50 for electronic processing and PVC card formatting. Official government portals remain accessible directly at zero cost.
-                                </p>
-                            </div>
-                        </div>
+                        <?php if (!empty($homeFaqs)): ?>
+                            <?php foreach ($homeFaqs as $fIdx => $faq): ?>
+                                <div class="faq-item<?= $fIdx === 0 ? ' active-faq' : '' ?>">
+                                    <button class="faq-question" type="button" aria-expanded="<?= $fIdx === 0 ? 'true' : 'false' ?>">
+                                        <span><?= $fIdx + 1 ?>. <?= htmlspecialchars($faq['question_en']) ?></span>
+                                        <i class="fas <?= $fIdx === 0 ? 'fa-minus' : 'fa-plus' ?> faq-icon"></i>
+                                    </button>
+                                    <div class="faq-answer" style="<?= $fIdx === 0 ? 'display:block;' : '' ?>">
+                                        <p><?= nl2br(htmlspecialchars($faq['answer_en'])) ?></p>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <p class="text-muted">FAQs will appear here once added from the admin panel.</p>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -675,16 +710,13 @@ include __DIR__ . '/includes/header.php';
                 </div>
             </div>
 
-            <div class="row g-4">
-                <?php if (!empty($homeFeedbacks)): ?>
-                    <?php 
-                    $delays = ['0.1s', '0.3s', '0.5s', '0.2s', '0.4s', '0.6s'];
-                    foreach ($homeFeedbacks as $idx => $fb): 
-                        $delay = $delays[$idx % count($delays)];
+            <?php if (!empty($homeFeedbacks)): ?>
+                <div class="owl-carousel citizen-feedback-carousel">
+                    <?php foreach ($homeFeedbacks as $idx => $fb):
                         $stars = max(1, min(5, (int)$fb['rating']));
                         $initial = mb_strtoupper(mb_substr($fb['citizen_name'], 0, 1));
                     ?>
-                    <div class="col-md-6 col-lg-4 wow fadeIn" data-wow-delay="<?= $delay ?>">
+                    <div class="feedback-item">
                         <div class="bg-white rounded-4 h-100 p-4 shadow-sm border d-flex flex-column justify-content-between">
                             <div>
                                 <div class="d-flex align-items-center justify-content-between mb-2">
@@ -721,12 +753,12 @@ include __DIR__ . '/includes/header.php';
                         </div>
                     </div>
                     <?php endforeach; ?>
-                <?php else: ?>
-                    <div class="col-12 text-center py-4">
-                        <p class="text-muted">No approved reviews yet. Be the first to share your experience!</p>
-                    </div>
-                <?php endif; ?>
-            </div>
+                </div>
+            <?php else: ?>
+                <div class="text-center py-4">
+                    <p class="text-muted">No approved reviews yet. Be the first to share your experience!</p>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
     <!-- Testimonial End -->

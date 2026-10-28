@@ -24,6 +24,31 @@
     // chrome collapsed.
 
 
+    // Citizen Feedback Carousel (homepage testimonials)
+    if ($.fn.owlCarousel && $('.citizen-feedback-carousel').length) {
+        $('.citizen-feedback-carousel').owlCarousel({
+            loop: $('.citizen-feedback-carousel .feedback-item').length > 3,
+            margin: 24,
+            nav: true,
+            dots: true,
+            autoplay: true,
+            autoplayTimeout: 5000,
+            autoplayHoverPause: true,
+            smartSpeed: 600,
+            navText: [
+                '<i class="fas fa-chevron-left"></i>',
+                '<i class="fas fa-chevron-right"></i>'
+            ],
+            responsive: {
+                0: { items: 1 },
+                576: { items: 1 },
+                768: { items: 2 },
+                992: { items: 3 }
+            }
+        });
+    }
+
+
     // Back to top button
     $(window).scroll(function () {
         if ($(this).scrollTop() > 300) {

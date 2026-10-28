@@ -214,6 +214,7 @@
     <script src="<?= BASE_URL ?>/lib/wow/wow.min.js"></script>
     <script src="<?= BASE_URL ?>/lib/easing/easing.min.js"></script>
     <script src="<?= BASE_URL ?>/lib/waypoints/waypoints.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js"></script>
 
     <!-- Template Javascript -->
     <script src="<?= BASE_URL ?>/js/main.js?v=<?= @filemtime(dirname(__DIR__) . '/js/main.js') ?: time() ?>"></script>
