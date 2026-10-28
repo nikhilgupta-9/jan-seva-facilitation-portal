@@ -1988,6 +1988,9 @@ body.gigw-high-contrast button {
     .header-center-body{
         display: none;
     }
+    .my-header{
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
 }
 
 
