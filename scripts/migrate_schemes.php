@@ -237,14 +237,14 @@ try {
         $meta = $criteriaMap[$slug] ?? [
             'min_age' => 18, 'max_age' => 100, 'max_income' => 99999999,
             'target_occupations' => 'all', 'target_gender' => 'all',
-            'image' => 'image/schemes/vajiram-schemes-banner.webp'
+            'image' => 'image/schemes/default-scheme-banner.jpg'
         ];
 
         // Fallback image if custom image doesn't exist on disk yet
         $imagePath = $meta['image'];
         if (!file_exists(__DIR__ . '/../' . $imagePath)) {
             // Check if generic or banner exists
-            $imagePath = 'image/schemes/vajiram-schemes-banner.webp';
+            $imagePath = 'image/schemes/default-scheme-banner.jpg';
         }
 
         $stmt->execute([

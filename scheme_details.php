@@ -16,6 +16,7 @@ if (!$scheme) {
 $pageTitle = htmlspecialchars($scheme['title_en']) . ' - Scheme Details & Eligibility - ' . APP_NAME;
 $metaDescription = htmlspecialchars($scheme['tagline_en']);
 $activeNav = 'schemes';
+$canonicalUrl = app_url('scheme/' . rawurlencode($currentSlug));
 
 $isCentralSector = ($scheme['funding_type'] === 'central_sector');
 
@@ -23,12 +24,12 @@ include __DIR__ . '/includes/header.php';
 ?>
 
 <!-- Breadcrumbs & Hero (Strict Light Theme with Banner Background) -->
-<section class="detail-hero" style="background: linear-gradient(120deg, rgba(248, 250, 252, 0.93) 0%, rgba(241, 245, 249, 0.92) 100%), url('image/barr.png'); background-position: center; background-size: cover; border-bottom: 1px solid #e2e8f0; padding: 28px 0 40px;">
+<section class="detail-hero" style="background: linear-gradient(120deg, rgba(248, 250, 252, 0.72) 0%, rgba(241, 245, 249, 0.68) 100%), url('<?= BASE_URL ?>/image/barr.png'); background-position: center 30%; background-size: cover; border-bottom: 1px solid #e2e8f0; padding: 28px 0 40px;">
     <div class="container">
         <div aria-label="breadcrumb">
             <ol class="breadcrumb detail-breadcrumb" style="margin-bottom: 14px;">
-                <li class="breadcrumb-item"><a href="index.php"><i class="fas fa-home mr-1"></i> Home</a></li>
-                <li class="breadcrumb-item"><a href="all-scheme.php">Government Schemes</a></li>
+                <li class="breadcrumb-item"><a href="<?= BASE_URL ?>/index.php"><i class="fas fa-home mr-1"></i> Home</a></li>
+                <li class="breadcrumb-item"><a href="<?= BASE_URL ?>/all-scheme.php">Government Schemes</a></li>
                 <li class="breadcrumb-item active" aria-current="page"><?= htmlspecialchars($scheme['title_en']) ?></li>
             </ol>
         </div>
@@ -75,7 +76,7 @@ include __DIR__ . '/includes/header.php';
                     <div style="font-size: 0.74rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">
                         Switch Scheme (योजना बदलें)
                     </div>
-                    <select id="jumpSchemeSelect" class="form-select form-select-sm" style="font-weight: 600; border-color: #cbd5e1;" onchange="if(this.value) window.location.href='scheme_details.php?slug=' + this.value;">
+                    <select id="jumpSchemeSelect" class="form-select form-select-sm" style="font-weight: 600; border-color: #cbd5e1;" onchange="if(this.value) window.location.href='<?= BASE_URL ?>/scheme/' + this.value;">
                         <?php foreach ($allSchemes as $sSlug => $sData): ?>
                             <option value="<?= htmlspecialchars($sSlug) ?>" <?= ($sSlug === $currentSlug) ? 'selected' : '' ?>>
                                 <?= htmlspecialchars($sData['title_en']) ?>
@@ -153,7 +154,7 @@ include __DIR__ . '/includes/header.php';
                 <!-- 1. Scheme Overview -->
                 <section class="detail-clean-panel">
                     <?php 
-                        $detailImg = !empty($scheme['image']) ? $scheme['image'] : 'image/schemes/vajiram-schemes-banner.webp'; 
+                        $detailImg = BASE_URL . '/' . (!empty($scheme['image']) ? $scheme['image'] : 'image/schemes/default-scheme-banner.jpg');
                     ?>
                     <div style="border-radius: 12px; overflow: hidden; height: 260px; margin-bottom: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);">
                         <img src="<?= htmlspecialchars($detailImg) ?>" alt="<?= htmlspecialchars($scheme['title_en']) ?>" style="width: 100%; height: 100%; object-fit: cover;">
@@ -365,7 +366,7 @@ include __DIR__ . '/includes/header.php';
                     <p style="font-size: 0.85rem; color: #475569; line-height: 1.6; margin-bottom: 14px;">
                         Need physical plastic cards, ID lamination, or assistance submitting application forms? Our portal bridges the digital divide for villagers and laborers at minimal cost.
                     </p>
-                    <a href="card-form.php?type=ayushman" class="btn btn-sm w-100" style="background: #059669; color: #fff; font-weight: 700; border-radius: 8px; padding: 9px;">
+                    <a href="<?= BASE_URL ?>/card-form.php?type=ayushman" class="btn btn-sm w-100" style="background: #059669; color: #fff; font-weight: 700; border-radius: 8px; padding: 9px;">
                         <i class="fas fa-id-card mr-1"></i> Print PVC Card at Doorstep
                     </a>
                 </div>
@@ -382,14 +383,14 @@ include __DIR__ . '/includes/header.php';
                                 if ($rSlug === $currentSlug) continue;
                                 if ($count++ >= 5) break;
                         ?>
-                            <a href="scheme_details.php?slug=<?= urlencode($rSlug) ?>" class="list-group-item list-group-item-action px-0 py-2" style="font-size: 0.84rem; color: #1e293b; font-weight: 600; border-color: #f1f5f9;">
+                            <a href="<?= scheme_url($rSlug) ?>" class="list-group-item list-group-item-action px-0 py-2" style="font-size: 0.84rem; color: #1e293b; font-weight: 600; border-color: #f1f5f9;">
                                 <i class="fas fa-chevron-right mr-2" style="font-size: 0.7rem; color: #94a3b8;"></i>
                                 <?= htmlspecialchars($rScheme['title_en']) ?>
                             </a>
                         <?php endforeach; ?>
                     </div>
                     <div class="mt-2 text-center">
-                        <a href="all-scheme.php" style="font-size: 0.82rem; font-weight: 700; color: #1e3a8a; text-decoration: none;">
+                        <a href="<?= BASE_URL ?>/all-scheme.php" style="font-size: 0.82rem; font-weight: 700; color: #1e3a8a; text-decoration: none;">
                             View All 12 Flagship Schemes &rarr;
                         </a>
                     </div>
@@ -740,7 +741,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             <a href="${officialUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-success" style="border-radius: 20px; font-weight: 700; padding: 8px 22px;">
                                 <i class="fas fa-external-link-alt mr-1"></i> ${btnLabel}
                             </a>
-                            <a href="card-form.php?type=ayushman" class="btn btn-outline-success" style="border-radius: 20px; font-weight: 700; padding: 8px 20px;">
+                            <a href="<?= BASE_URL ?>/card-form.php?type=ayushman" class="btn btn-outline-success" style="border-radius: 20px; font-weight: 700; padding: 8px 20px;">
                                 <i class="fas fa-print mr-1"></i> Get Plastic ID Printed
                             </a>
                         </div>
@@ -759,7 +760,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         <h4 style="font-weight: 800; color: #c2410c; margin-bottom: 8px;">${heading}</h4>
                         <p style="font-size: 0.95rem; color: #9a3412; line-height: 1.6; margin-bottom: 12px; font-weight: 600;">${msg}</p>
                         <p style="font-size: 0.86rem; color: #475569; margin-bottom: 16px;">${advice}</p>
-                        <a href="all-scheme.php" class="btn btn-outline-danger" style="border-radius: 20px; font-weight: 700; padding: 8px 22px;">
+                        <a href="<?= BASE_URL ?>/all-scheme.php" class="btn btn-outline-danger" style="border-radius: 20px; font-weight: 700; padding: 8px 22px;">
                             <i class="fas fa-th mr-1"></i> Explore Other Schemes
                         </a>
                     </div>

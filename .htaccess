@@ -14,5 +14,16 @@ ErrorDocument 404 /gp/404.php
 </FilesMatch>
 
 <IfModule mod_rewrite.c>
-    RewriteEngine Off
+    RewriteEngine On
+    RewriteBase /gp/
+
+    # SEO-friendly scheme detail URL: /gp/scheme/<slug> -> scheme_details.php?slug=<slug>
+    RewriteRule ^scheme/([a-zA-Z0-9-]+)/?$ scheme_details.php?slug=$1 [L,QSA]
+
+    # SEO-friendly citizen service detail URLs: /gp/service/<slug> -> service-detail.php?slug=<slug>
+    RewriteRule ^service/([a-zA-Z0-9_-]+)/?$ service-detail.php?slug=$1 [L,QSA]
+    RewriteRule ^services/([a-zA-Z0-9_-]+)/?$ service-detail.php?slug=$1 [L,QSA]
+    RewriteRule ^service-detail/([a-zA-Z0-9_-]+)/?$ service-detail.php?slug=$1 [L,QSA]
+    RewriteRule ^servise-detail/([a-zA-Z0-9_-]+)/?$ service-detail.php?slug=$1 [L,QSA]
+    RewriteRule ^services/?$ service.php [L,QSA]
 </IfModule>

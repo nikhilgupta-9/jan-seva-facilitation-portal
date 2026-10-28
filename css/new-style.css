@@ -1405,3 +1405,142 @@ body.gigw-high-contrast button {
     margin-top: 20px;
 }
 
+
+/* ========================================================
+   SITE-WIDE HEADER / NAVBAR MOBILE RESPONSIVENESS
+   Applies to includes/header.php on every page (top
+   accessibility bar, center brand+search bar, main navbar).
+   ======================================================== */
+@media (max-width: 991.98px) {
+    /* Top accessibility bar: wrap instead of overflowing */
+    .header-body {
+        flex-wrap: wrap;
+        justify-content: center;
+        row-gap: 4px;
+        padding: 6px 0;
+    }
+    .header-left.header-item,
+    .header-right.header-item {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    .header-body .header-item a {
+        height: auto;
+        padding: 4px 8px;
+    }
+    .header-body .header-item .element {
+        padding: 4px 8px;
+        height: auto;
+    }
+
+    /* Center bar: brand is already hidden below lg, so let the
+       search form take the full row width instead of shrinking
+       next to an empty flex sibling. */
+    .header-center {
+        flex-wrap: wrap;
+        row-gap: 10px;
+    }
+    .header-center-body form {
+        width: 100%;
+    }
+    .search-header {
+        width: 100%;
+    }
+    .search-header .form-control {
+        min-width: 0;
+    }
+}
+
+@media (max-width: 767.98px) {
+    /* Search bar removed on phones per request - Citizen Services
+       and the eligibility checker already cover search intent. */
+    .header-center-body form {
+        display: none;
+    }
+    .header-center-body .header-center {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .header-body .header-item a,
+    .header-body .header-item .element {
+        font-size: 0.78rem;
+        padding: 3px 6px;
+    }
+    .header-left.header-item .tagline {
+        display: none;
+    }
+}
+
+/* Mobile navbar: comfortable touch targets + no stray horizontal
+   scroll from the collapsed menu panel */
+@media (max-width: 991.98px) {
+    .navbar-collapse {
+        max-height: calc(100vh - 70px);
+        overflow-y: auto;
+    }
+    .navbar .navbar-nav .nav-link {
+        min-height: 44px;
+    }
+
+    /* Keep the brand and hamburger on a single row: a long portal
+       name + tagline previously forced the toggler onto its own
+       line. Let the brand shrink/truncate instead of wrapping. */
+    .navbar {
+        flex-wrap: nowrap;
+    }
+    .navbar > .navbar-brand {
+        min-width: 0;
+        flex: 1 1 auto;
+        overflow: hidden;
+    }
+    .navbar > .navbar-brand .d-flex.flex-column {
+        min-width: 0;
+        overflow: hidden;
+    }
+    .navbar > .navbar-brand .d-flex.flex-column span,
+    .navbar > .navbar-brand .d-flex.flex-column small {
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .navbar-toggler {
+        flex-shrink: 0;
+        align-self: center;
+    }
+}
+
+/* ========================================================
+   SCHEME DETAIL PAGE (scheme_details.php) MOBILE FIXES
+   The hero title and quick-facts card use inline font-size /
+   padding, which beats the older .detail-hero h1 media rule
+   in style.css. Override with !important at matching
+   breakpoints so the title actually shrinks on phones.
+   ======================================================== */
+@media (max-width: 767.98px) {
+    .detail-hero h1[style] {
+        font-size: 1.5rem !important;
+    }
+    .detail-clean-panel {
+        padding: 18px !important;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .detail-top-action-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .btn-eligibility-trigger {
+        justify-content: center;
+    }
+    .audio-narration-card {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .audio-ctrl-group {
+        justify-content: center;
+    }
+}

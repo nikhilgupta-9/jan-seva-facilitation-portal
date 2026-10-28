@@ -118,14 +118,14 @@
                         <i class="fas fa-id-card text-warning me-2"></i>Digital Identity Passes
                     </h5>
                     <ul class="list-unstyled footer-links">
-                        <li><a href="<?= BASE_URL ?>/servise-detail.php?slug=abha-card"><i class="fas fa-chevron-right me-2 text-warning small"></i>ABHA Health ID Card (₹50)</a></li>
-                        <li><a href="<?= BASE_URL ?>/servise-detail.php?slug=apaar-card"><i class="fas fa-chevron-right me-2 text-warning small"></i>APAAR / ABC Student ID (₹50)</a></li>
-                        <li><a href="<?= BASE_URL ?>/servise-detail.php?slug=eshram-card"><i class="fas fa-chevron-right me-2 text-warning small"></i>e-Shram Worker Card (₹50)</a></li>
-                        <li><a href="<?= BASE_URL ?>/servise-detail.php?slug=voter-id"><i class="fas fa-chevron-right me-2 text-warning small"></i>Voter ID Verification (₹50)</a></li>
-                        <li><a href="<?= BASE_URL ?>/servise-detail.php?slug=aadhaar-services"><i class="fas fa-chevron-right me-2 text-warning small"></i>Aadhaar Services (ASK Center)</a></li>
-                        <li><a href="<?= BASE_URL ?>/servise-detail.php?slug=ration-card"><i class="fas fa-chevron-right me-2 text-warning small"></i>State Ration Card (NFSA)</a></li>
-                        <li><a href="<?= BASE_URL ?>/servise-detail.php?slug=pan-card"><i class="fas fa-chevron-right me-2 text-warning small"></i>PAN Card Correction Guide</a></li>
-                        <li><a href="<?= BASE_URL ?>/servise-detail.php?slug=edistrict-certificates"><i class="fas fa-chevron-right me-2 text-warning small"></i>e-District Revenue Services</a></li>
+                        <li><a href="<?= BASE_URL ?>/service/abha-card"><i class="fas fa-chevron-right me-2 text-warning small"></i>ABHA Health ID Card (₹50)</a></li>
+                        <li><a href="<?= BASE_URL ?>/service/apaar-card"><i class="fas fa-chevron-right me-2 text-warning small"></i>APAAR / ABC Student ID (₹50)</a></li>
+                        <li><a href="<?= BASE_URL ?>/service/eshram-card"><i class="fas fa-chevron-right me-2 text-warning small"></i>e-Shram Worker Card (₹50)</a></li>
+                        <li><a href="<?= BASE_URL ?>/service/voter-id"><i class="fas fa-chevron-right me-2 text-warning small"></i>Voter ID Verification (₹50)</a></li>
+                        <li><a href="<?= BASE_URL ?>/service/aadhaar-services"><i class="fas fa-chevron-right me-2 text-warning small"></i>Aadhaar Services (ASK Center)</a></li>
+                        <li><a href="<?= BASE_URL ?>/service/ration-card"><i class="fas fa-chevron-right me-2 text-warning small"></i>State Ration Card (NFSA)</a></li>
+                        <li><a href="<?= BASE_URL ?>/service/pan-card"><i class="fas fa-chevron-right me-2 text-warning small"></i>PAN Card Correction Guide</a></li>
+                        <li><a href="<?= BASE_URL ?>/service/edistrict-certificates"><i class="fas fa-chevron-right me-2 text-warning small"></i>e-District Revenue Services</a></li>
                         <li class="pt-1"><a href="<?= BASE_URL ?>/service.php" class="text-warning fw-bold"><i class="fas fa-th-large me-2"></i>All Citizen Services Catalog &rarr;</a></li>
                     </ul>
                 </div>
@@ -215,7 +215,7 @@
     <script src="<?= BASE_URL ?>/lib/waypoints/waypoints.min.js"></script>
 
     <!-- Template Javascript -->
-    <script src="<?= BASE_URL ?>/js/main.js"></script>
+    <script src="<?= BASE_URL ?>/js/main.js?v=<?= @filemtime(dirname(__DIR__) . '/js/main.js') ?: time() ?>"></script>
 
     <!-- GIGW Accessibility Handler (Font Resizer, Contrast, Language) -->
     <script>

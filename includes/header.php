@@ -16,8 +16,11 @@ $activeNav = $activeNav ?? '';
     <meta charset="utf-8">
     <title><?= htmlspecialchars($pageTitle) ?></title>
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
-    <meta content="" name="keywords">
+    <meta content="<?= htmlspecialchars($metaKeywords ?? '') ?>" name="keywords">
     <meta content="<?= htmlspecialchars($metaDescription) ?>" name="description">
+    <?php if (!empty($canonicalUrl)): ?>
+    <link rel="canonical" href="<?= htmlspecialchars($canonicalUrl) ?>">
+    <?php endif; ?>
 
     <!-- Favicon -->
     <link href="<?= BASE_URL ?>/img/favicon.ico" rel="icon">
@@ -40,8 +43,8 @@ $activeNav = $activeNav ?? '';
     <link href="<?= BASE_URL ?>/css/bootstrap.min.css" rel="stylesheet">
 
     <!-- Template Stylesheet -->
-    <link href="<?= BASE_URL ?>/css/style.css" rel="stylesheet">
-    <link href="<?= BASE_URL ?>/css/new-style.css" rel="stylesheet">
+    <link href="<?= BASE_URL ?>/css/style.css?v=<?= @filemtime(dirname(__DIR__) . '/css/style.css') ?: time() ?>" rel="stylesheet">
+    <link href="<?= BASE_URL ?>/css/new-style.css?v=<?= @filemtime(dirname(__DIR__) . '/css/new-style.css') ?: time() ?>" rel="stylesheet">
 
     <!-- Razorpay Checkout & html2canvas for card generation backend -->
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
@@ -139,28 +142,28 @@ $activeNav = $activeNav ?? '';
                                     <div class="dropdown-header text-uppercase text-primary fw-bold">
                                         <i class="fas fa-bolt text-warning me-1"></i> Instant Digital Cards (₹50)
                                     </div>
-                                    <a href="<?= BASE_URL ?>/servise-detail.php?slug=abha-card" class="dropdown-item d-flex align-items-center gap-2">
+                                    <a href="<?= BASE_URL ?>/service/abha-card" class="dropdown-item d-flex align-items-center gap-2">
                                         <span class="srv-icon-badge bg-danger text-white"><i class="fas fa-heartbeat"></i></span>
                                         <div>
                                             <div class="fw-bold srv-name">ABHA Health Card</div>
                                             <small class="text-muted d-block">Ayushman Bharat Health ID</small>
                                         </div>
                                     </a>
-                                    <a href="<?= BASE_URL ?>/servise-detail.php?slug=apaar-card" class="dropdown-item d-flex align-items-center gap-2">
+                                    <a href="<?= BASE_URL ?>/service/apaar-card" class="dropdown-item d-flex align-items-center gap-2">
                                         <span class="srv-icon-badge bg-primary text-white"><i class="fas fa-graduation-cap"></i></span>
                                         <div>
                                             <div class="fw-bold srv-name">APAAR Student ID</div>
                                             <small class="text-muted d-block">One Nation One Student ID</small>
                                         </div>
                                     </a>
-                                    <a href="<?= BASE_URL ?>/servise-detail.php?slug=eshram-card" class="dropdown-item d-flex align-items-center gap-2">
+                                    <a href="<?= BASE_URL ?>/service/eshram-card" class="dropdown-item d-flex align-items-center gap-2">
                                         <span class="srv-icon-badge bg-warning text-dark"><i class="fas fa-hard-hat"></i></span>
                                         <div>
                                             <div class="fw-bold srv-name">e-Shram Worker Card</div>
                                             <small class="text-muted d-block">Unorganized Worker Pass</small>
                                         </div>
                                     </a>
-                                    <a href="<?= BASE_URL ?>/servise-detail.php?slug=voter-id" class="dropdown-item d-flex align-items-center gap-2">
+                                    <a href="<?= BASE_URL ?>/service/voter-id" class="dropdown-item d-flex align-items-center gap-2">
                                         <span class="srv-icon-badge bg-success text-white"><i class="fas fa-id-card"></i></span>
                                         <div>
                                             <div class="fw-bold srv-name">Voter ID Verification</div>
@@ -174,28 +177,28 @@ $activeNav = $activeNav ?? '';
                                     <div class="dropdown-header text-uppercase text-secondary fw-bold">
                                         <i class="fas fa-compass text-info me-1"></i> Assisted Govt Services
                                     </div>
-                                    <a href="<?= BASE_URL ?>/servise-detail.php?slug=aadhaar-services" class="dropdown-item d-flex align-items-center gap-2">
+                                    <a href="<?= BASE_URL ?>/service/aadhaar-services" class="dropdown-item d-flex align-items-center gap-2">
                                         <span class="srv-icon-badge bg-info text-white"><i class="fas fa-fingerprint"></i></span>
                                         <div>
                                             <div class="fw-bold srv-name">Aadhaar Services (ASK)</div>
                                             <small class="text-muted d-block">Update &amp; Appointment Guidance</small>
                                         </div>
                                     </a>
-                                    <a href="<?= BASE_URL ?>/servise-detail.php?slug=ration-card" class="dropdown-item d-flex align-items-center gap-2">
+                                    <a href="<?= BASE_URL ?>/service/ration-card" class="dropdown-item d-flex align-items-center gap-2">
                                         <span class="srv-icon-badge bg-warning text-dark"><i class="fas fa-utensils"></i></span>
                                         <div>
                                             <div class="fw-bold srv-name">Ration Card (NFSA)</div>
                                             <small class="text-muted d-block">State Food &amp; Supply Portals</small>
                                         </div>
                                     </a>
-                                    <a href="<?= BASE_URL ?>/servise-detail.php?slug=pan-card" class="dropdown-item d-flex align-items-center gap-2">
+                                    <a href="<?= BASE_URL ?>/service/pan-card" class="dropdown-item d-flex align-items-center gap-2">
                                         <span class="srv-icon-badge bg-primary text-white"><i class="fas fa-address-card"></i></span>
                                         <div>
                                             <div class="fw-bold srv-name">PAN Card Correction</div>
                                             <small class="text-muted d-block">NSDL / UTIITSL Citizen Guide</small>
                                         </div>
                                     </a>
-                                    <a href="<?= BASE_URL ?>/servise-detail.php?slug=edistrict-certificates" class="dropdown-item d-flex align-items-center gap-2">
+                                    <a href="<?= BASE_URL ?>/service/edistrict-certificates" class="dropdown-item d-flex align-items-center gap-2">
                                         <span class="srv-icon-badge bg-secondary text-white"><i class="fas fa-landmark"></i></span>
                                         <div>
                                             <div class="fw-bold srv-name">e-District Services</div>

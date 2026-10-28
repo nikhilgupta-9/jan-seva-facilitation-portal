@@ -5,7 +5,7 @@ require_once __DIR__ . '/auth.php';
 $page_title = 'Government Schemes Management';
 
 // Handle quick inline status toggle or delete
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     $action = $_POST['action'] ?? '';
     $scheme_id = (int) ($_POST['scheme_id'] ?? 0);
 
@@ -67,66 +67,107 @@ $active_count = (int) $pdo->query("SELECT COUNT(*) FROM `schemes` WHERE `is_acti
 include __DIR__ . '/header.php';
 ?>
 
+<style>
+  .sch-filter-card { padding: 16px 18px; margin-bottom: 22px; }
+  .sch-table td { vertical-align: middle; }
+  .sch-thumb { width: 54px; height: 40px; object-fit: cover; border-radius: 6px; border: 1px solid var(--adm-border); }
+  .sch-title { font-weight: 700; color: var(--adm-blue-dark); font-size: 0.95rem; }
+  .sch-title-hi { font-size: 0.82rem; color: #475569; }
+  .sch-slug { color: #94a3b8; font-family: monospace; font-size: 0.72rem; }
+  .sch-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 0.72rem; font-weight: 600; padding: 3px 9px;
+    border-radius: 20px; white-space: nowrap;
+  }
+  .sch-chip-central { background: var(--adm-blue-tint); color: var(--adm-blue-dark); }
+  .sch-chip-sponsored { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+  .sch-chip-category { background: #f1f5f9; color: #334155; }
+  .sch-actions .btn { margin-left: 4px; }
+
+  @media (max-width: 575.98px) {
+    .sch-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px; }
+    .sch-actions .btn { margin-left: 0; }
+  }
+</style>
+
 <!-- Title & Action Bar -->
-<div class="row" style="margin-bottom: 24px; align-items: center;">
-  <div class="col-sm-8 col-xs-12">
-    <h2 style="font-weight: 800; color: var(--adm-navy); margin: 0; font-size: 1.6rem;">
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+  <div>
+    <h2 class="fw-bold mb-1" style="color: var(--adm-blue-dark); font-size: 1.5rem;">
       <i class="fas fa-landmark text-warning"></i> Government Schemes Directory
     </h2>
-    <p class="text-muted" style="margin-top: 4px; font-size: 0.9rem;">
-      Manage all 20+ flagship government schemes, bilingual Hindi/English details, eligibility rules, and official portal deep-links directly from the database.
+    <p class="text-muted mb-0" style="font-size: 0.9rem; max-width: 640px;">
+      Manage all flagship government schemes, bilingual Hindi/English details, eligibility rules, and official portal links.
     </p>
   </div>
-  <div class="col-sm-4 col-xs-12 text-right">
-    <a href="<?php echo BASE_URL; ?>/admin/scheme-edit.php" class="btn btn-primary" style="background: var(--adm-navy); border: none; font-weight: 700; border-radius: 8px; padding: 10px 18px;">
-      <i class="fas fa-plus-circle mr-1"></i> Add New Scheme
-    </a>
-  </div>
+  <a href="<?php echo BASE_URL; ?>/admin/scheme-edit.php" class="btn btn-gov-saffron fw-bold flex-shrink-0">
+    <i class="fas fa-plus-circle"></i> Add New Scheme
+  </a>
 </div>
 
-<!-- 4 Key Stat Badges -->
-<div class="row" style="margin-bottom: 24px;">
-  <div class="col-md-3 col-sm-6 col-xs-12" style="margin-bottom: 12px;">
-    <div class="adm-card" style="padding: 18px; border-left: 4px solid var(--adm-navy);">
-      <div class="text-muted" style="font-size: 0.76rem; font-weight: 800; text-transform: uppercase;">Total Flagship Schemes</div>
-      <div style="font-size: 1.8rem; font-weight: 800; color: var(--adm-navy);"><?php echo $total_count; ?></div>
-      <small style="color: #64748b;">In Master Database</small>
+<!-- 4 Key Stat Cards -->
+<div class="row g-3 mb-4">
+  <div class="col-md-3 col-sm-6">
+    <div class="stat-card mb-0">
+      <div class="stat-icon" style="background: var(--adm-blue-tint); color: var(--adm-blue-dark);">
+        <i class="fas fa-landmark"></i>
+      </div>
+      <div>
+        <div class="stat-label">Total Schemes</div>
+        <div class="stat-value" style="color: var(--adm-blue-dark);"><?php echo $total_count; ?></div>
+        <small class="text-muted">In Master Database</small>
+      </div>
     </div>
   </div>
-  <div class="col-md-3 col-sm-6 col-xs-12" style="margin-bottom: 12px;">
-    <div class="adm-card" style="padding: 18px; border-left: 4px solid #2563eb;">
-      <div class="text-muted" style="font-size: 0.76rem; font-weight: 800; text-transform: uppercase;">Central Sector (100%)</div>
-      <div style="font-size: 1.8rem; font-weight: 800; color: #2563eb;"><?php echo $central_sector_count; ?></div>
-      <small style="color: #64748b;">Direct Central DBT</small>
+  <div class="col-md-3 col-sm-6">
+    <div class="stat-card mb-0">
+      <div class="stat-icon" style="background: #e0f2fe; color: #0284c7;">
+        <i class="fas fa-university"></i>
+      </div>
+      <div>
+        <div class="stat-label">Central Sector (100%)</div>
+        <div class="stat-value" style="color: #0284c7;"><?php echo $central_sector_count; ?></div>
+        <small class="text-muted">Direct Central DBT</small>
+      </div>
     </div>
   </div>
-  <div class="col-md-3 col-sm-6 col-xs-12" style="margin-bottom: 12px;">
-    <div class="adm-card" style="padding: 18px; border-left: 4px solid #059669;">
-      <div class="text-muted" style="font-size: 0.76rem; font-weight: 800; text-transform: uppercase;">Centrally Sponsored</div>
-      <div style="font-size: 1.8rem; font-weight: 800; color: #059669;"><?php echo $centrally_sponsored_count; ?></div>
-      <small style="color: #64748b;">Shared 60:40 with States</small>
+  <div class="col-md-3 col-sm-6">
+    <div class="stat-card mb-0">
+      <div class="stat-icon" style="background: #dcfce7; color: #16a34a;">
+        <i class="fas fa-handshake"></i>
+      </div>
+      <div>
+        <div class="stat-label">Centrally Sponsored</div>
+        <div class="stat-value" style="color: #16a34a;"><?php echo $centrally_sponsored_count; ?></div>
+        <small class="text-muted">Shared 60:40 with States</small>
+      </div>
     </div>
   </div>
-  <div class="col-md-3 col-sm-6 col-xs-12" style="margin-bottom: 12px;">
-    <div class="adm-card" style="padding: 18px; border-left: 4px solid #16a34a;">
-      <div class="text-muted" style="font-size: 0.76rem; font-weight: 800; text-transform: uppercase;">Active on Website</div>
-      <div style="font-size: 1.8rem; font-weight: 800; color: #16a34a;"><?php echo $active_count; ?></div>
-      <small style="color: #64748b;">Publicly Accessible</small>
+  <div class="col-md-3 col-sm-6">
+    <div class="stat-card mb-0">
+      <div class="stat-icon" style="background: var(--adm-saffron-tint); color: var(--adm-saffron-dark);">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <div>
+        <div class="stat-label">Active on Website</div>
+        <div class="stat-value" style="color: var(--adm-saffron-dark);"><?php echo $active_count; ?></div>
+        <small class="text-muted">Publicly Accessible</small>
+      </div>
     </div>
   </div>
 </div>
 
 <!-- Filter & Search Controls -->
-<div class="adm-card" style="padding: 18px 20px; margin-bottom: 24px;">
-  <form method="GET" action="<?php echo BASE_URL; ?>/admin/schemes.php" class="row" style="align-items: center;">
-    <div class="col-md-4 col-sm-6 col-xs-12" style="margin-bottom: 10px;">
+<div class="adm-card sch-filter-card">
+  <form method="GET" action="<?php echo BASE_URL; ?>/admin/schemes.php" class="row g-2 align-items-center">
+    <div class="col-md-4">
       <div class="input-group">
-        <span class="input-group-addon"><i class="fas fa-search"></i></span>
+        <span class="input-group-text"><i class="fas fa-search text-muted"></i></span>
         <input type="text" name="q" value="<?php echo htmlspecialchars($search_query); ?>" class="form-control" placeholder="Search by scheme name, ministry, or slug...">
       </div>
     </div>
-    
-    <div class="col-md-3 col-sm-6 col-xs-12" style="margin-bottom: 10px;">
+
+    <div class="col-md-3 col-sm-6">
       <select name="funding" class="form-control" onchange="this.form.submit();">
         <option value="">All Funding Types</option>
         <option value="central_sector" <?php echo ($filter_funding === 'central_sector') ? 'selected' : ''; ?>>Central Sector (100% Central)</option>
@@ -134,7 +175,7 @@ include __DIR__ . '/header.php';
       </select>
     </div>
 
-    <div class="col-md-3 col-sm-6 col-xs-12" style="margin-bottom: 10px;">
+    <div class="col-md-3 col-sm-6">
       <select name="category" class="form-control" onchange="this.form.submit();">
         <option value="">All Categories</option>
         <option value="agriculture" <?php echo ($filter_category === 'agriculture') ? 'selected' : ''; ?>>Agriculture &amp; Farmers</option>
@@ -149,12 +190,12 @@ include __DIR__ . '/header.php';
       </select>
     </div>
 
-    <div class="col-md-2 col-sm-6 col-xs-12" style="margin-bottom: 10px; display: flex; gap: 6px;">
-      <button type="submit" class="btn btn-sm btn-primary" style="flex: 1; height: 34px;">
+    <div class="col-md-2 col-sm-6 d-flex gap-2">
+      <button type="submit" class="btn btn-sm btn-primary flex-fill">
         <i class="fas fa-filter"></i> Filter
       </button>
       <?php if (!empty($search_query) || !empty($filter_funding) || !empty($filter_category)): ?>
-        <a href="<?php echo BASE_URL; ?>/admin/schemes.php" class="btn btn-sm btn-default" style="height: 34px;" title="Reset Filters">
+        <a href="<?php echo BASE_URL; ?>/admin/schemes.php" class="btn btn-sm btn-default" title="Reset Filters">
           <i class="fas fa-undo"></i>
         </a>
       <?php endif; ?>
@@ -164,15 +205,13 @@ include __DIR__ . '/header.php';
 
 <!-- Schemes Data Table -->
 <div class="adm-card">
-  <div class="adm-card-header" style="display: flex; justify-content: space-between; align-items: center;">
-    <h4 style="margin: 0; font-weight: 700;">
-      <i class="fas fa-list-alt text-primary mr-1"></i> Schemes List (<?php echo count($schemes); ?> Schemes)
-    </h4>
+  <div class="adm-card-header">
+    <h4><i class="fas fa-list-alt text-primary"></i> Schemes List (<?php echo count($schemes); ?>)</h4>
   </div>
 
   <div class="adm-card-body" style="padding: 0;">
     <div class="table-responsive">
-      <table class="table table-hover table-striped" style="font-size: 0.88rem; margin-bottom: 0; vertical-align: middle;">
+      <table class="table table-hover table-striped sch-table" style="font-size: 0.88rem; margin-bottom: 0;">
         <thead style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
           <tr>
             <th style="width: 45px;">#ID</th>
@@ -182,48 +221,40 @@ include __DIR__ . '/header.php';
             <th>Category &amp; Ministry</th>
             <th>Launch &amp; Budget</th>
             <th style="width: 90px; text-align: center;">Status</th>
-            <th style="width: 130px; text-align: right;">Actions</th>
+            <th style="width: 150px; text-align: right;">Actions</th>
           </tr>
         </thead>
         <tbody>
           <?php if (empty($schemes)): ?>
             <tr>
-              <td colspan="8" class="text-center py-4" style="color: #64748b;">
+              <td colspan="8" class="text-center py-4 text-muted">
                 No government schemes matched your filter criteria.
               </td>
             </tr>
           <?php else: ?>
-            <?php foreach ($schemes as $s): 
+            <?php foreach ($schemes as $s):
               $is_central = ($s['funding_type'] === 'central_sector');
-              $img_src = !empty($s['image']) ? (BASE_URL . '/' . $s['image']) : (BASE_URL . '/image/schemes/vajiram-schemes-banner.webp');
+              $img_src = !empty($s['image']) ? (BASE_URL . '/' . $s['image']) : (BASE_URL . '/image/schemes/default-scheme-banner.jpg');
             ?>
               <tr>
                 <td><code>#<?php echo $s['id']; ?></code></td>
                 <td>
-                  <img src="<?php echo htmlspecialchars($img_src); ?>" alt="Scheme" style="width: 52px; height: 38px; object-fit: cover; border-radius: 6px; border: 1px solid #cbd5e1;">
+                  <img src="<?php echo htmlspecialchars($img_src); ?>" alt="Scheme" class="sch-thumb">
                 </td>
                 <td>
-                  <div style="font-weight: 700; color: var(--adm-navy); font-size: 0.95rem;">
-                    <?php echo htmlspecialchars($s['title_en']); ?>
-                  </div>
-                  <div style="font-size: 0.82rem; color: #475569;">
-                    <?php echo htmlspecialchars($s['title_hi']); ?>
-                  </div>
-                  <small style="color: #94a3b8; font-family: monospace;">Slug: <?php echo htmlspecialchars($s['slug']); ?></small>
+                  <div class="sch-title"><?php echo htmlspecialchars($s['title_en']); ?></div>
+                  <div class="sch-title-hi"><?php echo htmlspecialchars($s['title_hi']); ?></div>
+                  <span class="sch-slug">Slug: <?php echo htmlspecialchars($s['slug']); ?></span>
                 </td>
                 <td>
                   <?php if ($is_central): ?>
-                    <span class="badge" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; font-size: 0.74rem;">
-                      <i class="fas fa-landmark"></i> Central Sector (100%)
-                    </span>
+                    <span class="sch-chip sch-chip-central"><i class="fas fa-landmark"></i> Central Sector</span>
                   <?php else: ?>
-                    <span class="badge" style="background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-size: 0.74rem;">
-                      <i class="fas fa-handshake"></i> Centrally Sponsored
-                    </span>
+                    <span class="sch-chip sch-chip-sponsored"><i class="fas fa-handshake"></i> Centrally Sponsored</span>
                   <?php endif; ?>
                 </td>
                 <td>
-                  <span class="badge" style="background: #f1f5f9; color: #334155; font-size: 0.72rem; margin-bottom: 2px;">
+                  <span class="sch-chip sch-chip-category d-block mb-1" style="width: fit-content;">
                     <?php echo htmlspecialchars($s['category_name_en'] ?? $s['category']); ?>
                   </span>
                   <div style="font-size: 0.75rem; color: #64748b;">
@@ -239,7 +270,7 @@ include __DIR__ . '/header.php';
                   </div>
                 </td>
                 <td style="text-align: center;">
-                  <form method="POST" action="<?php echo BASE_URL; ?>/admin/schemes.php" style="display: inline;">
+                  <form method="POST" action="<?php echo BASE_URL; ?>/admin/schemes.php" class="d-inline">
                     <input type="hidden" name="action" value="toggle_status">
                     <input type="hidden" name="scheme_id" value="<?php echo $s['id']; ?>">
                     <button type="submit" class="btn btn-xs <?php echo ($s['is_active'] == 1) ? 'btn-success' : 'btn-default'; ?>" style="border-radius: 12px; font-weight: 700; padding: 3px 10px;">
@@ -247,14 +278,14 @@ include __DIR__ . '/header.php';
                     </button>
                   </form>
                 </td>
-                <td style="text-align: right; white-space: nowrap;">
-                  <a href="<?php echo BASE_URL; ?>/scheme_details.php?slug=<?php echo urlencode($s['slug']); ?>" target="_blank" class="btn btn-xs btn-default" title="View on Live Website" style="margin-right: 4px;">
+                <td style="text-align: right; white-space: nowrap;" class="sch-actions">
+                  <a href="<?php echo scheme_url($s['slug']); ?>" target="_blank" class="btn btn-xs btn-default" title="View on Live Website">
                     <i class="fas fa-external-link-alt text-muted"></i>
                   </a>
-                  <a href="<?php echo BASE_URL; ?>/admin/scheme-edit.php?id=<?php echo $s['id']; ?>" class="btn btn-xs btn-primary" title="Edit Scheme" style="background: #1e3a8a; border: none; margin-right: 4px;">
+                  <a href="<?php echo BASE_URL; ?>/admin/scheme-edit.php?id=<?php echo $s['id']; ?>" class="btn btn-xs btn-primary" title="Edit Scheme">
                     <i class="fas fa-edit"></i> Edit
                   </a>
-                  <form method="POST" action="<?php echo BASE_URL; ?>/admin/schemes.php" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this government scheme?');">
+                  <form method="POST" action="<?php echo BASE_URL; ?>/admin/schemes.php" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this government scheme?');">
                     <input type="hidden" name="action" value="delete_scheme">
                     <input type="hidden" name="scheme_id" value="<?php echo $s['id']; ?>">
                     <button type="submit" class="btn btn-xs btn-danger" title="Delete Scheme">

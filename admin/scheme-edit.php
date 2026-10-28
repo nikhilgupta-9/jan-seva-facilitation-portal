@@ -13,7 +13,7 @@ $scheme = [
     'tagline_en' => '',
     'tagline_hi' => '',
     'icon' => 'fa-landmark',
-    'image' => 'image/schemes/vajiram-schemes-banner.webp',
+    'image' => 'image/schemes/default-scheme-banner.jpg',
     'category' => 'agriculture',
     'category_name_en' => 'Agriculture & Farmers Welfare',
     'category_name_hi' => 'कृषि एवं किसान कल्याण',
@@ -75,7 +75,7 @@ if ($is_edit) {
 }
 
 // Process Form Submit
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     $slug = trim($_POST['slug'] ?? '');
     $title_en = trim($_POST['title_en'] ?? '');
     $title_hi = trim($_POST['title_hi'] ?? '');
@@ -98,7 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $overview_hi = trim($_POST['overview_hi'] ?? '');
     $audio_text_en = trim($_POST['audio_text_en'] ?? '');
     $audio_text_hi = trim($_POST['audio_text_hi'] ?? '');
-    
+
     $min_age = (int) ($_POST['min_age'] ?? 0);
     $max_age = (int) ($_POST['max_age'] ?? 120);
     $max_income = (int) ($_POST['max_income'] ?? 99999999);
@@ -261,334 +261,478 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 include __DIR__ . '/header.php';
 ?>
 
-<div class="row" style="margin-bottom: 20px; align-items: center;">
-  <div class="col-sm-8 col-xs-12">
-    <h2 style="font-weight: 800; color: var(--adm-navy); margin: 0; font-size: 1.5rem;">
-      <i class="fas fa-edit text-warning"></i> <?php echo $is_edit ? 'Edit Scheme: ' . htmlspecialchars($scheme['title_en']) : 'Add New Government Scheme'; ?>
+<style>
+  /* Tabbed scheme-edit layout: groups a 40+ field form into manageable
+     steps instead of one long scroll, with a sticky save bar always
+     reachable. */
+  .se-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    background: #ffffff;
+    border: 1px solid var(--adm-border);
+    border-radius: 10px;
+    padding: 8px;
+    margin-bottom: 20px;
+    position: sticky;
+    top: 76px;
+    z-index: 15;
+  }
+  .se-tabs .nav-link {
+    border: none;
+    border-radius: 8px;
+    padding: 9px 14px;
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    white-space: nowrap;
+  }
+  .se-tabs .nav-link .se-tab-num {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #e2e8f0;
+    color: #475569;
+    font-size: 0.7rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .se-tabs .nav-link.active {
+    color: var(--adm-saffron-dark);
+    background: var(--adm-saffron-tint);
+  }
+  .se-tabs .nav-link.active .se-tab-num {
+    background: var(--adm-saffron);
+    color: #ffffff;
+  }
+
+  .se-label {
+    font-weight: 700;
+    color: #1e293b;
+    font-size: 0.86rem;
+    margin-bottom: 6px;
+    display: block;
+  }
+  .se-hint { color: #64748b; font-size: 0.78rem; display: block; margin-top: 4px; }
+  .se-required { color: #dc2626; }
+
+  .se-save-bar {
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    background: #ffffff;
+    border: 1px solid var(--adm-border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-top: 10px;
+    margin-bottom: 24px;
+    box-shadow: 0 -6px 16px rgba(0,0,0,0.05);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  @media (max-width: 575.98px) {
+    .se-tabs { position: static; overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
+    .se-save-bar { flex-direction: column; align-items: stretch; }
+    .se-save-bar .btn { width: 100%; }
+  }
+</style>
+
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+  <div>
+    <h2 class="fw-bold mb-1" style="color: var(--adm-blue-dark); font-size: 1.4rem;">
+      <i class="fas fa-edit text-warning"></i>
+      <?php echo $is_edit ? 'Edit Scheme: ' . htmlspecialchars($scheme['title_en']) : 'Add New Government Scheme'; ?>
     </h2>
-    <p class="text-muted" style="margin-top: 4px; font-size: 0.88rem;">
-      Configure bilingual details, funding classifications, relevant imagery, and direct eligibility criteria.
+    <p class="text-muted mb-0" style="font-size: 0.88rem;">
+      Configure bilingual details, funding classification, imagery, and eligibility criteria — organized into steps below.
     </p>
   </div>
-  <div class="col-sm-4 col-xs-12 text-right">
-    <a href="<?php echo BASE_URL; ?>/admin/schemes.php" class="btn btn-default" style="border-radius: 8px;">
-      <i class="fas fa-arrow-left mr-1"></i> Back to Schemes
-    </a>
-  </div>
+  <a href="<?php echo BASE_URL; ?>/admin/schemes.php" class="btn btn-default flex-shrink-0">
+    <i class="fas fa-arrow-left"></i> Back to Schemes
+  </a>
 </div>
 
 <form method="POST" action="" enctype="multipart/form-data">
-  
-  <!-- 1. Basic Identification Card -->
-  <div class="adm-card" style="margin-bottom: 24px;">
-    <div class="adm-card-header">
-      <h4><i class="fas fa-id-card text-primary mr-1"></i> 1. Basic Scheme Information</h4>
-    </div>
-    <div class="adm-card-body">
-      <div class="row">
-        <div class="col-md-6 form-group">
-          <label>Scheme Title (English) *</label>
-          <input type="text" name="title_en" value="<?php echo htmlspecialchars($scheme['title_en']); ?>" class="form-control" required placeholder="e.g. PM-KISAN (Pradhan Mantri Kisan Samman Nidhi)">
-        </div>
-        <div class="col-md-6 form-group">
-          <label>Scheme Title (Hindi) *</label>
-          <input type="text" name="title_hi" value="<?php echo htmlspecialchars($scheme['title_hi']); ?>" class="form-control" required placeholder="e.g. प्रधानमंत्री किसान सम्मान निधि (PM-KISAN)">
-        </div>
-      </div>
 
-      <div class="row">
-        <div class="col-md-4 form-group">
-          <label>Unique URL Slug *</label>
-          <input type="text" name="slug" value="<?php echo htmlspecialchars($scheme['slug']); ?>" class="form-control" required placeholder="e.g. pm-kisan">
-        </div>
-        <div class="col-md-4 form-group">
-          <label>Funding Classification *</label>
-          <select name="funding_type" class="form-control" required>
-            <option value="central_sector" <?php echo ($scheme['funding_type'] === 'central_sector') ? 'selected' : ''; ?>>
-              Central Sector Scheme (100% Central Funded)
-            </option>
-            <option value="centrally_sponsored" <?php echo ($scheme['funding_type'] === 'centrally_sponsored') ? 'selected' : ''; ?>>
-              Centrally Sponsored Scheme (Shared 60:40 Centre &amp; State)
-            </option>
-          </select>
-        </div>
-        <div class="col-md-4 form-group">
-          <label>Category / Sector *</label>
-          <select name="category" class="form-control" required>
-            <option value="agriculture" <?php echo ($scheme['category'] === 'agriculture') ? 'selected' : ''; ?>>Agriculture &amp; Farmers</option>
-            <option value="energy_utilities" <?php echo ($scheme['category'] === 'energy_utilities') ? 'selected' : ''; ?>>Renewable Energy &amp; Power</option>
-            <option value="healthcare" <?php echo ($scheme['category'] === 'healthcare') ? 'selected' : ''; ?>>Healthcare &amp; Wellness</option>
-            <option value="housing" <?php echo ($scheme['category'] === 'housing') ? 'selected' : ''; ?>>Housing &amp; Rural Development</option>
-            <option value="employment" <?php echo ($scheme['category'] === 'employment') ? 'selected' : ''; ?>>Employment &amp; Skills</option>
-            <option value="social_security" <?php echo ($scheme['category'] === 'social_security') ? 'selected' : ''; ?>>Social Security &amp; Pension</option>
-            <option value="financial_services" <?php echo ($scheme['category'] === 'financial_services') ? 'selected' : ''; ?>>Financial Inclusion &amp; Credit</option>
-            <option value="water_sanitation" <?php echo ($scheme['category'] === 'water_sanitation') ? 'selected' : ''; ?>>Water &amp; Sanitation</option>
-            <option value="women_child" <?php echo ($scheme['category'] === 'women_child') ? 'selected' : ''; ?>>Women &amp; Child Development</option>
-          </select>
-        </div>
-      </div>
+  <!-- Step Navigation -->
+  <ul class="nav se-tabs" id="schemeTabs" role="tablist">
+    <li class="nav-item">
+      <button class="nav-link active" id="tab-basic-btn" data-bs-toggle="tab" data-bs-target="#tab-basic" type="button" role="tab">
+        <span class="se-tab-num">1</span> Basic Info
+      </button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" id="tab-image-btn" data-bs-toggle="tab" data-bs-target="#tab-image" type="button" role="tab">
+        <span class="se-tab-num">2</span> Imagery
+      </button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" id="tab-overview-btn" data-bs-toggle="tab" data-bs-target="#tab-overview" type="button" role="tab">
+        <span class="se-tab-num">3</span> Overview
+      </button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" id="tab-details-btn" data-bs-toggle="tab" data-bs-target="#tab-details" type="button" role="tab">
+        <span class="se-tab-num">4</span> Benefits &amp; Docs
+      </button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" id="tab-eligibility-btn" data-bs-toggle="tab" data-bs-target="#tab-eligibility" type="button" role="tab">
+        <span class="se-tab-num">5</span> Eligibility &amp; Audio
+      </button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" id="tab-status-btn" data-bs-toggle="tab" data-bs-target="#tab-status" type="button" role="tab">
+        <span class="se-tab-num">6</span> Status
+      </button>
+    </li>
+  </ul>
 
-      <div class="row">
-        <div class="col-md-6 form-group">
-          <label>Category Label (English)</label>
-          <input type="text" name="category_name_en" value="<?php echo htmlspecialchars($scheme['category_name_en']); ?>" class="form-control" placeholder="e.g. Agriculture & Farmers Welfare">
-        </div>
-        <div class="col-md-6 form-group">
-          <label>Category Label (Hindi)</label>
-          <input type="text" name="category_name_hi" value="<?php echo htmlspecialchars($scheme['category_name_hi']); ?>" class="form-control" placeholder="e.g. कृषि एवं किसान कल्याण">
-        </div>
-      </div>
+  <div class="tab-content">
 
-      <div class="row">
-        <div class="col-md-6 form-group">
-          <label>Ministry (English)</label>
-          <input type="text" name="ministry_en" value="<?php echo htmlspecialchars($scheme['ministry_en']); ?>" class="form-control" placeholder="e.g. Ministry of Agriculture and Farmers Welfare">
+    <!-- 1. Basic Identification -->
+    <div class="tab-pane fade show active" id="tab-basic" role="tabpanel">
+      <div class="adm-card">
+        <div class="adm-card-header">
+          <h4><i class="fas fa-id-card text-primary"></i> Basic Scheme Information</h4>
         </div>
-        <div class="col-md-6 form-group">
-          <label>Ministry (Hindi)</label>
-          <input type="text" name="ministry_hi" value="<?php echo htmlspecialchars($scheme['ministry_hi']); ?>" class="form-control" placeholder="e.g. कृषि एवं किसान कल्याण मंत्रालय">
-        </div>
-      </div>
+        <div class="adm-card-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="se-label">Scheme Title (English) <span class="se-required">*</span></label>
+              <input type="text" name="title_en" value="<?php echo htmlspecialchars($scheme['title_en']); ?>" class="form-control" required placeholder="e.g. PM-KISAN (Pradhan Mantri Kisan Samman Nidhi)">
+            </div>
+            <div class="col-md-6">
+              <label class="se-label">Scheme Title (Hindi) <span class="se-required">*</span></label>
+              <input type="text" name="title_hi" value="<?php echo htmlspecialchars($scheme['title_hi']); ?>" class="form-control" required placeholder="e.g. प्रधानमंत्री किसान सम्मान निधि (PM-KISAN)">
+            </div>
 
-      <div class="row">
-        <div class="col-md-3 form-group">
-          <label>Launch Year</label>
-          <input type="text" name="launch_year" value="<?php echo htmlspecialchars($scheme['launch_year']); ?>" class="form-control" placeholder="e.g. 2019">
-        </div>
-        <div class="col-md-3 form-group">
-          <label>Budget Allocation</label>
-          <input type="text" name="budget" value="<?php echo htmlspecialchars($scheme['budget']); ?>" class="form-control" placeholder="e.g. ₹60,000 Crore / year">
-        </div>
-        <div class="col-md-3 form-group">
-          <label>Helpline Number</label>
-          <input type="text" name="helpline" value="<?php echo htmlspecialchars($scheme['helpline']); ?>" class="form-control" placeholder="e.g. 155261">
-        </div>
-        <div class="col-md-3 form-group">
-          <label>FontAwesome Icon</label>
-          <input type="text" name="icon" value="<?php echo htmlspecialchars($scheme['icon']); ?>" class="form-control" placeholder="e.g. fa-tractor">
-        </div>
-      </div>
+            <div class="col-md-4">
+              <label class="se-label">Unique URL Slug <span class="se-required">*</span></label>
+              <input type="text" name="slug" value="<?php echo htmlspecialchars($scheme['slug']); ?>" class="form-control" required placeholder="e.g. pm-kisan">
+            </div>
+            <div class="col-md-4">
+              <label class="se-label">Funding Classification <span class="se-required">*</span></label>
+              <select name="funding_type" class="form-control" required>
+                <option value="central_sector" <?php echo ($scheme['funding_type'] === 'central_sector') ? 'selected' : ''; ?>>Central Sector Scheme (100% Central Funded)</option>
+                <option value="centrally_sponsored" <?php echo ($scheme['funding_type'] === 'centrally_sponsored') ? 'selected' : ''; ?>>Centrally Sponsored Scheme (Shared 60:40 Centre &amp; State)</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="se-label">Category / Sector <span class="se-required">*</span></label>
+              <select name="category" class="form-control" required>
+                <option value="agriculture" <?php echo ($scheme['category'] === 'agriculture') ? 'selected' : ''; ?>>Agriculture &amp; Farmers</option>
+                <option value="energy_utilities" <?php echo ($scheme['category'] === 'energy_utilities') ? 'selected' : ''; ?>>Renewable Energy &amp; Power</option>
+                <option value="healthcare" <?php echo ($scheme['category'] === 'healthcare') ? 'selected' : ''; ?>>Healthcare &amp; Wellness</option>
+                <option value="housing" <?php echo ($scheme['category'] === 'housing') ? 'selected' : ''; ?>>Housing &amp; Rural Development</option>
+                <option value="employment" <?php echo ($scheme['category'] === 'employment') ? 'selected' : ''; ?>>Employment &amp; Skills</option>
+                <option value="social_security" <?php echo ($scheme['category'] === 'social_security') ? 'selected' : ''; ?>>Social Security &amp; Pension</option>
+                <option value="financial_services" <?php echo ($scheme['category'] === 'financial_services') ? 'selected' : ''; ?>>Financial Inclusion &amp; Credit</option>
+                <option value="water_sanitation" <?php echo ($scheme['category'] === 'water_sanitation') ? 'selected' : ''; ?>>Water &amp; Sanitation</option>
+                <option value="women_child" <?php echo ($scheme['category'] === 'women_child') ? 'selected' : ''; ?>>Women &amp; Child Development</option>
+              </select>
+            </div>
 
-      <div class="form-group">
-        <label>Official Government Portal URL</label>
-        <input type="url" name="official_url" value="<?php echo htmlspecialchars($scheme['official_url']); ?>" class="form-control" placeholder="https://pmkisan.gov.in/">
-      </div>
-    </div>
-  </div>
+            <div class="col-md-6">
+              <label class="se-label">Category Label (English)</label>
+              <input type="text" name="category_name_en" value="<?php echo htmlspecialchars($scheme['category_name_en']); ?>" class="form-control" placeholder="e.g. Agriculture & Farmers Welfare">
+            </div>
+            <div class="col-md-6">
+              <label class="se-label">Category Label (Hindi)</label>
+              <input type="text" name="category_name_hi" value="<?php echo htmlspecialchars($scheme['category_name_hi']); ?>" class="form-control" placeholder="e.g. कृषि एवं किसान कल्याण">
+            </div>
 
-  <!-- 2. Scheme Imagery Card -->
-  <div class="adm-card" style="margin-bottom: 24px;">
-    <div class="adm-card-header">
-      <h4><i class="fas fa-image text-success mr-1"></i> 2. Scheme Visual Imagery</h4>
-    </div>
-    <div class="adm-card-body">
-      <div class="row align-items-center">
-        <div class="col-md-3 text-center">
-          <?php 
-            $current_img = !empty($scheme['image']) ? (BASE_URL . '/' . $scheme['image']) : (BASE_URL . '/image/schemes/vajiram-schemes-banner.webp');
-          ?>
-          <img src="<?php echo htmlspecialchars($current_img); ?>" alt="Preview" style="max-width: 100%; height: 110px; object-fit: cover; border-radius: 8px; border: 1.5px solid #cbd5e1; margin-bottom: 8px;">
-          <div class="text-muted" style="font-size: 0.76rem;">Current Image</div>
-        </div>
-        <div class="col-md-9">
-          <div class="form-group">
-            <label>Upload New Scheme Image (.jpg, .png, .webp)</label>
-            <input type="file" name="scheme_image" class="form-control" accept="image/*">
-            <small class="text-muted">Upload high-resolution relevant image for cards and details.</small>
-          </div>
-          <div class="form-group">
-            <label>Or Image Relative Path on Server</label>
-            <input type="text" name="image_text" value="<?php echo htmlspecialchars($scheme['image']); ?>" class="form-control" placeholder="image/schemes/pm-kisan.jpg">
+            <div class="col-md-6">
+              <label class="se-label">Ministry (English)</label>
+              <input type="text" name="ministry_en" value="<?php echo htmlspecialchars($scheme['ministry_en']); ?>" class="form-control" placeholder="e.g. Ministry of Agriculture and Farmers Welfare">
+            </div>
+            <div class="col-md-6">
+              <label class="se-label">Ministry (Hindi)</label>
+              <input type="text" name="ministry_hi" value="<?php echo htmlspecialchars($scheme['ministry_hi']); ?>" class="form-control" placeholder="e.g. कृषि एवं किसान कल्याण मंत्रालय">
+            </div>
+
+            <div class="col-md-3">
+              <label class="se-label">Launch Year</label>
+              <input type="text" name="launch_year" value="<?php echo htmlspecialchars($scheme['launch_year']); ?>" class="form-control" placeholder="e.g. 2019">
+            </div>
+            <div class="col-md-3">
+              <label class="se-label">Budget Allocation</label>
+              <input type="text" name="budget" value="<?php echo htmlspecialchars($scheme['budget']); ?>" class="form-control" placeholder="e.g. ₹60,000 Crore / year">
+            </div>
+            <div class="col-md-3">
+              <label class="se-label">Helpline Number</label>
+              <input type="text" name="helpline" value="<?php echo htmlspecialchars($scheme['helpline']); ?>" class="form-control" placeholder="e.g. 155261">
+            </div>
+            <div class="col-md-3">
+              <label class="se-label">FontAwesome Icon</label>
+              <input type="text" name="icon" value="<?php echo htmlspecialchars($scheme['icon']); ?>" class="form-control" placeholder="e.g. fa-tractor">
+            </div>
+
+            <div class="col-12">
+              <label class="se-label">Official Government Portal URL</label>
+              <input type="url" name="official_url" value="<?php echo htmlspecialchars($scheme['official_url']); ?>" class="form-control" placeholder="https://pmkisan.gov.in/">
+            </div>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- 2. Scheme Imagery -->
+    <div class="tab-pane fade" id="tab-image" role="tabpanel">
+      <div class="adm-card">
+        <div class="adm-card-header">
+          <h4><i class="fas fa-image text-success"></i> Scheme Visual Imagery</h4>
+        </div>
+        <div class="adm-card-body">
+          <div class="row g-3 align-items-center">
+            <div class="col-md-3 text-center">
+              <?php $current_img = !empty($scheme['image']) ? (BASE_URL . '/' . $scheme['image']) : (BASE_URL . '/image/schemes/default-scheme-banner.jpg'); ?>
+              <img src="<?php echo htmlspecialchars($current_img); ?>" alt="Preview" style="max-width: 100%; height: 110px; object-fit: cover; border-radius: 8px; border: 1.5px solid #cbd5e1; margin-bottom: 8px;">
+              <div class="text-muted" style="font-size: 0.76rem;">Current Image</div>
+            </div>
+            <div class="col-md-9">
+              <div class="mb-3">
+                <label class="se-label">Upload New Scheme Image (.jpg, .png, .webp)</label>
+                <input type="file" name="scheme_image" class="form-control" accept="image/*">
+                <small class="se-hint">Upload a high-resolution, relevant image for cards and details.</small>
+              </div>
+              <div>
+                <label class="se-label">Or Image Relative Path on Server</label>
+                <input type="text" name="image_text" value="<?php echo htmlspecialchars($scheme['image']); ?>" class="form-control" placeholder="image/schemes/pm-kisan.jpg">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Summaries & Overviews -->
+    <div class="tab-pane fade" id="tab-overview" role="tabpanel">
+      <div class="adm-card">
+        <div class="adm-card-header">
+          <h4><i class="fas fa-align-left text-info"></i> Tagline &amp; Full Overview (Bilingual)</h4>
+        </div>
+        <div class="adm-card-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="se-label">Short Tagline (English)</label>
+              <textarea name="tagline_en" rows="2" class="form-control" placeholder="Short 1-2 sentence card summary..."><?php echo htmlspecialchars($scheme['tagline_en']); ?></textarea>
+            </div>
+            <div class="col-md-6">
+              <label class="se-label">Short Tagline (Hindi)</label>
+              <textarea name="tagline_hi" rows="2" class="form-control" placeholder="कार्ड पर दिखने वाला संक्षिप्त हिन्दी विवरण..."><?php echo htmlspecialchars($scheme['tagline_hi']); ?></textarea>
+            </div>
+
+            <div class="col-md-6">
+              <label class="se-label">Comprehensive Overview (English)</label>
+              <textarea name="overview_en" rows="6" class="form-control" placeholder="Full background, objective, and operational model..."><?php echo htmlspecialchars($scheme['overview_en']); ?></textarea>
+            </div>
+            <div class="col-md-6">
+              <label class="se-label">Comprehensive Overview (Hindi)</label>
+              <textarea name="overview_hi" rows="6" class="form-control" placeholder="योजना का विस्तृत हिन्दी विवरण एवं उद्देश्य..."><?php echo htmlspecialchars($scheme['overview_hi']); ?></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Multi-Line Lists: Benefits, Eligibility, Documents, How to Apply -->
+    <div class="tab-pane fade" id="tab-details" role="tabpanel">
+      <div class="adm-card">
+        <div class="adm-card-header">
+          <h4><i class="fas fa-list-ol text-warning"></i> Detailed Sections</h4>
+          <span class="badge" style="background: #eef2f7; color: #475569; font-weight: 600; font-size: 0.72rem;">1 item per line</span>
+        </div>
+        <div class="adm-card-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="se-label">Key Benefits (English)</label>
+              <textarea name="benefits_en" rows="5" class="form-control"><?php echo htmlspecialchars(implode("\n", (array)($scheme['benefits_en'] ?? []))); ?></textarea>
+            </div>
+            <div class="col-md-6">
+              <label class="se-label">Key Benefits (Hindi)</label>
+              <textarea name="benefits_hi" rows="5" class="form-control"><?php echo htmlspecialchars(implode("\n", (array)($scheme['benefits_hi'] ?? []))); ?></textarea>
+            </div>
+
+            <div class="col-md-6">
+              <label class="se-label">Eligibility Rules &amp; Exclusions (English)</label>
+              <textarea name="eligibility_en" rows="5" class="form-control"><?php echo htmlspecialchars(implode("\n", (array)($scheme['eligibility_en'] ?? []))); ?></textarea>
+            </div>
+            <div class="col-md-6">
+              <label class="se-label">Eligibility Rules &amp; Exclusions (Hindi)</label>
+              <textarea name="eligibility_hi" rows="5" class="form-control"><?php echo htmlspecialchars(implode("\n", (array)($scheme['eligibility_hi'] ?? []))); ?></textarea>
+            </div>
+
+            <div class="col-md-6">
+              <label class="se-label">Required Documents (English)</label>
+              <textarea name="documents_en" rows="4" class="form-control"><?php echo htmlspecialchars(implode("\n", (array)($scheme['documents_en'] ?? []))); ?></textarea>
+            </div>
+            <div class="col-md-6">
+              <label class="se-label">Required Documents (Hindi)</label>
+              <textarea name="documents_hi" rows="4" class="form-control"><?php echo htmlspecialchars(implode("\n", (array)($scheme['documents_hi'] ?? []))); ?></textarea>
+            </div>
+
+            <div class="col-md-6">
+              <label class="se-label">How to Apply Steps (English)</label>
+              <textarea name="how_to_apply_en" rows="5" class="form-control"><?php echo htmlspecialchars(implode("\n", (array)($scheme['how_to_apply_en'] ?? []))); ?></textarea>
+            </div>
+            <div class="col-md-6">
+              <label class="se-label">How to Apply Steps (Hindi)</label>
+              <textarea name="how_to_apply_hi" rows="5" class="form-control"><?php echo htmlspecialchars(implode("\n", (array)($scheme['how_to_apply_hi'] ?? []))); ?></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. Audio Narration & Eligibility Checker Criteria -->
+    <div class="tab-pane fade" id="tab-eligibility" role="tabpanel">
+      <div class="adm-card">
+        <div class="adm-card-header">
+          <h4><i class="fas fa-volume-up text-danger"></i> Audio Narration &amp; Eligibility Parameters</h4>
+        </div>
+        <div class="adm-card-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="se-label">Audio Script (English - spoken via TTS)</label>
+              <textarea name="audio_text_en" rows="3" class="form-control"><?php echo htmlspecialchars($scheme['audio_text_en']); ?></textarea>
+            </div>
+            <div class="col-md-6">
+              <label class="se-label">Audio Script (Hindi - spoken via TTS)</label>
+              <textarea name="audio_text_hi" rows="3" class="form-control"><?php echo htmlspecialchars($scheme['audio_text_hi']); ?></textarea>
+            </div>
+          </div>
+
+          <hr class="my-4">
+
+          <div class="row g-3">
+            <div class="col-md-3">
+              <label class="se-label">Minimum Age</label>
+              <input type="number" name="min_age" value="<?php echo (int)$scheme['min_age']; ?>" class="form-control">
+            </div>
+            <div class="col-md-3">
+              <label class="se-label">Maximum Age</label>
+              <input type="number" name="max_age" value="<?php echo (int)$scheme['max_age']; ?>" class="form-control">
+            </div>
+            <div class="col-md-3">
+              <label class="se-label">Max Income Limit (₹)</label>
+              <input type="number" name="max_income" value="<?php echo (int)$scheme['max_income']; ?>" class="form-control">
+            </div>
+            <div class="col-md-3">
+              <label class="se-label">Target Gender</label>
+              <select name="target_gender" class="form-control">
+                <option value="all" <?php echo ($scheme['target_gender'] === 'all') ? 'selected' : ''; ?>>All (Male &amp; Female)</option>
+                <option value="female" <?php echo ($scheme['target_gender'] === 'female') ? 'selected' : ''; ?>>Female Only</option>
+                <option value="male" <?php echo ($scheme['target_gender'] === 'male') ? 'selected' : ''; ?>>Male Only</option>
+              </select>
+            </div>
+
+            <div class="col-12">
+              <label class="se-label">Target Occupations (comma-separated: farmer, artisan, street_vendor, unorganized, business, student, senior, all)</label>
+              <input type="text" name="target_occupations" value="<?php echo htmlspecialchars($scheme['target_occupations'] ?? 'all'); ?>" class="form-control">
+            </div>
+
+            <div class="col-md-6">
+              <label class="se-label">Eligibility Question 1 (English)</label>
+              <input type="text" name="q1_en" value="<?php echo htmlspecialchars($scheme['eligibility_checker']['q1_en'] ?? ''); ?>" class="form-control">
+            </div>
+            <div class="col-md-6">
+              <label class="se-label">Eligibility Question 1 (Hindi)</label>
+              <input type="text" name="q1_hi" value="<?php echo htmlspecialchars($scheme['eligibility_checker']['q1_hi'] ?? ''); ?>" class="form-control">
+            </div>
+
+            <div class="col-md-6">
+              <label class="se-label">Eligibility Question 2 (English)</label>
+              <input type="text" name="q2_en" value="<?php echo htmlspecialchars($scheme['eligibility_checker']['q2_en'] ?? ''); ?>" class="form-control">
+            </div>
+            <div class="col-md-6">
+              <label class="se-label">Eligibility Question 2 (Hindi)</label>
+              <input type="text" name="q2_hi" value="<?php echo htmlspecialchars($scheme['eligibility_checker']['q2_hi'] ?? ''); ?>" class="form-control">
+            </div>
+
+            <div class="col-md-6">
+              <label class="se-label">Eligible Verdict Message (English)</label>
+              <input type="text" name="eligible_msg_en" value="<?php echo htmlspecialchars($scheme['eligibility_checker']['eligible_msg_en'] ?? ''); ?>" class="form-control">
+            </div>
+            <div class="col-md-6">
+              <label class="se-label">Eligible Verdict Message (Hindi)</label>
+              <input type="text" name="eligible_msg_hi" value="<?php echo htmlspecialchars($scheme['eligibility_checker']['eligible_msg_hi'] ?? ''); ?>" class="form-control">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. Status -->
+    <div class="tab-pane fade" id="tab-status" role="tabpanel">
+      <div class="adm-card">
+        <div class="adm-card-header">
+          <h4><i class="fas fa-toggle-on text-success"></i> Publish Status</h4>
+        </div>
+        <div class="adm-card-body">
+          <div class="row g-3 align-items-center">
+            <div class="col-md-6">
+              <label style="font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                <input type="checkbox" name="is_active" value="1" <?php echo ($scheme['is_active'] == 1) ? 'checked' : ''; ?> style="width: 18px; height: 18px;">
+                Active on Public Portal
+              </label>
+              <small class="se-hint">Unchecking this hides the scheme from the live website without deleting it.</small>
+            </div>
+            <div class="col-md-6">
+              <label class="se-label">Sort Order (lower shows first)</label>
+              <input type="number" name="sort_order" value="<?php echo (int)$scheme['sort_order']; ?>" class="form-control" style="max-width: 160px;">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
-  <!-- 3. Summaries & Overviews -->
-  <div class="adm-card" style="margin-bottom: 24px;">
-    <div class="adm-card-header">
-      <h4><i class="fas fa-align-left text-info mr-1"></i> 3. Tagline &amp; Full Overview (Bilingual)</h4>
-    </div>
-    <div class="adm-card-body">
-      <div class="row">
-        <div class="col-md-6 form-group">
-          <label>Short Tagline (English)</label>
-          <textarea name="tagline_en" rows="2" class="form-control" placeholder="Short 1-2 sentence card summary..."><?php echo htmlspecialchars($scheme['tagline_en']); ?></textarea>
-        </div>
-        <div class="col-md-6 form-group">
-          <label>Short Tagline (Hindi)</label>
-          <textarea name="tagline_hi" rows="2" class="form-control" placeholder="कार्ड पर दिखने वाला संक्षिप्त हिन्दी विवरण..."><?php echo htmlspecialchars($scheme['tagline_hi']); ?></textarea>
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="col-md-6 form-group">
-          <label>Comprehensive Overview (English)</label>
-          <textarea name="overview_en" rows="5" class="form-control" placeholder="Full background, objective, and operational model..."><?php echo htmlspecialchars($scheme['overview_en']); ?></textarea>
-        </div>
-        <div class="col-md-6 form-group">
-          <label>Comprehensive Overview (Hindi)</label>
-          <textarea name="overview_hi" rows="5" class="form-control" placeholder="योजना का विस्तृत हिन्दी विवरण एवं उद्देश्य..."><?php echo htmlspecialchars($scheme['overview_hi']); ?></textarea>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 4. Multi-Line Lists: Benefits, Eligibility, Documents, How to Apply -->
-  <div class="adm-card" style="margin-bottom: 24px;">
-    <div class="adm-card-header">
-      <h4><i class="fas fa-list-ol text-warning mr-1"></i> 4. Detailed Sections (Enter one item per line)</h4>
-    </div>
-    <div class="adm-card-body">
-      <div class="row">
-        <div class="col-md-6 form-group">
-          <label>Key Benefits (English - 1 per line)</label>
-          <textarea name="benefits_en" rows="5" class="form-control"><?php echo htmlspecialchars(implode("\n", (array)($scheme['benefits_en'] ?? []))); ?></textarea>
-        </div>
-        <div class="col-md-6 form-group">
-          <label>Key Benefits (Hindi - 1 per line)</label>
-          <textarea name="benefits_hi" rows="5" class="form-control"><?php echo htmlspecialchars(implode("\n", (array)($scheme['benefits_hi'] ?? []))); ?></textarea>
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="col-md-6 form-group">
-          <label>Eligibility Rules &amp; Exclusions (English - 1 per line)</label>
-          <textarea name="eligibility_en" rows="5" class="form-control"><?php echo htmlspecialchars(implode("\n", (array)($scheme['eligibility_en'] ?? []))); ?></textarea>
-        </div>
-        <div class="col-md-6 form-group">
-          <label>Eligibility Rules &amp; Exclusions (Hindi - 1 per line)</label>
-          <textarea name="eligibility_hi" rows="5" class="form-control"><?php echo htmlspecialchars(implode("\n", (array)($scheme['eligibility_hi'] ?? []))); ?></textarea>
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="col-md-6 form-group">
-          <label>Required Documents (English - 1 per line)</label>
-          <textarea name="documents_en" rows="4" class="form-control"><?php echo htmlspecialchars(implode("\n", (array)($scheme['documents_en'] ?? []))); ?></textarea>
-        </div>
-        <div class="col-md-6 form-group">
-          <label>Required Documents (Hindi - 1 per line)</label>
-          <textarea name="documents_hi" rows="4" class="form-control"><?php echo htmlspecialchars(implode("\n", (array)($scheme['documents_hi'] ?? []))); ?></textarea>
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="col-md-6 form-group">
-          <label>How to Apply Steps (English - 1 per line)</label>
-          <textarea name="how_to_apply_en" rows="5" class="form-control"><?php echo htmlspecialchars(implode("\n", (array)($scheme['how_to_apply_en'] ?? []))); ?></textarea>
-        </div>
-        <div class="col-md-6 form-group">
-          <label>How to Apply Steps (Hindi - 1 per line)</label>
-          <textarea name="how_to_apply_hi" rows="5" class="form-control"><?php echo htmlspecialchars(implode("\n", (array)($scheme['how_to_apply_hi'] ?? []))); ?></textarea>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 5. Audio Narration & Eligibility Checker Criteria -->
-  <div class="adm-card" style="margin-bottom: 24px;">
-    <div class="adm-card-header">
-      <h4><i class="fas fa-volume-up text-danger mr-1"></i> 5. Audio Voice Narration &amp; Eligibility Parameters</h4>
-    </div>
-    <div class="adm-card-body">
-      <div class="row">
-        <div class="col-md-6 form-group">
-          <label>Audio Script (English - spoken aloud via TTS)</label>
-          <textarea name="audio_text_en" rows="3" class="form-control"><?php echo htmlspecialchars($scheme['audio_text_en']); ?></textarea>
-        </div>
-        <div class="col-md-6 form-group">
-          <label>Audio Script (Hindi - spoken aloud via TTS)</label>
-          <textarea name="audio_text_hi" rows="3" class="form-control"><?php echo htmlspecialchars($scheme['audio_text_hi']); ?></textarea>
-        </div>
-      </div>
-
-      <div class="row" style="border-top: 1px solid #f1f5f9; padding-top: 15px;">
-        <div class="col-md-3 form-group">
-          <label>Minimum Age</label>
-          <input type="number" name="min_age" value="<?php echo (int)$scheme['min_age']; ?>" class="form-control">
-        </div>
-        <div class="col-md-3 form-group">
-          <label>Maximum Age</label>
-          <input type="number" name="max_age" value="<?php echo (int)$scheme['max_age']; ?>" class="form-control">
-        </div>
-        <div class="col-md-3 form-group">
-          <label>Max Income Limit (₹)</label>
-          <input type="number" name="max_income" value="<?php echo (int)$scheme['max_income']; ?>" class="form-control">
-        </div>
-        <div class="col-md-3 form-group">
-          <label>Target Gender</label>
-          <select name="target_gender" class="form-control">
-            <option value="all" <?php echo ($scheme['target_gender'] === 'all') ? 'selected' : ''; ?>>All (Male &amp; Female)</option>
-            <option value="female" <?php echo ($scheme['target_gender'] === 'female') ? 'selected' : ''; ?>>Female Only</option>
-            <option value="male" <?php echo ($scheme['target_gender'] === 'male') ? 'selected' : ''; ?>>Male Only</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label>Target Occupations (comma-separated, e.g.: farmer, artisan, street_vendor, unorganized, business, student, senior, all)</label>
-        <input type="text" name="target_occupations" value="<?php echo htmlspecialchars($scheme['target_occupations'] ?? 'all'); ?>" class="form-control">
-      </div>
-
-      <div class="row">
-        <div class="col-md-6 form-group">
-          <label>Eligibility Question 1 (English)</label>
-          <input type="text" name="q1_en" value="<?php echo htmlspecialchars($scheme['eligibility_checker']['q1_en'] ?? ''); ?>" class="form-control">
-        </div>
-        <div class="col-md-6 form-group">
-          <label>Eligibility Question 1 (Hindi)</label>
-          <input type="text" name="q1_hi" value="<?php echo htmlspecialchars($scheme['eligibility_checker']['q1_hi'] ?? ''); ?>" class="form-control">
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="col-md-6 form-group">
-          <label>Eligibility Question 2 (English)</label>
-          <input type="text" name="q2_en" value="<?php echo htmlspecialchars($scheme['eligibility_checker']['q2_en'] ?? ''); ?>" class="form-control">
-        </div>
-        <div class="col-md-6 form-group">
-          <label>Eligibility Question 2 (Hindi)</label>
-          <input type="text" name="q2_hi" value="<?php echo htmlspecialchars($scheme['eligibility_checker']['q2_hi'] ?? ''); ?>" class="form-control">
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="col-md-6 form-group">
-          <label>Eligible Verdict Message (Hindi)</label>
-          <input type="text" name="eligible_msg_hi" value="<?php echo htmlspecialchars($scheme['eligibility_checker']['eligible_msg_hi'] ?? ''); ?>" class="form-control">
-        </div>
-        <div class="col-md-6 form-group">
-          <label>Eligible Verdict Message (English)</label>
-          <input type="text" name="eligible_msg_en" value="<?php echo htmlspecialchars($scheme['eligibility_checker']['eligible_msg_en'] ?? ''); ?>" class="form-control">
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 6. Status & Save Buttons -->
-  <div class="adm-card" style="margin-bottom: 30px; padding: 20px;">
-    <div class="row align-items-center">
-      <div class="col-md-6">
-        <label style="margin-right: 20px; font-weight: 700; cursor: pointer;">
-          <input type="checkbox" name="is_active" value="1" <?php echo ($scheme['is_active'] == 1) ? 'checked' : ''; ?> style="width: 18px; height: 18px; vertical-align: middle;">
-          Active on Public Portal
-        </label>
-        <span style="display: inline-block;">
-          <label style="font-weight: 700; margin-right: 6px;">Sort Order:</label>
-          <input type="number" name="sort_order" value="<?php echo (int)$scheme['sort_order']; ?>" style="width: 80px; display: inline-block;" class="form-control input-sm">
-        </span>
-      </div>
-      <div class="col-md-6 text-right">
-        <a href="<?php echo BASE_URL; ?>/admin/schemes.php" class="btn btn-default" style="margin-right: 8px;">Cancel</a>
-        <button type="submit" class="btn btn-primary" style="background: var(--adm-navy); border: none; font-weight: 700; padding: 10px 28px; border-radius: 8px;">
-          <i class="fas fa-save mr-1"></i> Save Scheme to Database
-        </button>
-      </div>
+  <!-- Sticky Save Bar: always reachable regardless of active tab -->
+  <div class="se-save-bar">
+    <span class="text-muted" style="font-size: 0.82rem;"><i class="fas fa-info-circle"></i> Switching tabs keeps unsaved changes — nothing is lost until you save.</span>
+    <div class="d-flex gap-2">
+      <a href="<?php echo BASE_URL; ?>/admin/schemes.php" class="btn btn-default">Cancel</a>
+      <button type="submit" class="btn btn-gov-saffron fw-bold px-4">
+        <i class="fas fa-save"></i> Save Scheme to Database
+      </button>
     </div>
   </div>
 
 </form>
+
+<script>
+// Jump straight to the tab containing the first invalid field instead of
+// silently blocking submit on a hidden tab (native HTML5 validation does
+// not switch tabs on its own).
+(function () {
+  var form = document.querySelector('form[enctype="multipart/form-data"]');
+  if (!form) return;
+  form.addEventListener('submit', function (e) {
+    var invalid = form.querySelector(':invalid');
+    if (!invalid) return;
+    var pane = invalid.closest('.tab-pane');
+    if (pane && !pane.classList.contains('active')) {
+      e.preventDefault();
+      var trigger = document.querySelector('[data-bs-target="#' + pane.id + '"]');
+      if (trigger) {
+        var tab = new bootstrap.Tab(trigger);
+        tab.show();
+        setTimeout(function () { invalid.reportValidity(); }, 150);
+      }
+    }
+  });
+})();
+</script>
 
 <?php include __DIR__ . '/footer.php'; ?>

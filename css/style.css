@@ -161,15 +161,18 @@ header .header-body .header-item .element .color-input-header{
 
 /*** Navbar ***/
 .navbar {
-    position:relative;
+    position: sticky;
     width: 100%;
     top: 0;
     left: 0;
-    z-index: 9;
+    z-index: 1030;
     transition: .5s;
-    /* background: transparent; */
     border-bottom: 1px solid rgba(255, 255, 255, .1);
     background-color:#bde0fe ;
+}
+
+.navbar.fixesnavbar {
+    border-bottom: 1px solid rgba(0, 0, 0, .08);
 }
 
 .navbar .navbar-nav .nav-link {

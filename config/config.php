@@ -70,11 +70,8 @@ function format_inr($amount) {
     return '₹' . number_format((float)$amount, 2);
 }
 
-function get_service_by_slug($pdo, $slug) {
-    $stmt = $pdo->prepare("SELECT * FROM services WHERE slug = ? AND is_active = 1 LIMIT 1");
-    $stmt->execute([$slug]);
-    return $stmt->fetch();
-}
+// Include Services Data Access Layer
+require_once __DIR__ . '/../data/services.php';
 
 function set_flash($type, $message) {
     $_SESSION['flash'] = ['type' => $type, 'message' => $message];

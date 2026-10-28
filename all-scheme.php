@@ -187,7 +187,7 @@ include __DIR__ . '/includes/header.php';
                         <div>
                             <!-- Scheme Relevant Image -->
                             <?php 
-                                $cardImg = !empty($scheme['image']) ? $scheme['image'] : 'image/schemes/vajiram-schemes-banner.webp'; 
+                                $cardImg = !empty($scheme['image']) ? $scheme['image'] : 'image/schemes/default-scheme-banner.jpg'; 
                             ?>
                             <div style="position: relative; border-radius: 10px; overflow: hidden; height: 165px; margin-bottom: 14px; background: #f1f5f9; border: 1px solid #e2e8f0;">
                                 <img src="<?= htmlspecialchars($cardImg) ?>" alt="<?= htmlspecialchars($scheme['title_en']) ?>" style="width: 100%; height: 100%; object-fit: cover;">
@@ -234,7 +234,7 @@ include __DIR__ . '/includes/header.php';
 
                         <!-- Card Footer with Action Buttons -->
                         <div class="scheme-card-footer">
-                            <a href="scheme_details.php?slug=<?= urlencode($slug) ?>" class="btn-card-detail">
+                            <a href="<?= scheme_url($slug) ?>" class="btn-card-detail">
                                 <i class="fas fa-info-circle"></i> Details &amp; Audio (विवरण)
                             </a>
                             <a href="<?= htmlspecialchars($scheme['official_url']) ?>" target="_blank" rel="noopener noreferrer" class="btn-card-official" title="Official Government Portal">

@@ -415,6 +415,15 @@ $admin_nav_items = [
     color: #334155;
   }
   .btn-default:hover { background: #f1f5f9; color: #1e293b; }
+  .btn-gov-saffron {
+    background: linear-gradient(135deg, var(--adm-saffron) 0%, var(--adm-saffron-dark) 100%);
+    border: none;
+    color: #ffffff;
+  }
+  .btn-gov-saffron:hover {
+    background: linear-gradient(135deg, var(--adm-saffron-dark) 0%, var(--adm-saffron) 100%);
+    color: #ffffff;
+  }
   .btn-xs {
     padding: 2px 9px;
     font-size: 0.75rem;

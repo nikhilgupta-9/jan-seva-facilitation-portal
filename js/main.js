@@ -16,14 +16,12 @@
     new WOW().init();
 
 
-    // Sticky Navbar
-    $(window).scroll(function () {
-        if ($(this).scrollTop() > 0) {
-            $('.navbar').addClass('position-fixed fixesnavbar  shadow-sm');
-        } else {
-            $('.navbar').removeClass('position-fixed fixesnavbar shadow-sm');
-        }
-    });
+    // Sticky navbar is handled by CSS (position: sticky) - see .navbar
+    // in css/style.css. The old scroll-triggered position-fixed toggle
+    // left the navbar with no top offset, so on scroll it pinned at
+    // whatever y-coordinate it happened to be at instead of y=0 -
+    // showing a gap above it and clipping on mobile when the browser
+    // chrome collapsed.
 
 
     // Back to top button
@@ -160,62 +158,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 document.addEventListener("DOMContentLoaded", function () {
   const form = document.getElementById("eligibilityForm");
-  const result = document.getElementById("eligibilityResult");
-
-  form.addEventListener("submit", function (event) {
-    event.preventDefault();
-
-    const age = Number(document.getElementById("citizenAge").value);
-    const state = document.getElementById("citizenState").value;
-    const income = document.getElementById("familyIncome").value;
-    const category = document.getElementById("citizenCategory").value;
-
-    result.hidden = false;
-    result.className = "eligibility-result";
-
-    if (
-      !Number.isFinite(age) ||
-      age < 1 || age > 120 ||
-      !state || !income || !category
-    ) {
-      result.classList.add("is-error");
-      result.innerHTML = `
-        <h4><i class="fa-solid fa-circle-exclamation"></i>
-        Please check your details</h4>
-        <p>Enter a valid age and complete all required fields.</p>
-      `;
-      return;
-    }
-
-    // Demo only: these are not official scheme eligibility rules.
-    result.classList.add("is-warning");
-    result.innerHTML = `
-      <h4><i class="fa-solid fa-circle-info"></i>
-      Your Details Are Ready!</h4>
-      <p>
-        You entered age <strong>${age}</strong>,
-        state <strong>${state}</strong>,
-        annual income <strong>${income === "1000000"
-          ? "Above ₹8 lakh"
-          : Number(income) === 100000
-            ? "Below ₹1 lakh"
-            : Number(income) === 300000
-              ? "₹1 lakh – ₹3 lakh"
-              : Number(income) === 500000
-                ? "₹3 lakh – ₹5 lakh"
-                : "₹5 lakh – ₹8 lakh"}</strong>,
-        and category <strong>${category}</strong>.
-      </p>
-      <p style="margin-top:10px">
-        <strong>Next step:</strong> Match these details against the
-        official eligibility criteria of each scheme. This demo
-        does not determine whether you qualify for any scheme.
-      </p>
-    `;
-
-    result.scrollIntoView({
-      behavior: "smooth",
-      block: "nearest"
-    });
-  });
+  if (form && typeof window.handleEligibilitySubmit === "function") {
+    form.addEventListener("submit", window.handleEligibilitySubmit);
+  }
 });

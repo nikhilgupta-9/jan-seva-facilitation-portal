@@ -31,3 +31,9 @@ function app_url(string $path = ''): string
     $base = rtrim(env('APP_URL', 'http://localhost/gp'), '/');
     return $base . '/' . ltrim($path, '/');
 }
+
+function scheme_url(string $slug): string
+{
+    $base = defined('BASE_URL') ? BASE_URL : '';
+    return $base . '/scheme/' . rawurlencode($slug);
+}
