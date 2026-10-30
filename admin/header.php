@@ -47,7 +47,8 @@ $admin_nav_items = [
 <title><?php echo isset($page_title) ? $page_title . ' | Admin Console' : 'Admin Console | ' . APP_NAME; ?></title>
 
 <!-- Fonts & Assets -->
-<link rel="icon" href="<?php echo BASE_URL; ?>/img/favicon.ico" type="image/x-icon">
+<link rel="icon" href="<?php echo BASE_URL; ?>/img/favicon.svg" type="image/svg+xml">
+<link rel="alternate icon" href="<?php echo BASE_URL; ?>/img/favicon.ico" type="image/x-icon">
 <link rel="preconnect" href="https://cdnjs.cloudflare.com">
 <link href="<?php echo BASE_URL; ?>/css/bootstrap.min.css" rel="stylesheet">
 <!-- Font Awesome loaded non-blocking (loadCSS pattern) so first paint & camera init on the scanner page don't wait on this CDN request -->

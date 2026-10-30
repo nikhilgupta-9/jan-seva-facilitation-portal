@@ -22,8 +22,9 @@ $activeNav = $activeNav ?? '';
     <link rel="canonical" href="<?= htmlspecialchars($canonicalUrl) ?>">
     <?php endif; ?>
 
-    <!-- Favicon -->
-    <link href="<?= BASE_URL ?>/img/favicon.ico" rel="icon">
+    <!-- Favicon (logo emblem) -->
+    <link href="<?= BASE_URL ?>/img/favicon.svg" rel="icon" type="image/svg+xml">
+    <link href="<?= BASE_URL ?>/img/favicon.ico" rel="alternate icon">
 
     <!-- Google Web Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">

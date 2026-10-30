@@ -244,7 +244,9 @@ include __DIR__ . '/includes/header.php';
 <style>
 /* Ayushman Help Desk — aligned to site light theme (css/gigw-theme.css tokens) */
 .ayush-hero-banner {
-    background: linear-gradient(135deg, #1e3a8a 0%, #1e5a87 60%, #0891b2 100%);
+    background: linear-gradient(135deg, rgb(30 58 138 / 74%) 0%, rgb(30 90 135 / 65%) 60%, rgb(8 145 178 / 58%) 100%), url(/gp/image/barr.png);
+    background-position: center;
+    background-size: cover;
     color: #ffffff;
     padding: 26px 0 20px;
     border-bottom: 4px solid #f59e0b;
@@ -1178,8 +1180,8 @@ textarea.form-control-gov-area:focus {
           <div class="ayush-card-body">
             <div class="form-check" style="margin-top: 0; padding-left: 1.6em;">
               <input type="checkbox" class="form-check-input" name="consent_accepted" id="consent_accepted" value="1" <?php echo (!empty($_POST['consent_accepted']) || !isset($_POST['submit_ayushman'])) ? 'checked' : ''; ?> required>
-              <label class="form-check-label" for="consent_accepted" style="font-weight: 600; color: #1e293b; font-size: 0.94rem; line-height: 1.6;" data-hi="मैं स्वेच्छा से अपनी दी गई जानकारी और अपलोड किए गए दस्तावेज़ डिजिटल हेल्थ स्मार्ट आईडी बनाने और सत्यापन के लिए प्रस्तुत कर रहा हूँ। मेरे द्वारा दी गई सभी जानकारी पूर्णतया सत्य और वैध है।" data-en="I voluntarily submit my provided information and uploaded documents for generating and verifying the Digital Health Smart ID. All information provided by me is completely true and valid.">
-                I voluntarily submit my provided information and uploaded documents for generating and verifying the Digital Health Smart ID. All information provided by me is completely true and valid.
+              <label class="form-check-label" for="consent_accepted" style="font-weight: 600; color: #1e293b; font-size: 0.94rem; line-height: 1.6;" data-hi="मैं स्वेच्छा से अपनी दी गई जानकारी और अपलोड किए गए दस्तावेज़—आभा कार्ड, आयुष्मान भारत कार्ड, राशन कार्ड, BOCW कार्ड और PMJAY / आयुष्मान भारत पत्र—की प्रतियों को विवरण मिलान और Digital Health Smart ID तैयार करने के लिए उपयोग करने की सहमति देता/देती हूँ। मुझे ज्ञात है कि यह एक निजी डेटा फॉर्मेटिंग सेवा है। मेरे द्वारा दी गई जानकारी की सत्यता की जिम्मेदारी मेरी है।" data-en="I voluntarily consent to the use of my submitted information and uploaded documents—ABHA Card, Ayushman Bharat Card, Ration Card, BOCW Card and PMJAY / Ayushman Bharat Letter—for checking the submitted details and preparing my Digital Health Smart ID. I understand that this is a private data formatting service. I am responsible for the accuracy of the information I provide.">
+                I voluntarily consent to the use of my submitted information and uploaded documents—ABHA Card, Ayushman Bharat Card, Ration Card, BOCW Card and PMJAY / Ayushman Bharat Letter—for checking the submitted details and preparing my Digital Health Smart ID. I understand that this is a private data formatting service. I am responsible for the accuracy of the information I provide.
               </label>
             </div>
           </div>
