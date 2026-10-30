@@ -477,8 +477,13 @@ include __DIR__ . '/header.php';
               <?php echo date('d M Y, h:i A'); ?>
             </span>
           </div>
-          <div style="font-family: monospace; font-size: 0.74rem; font-weight: 800; color: #065f46;">
-            HMAC-SHA256 VALID
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span id="dossier-auto-hide-badge" class="label" style="background: #d97706;" title="This record auto-hides after 2 minutes for citizen data privacy">
+              <i class="fas fa-clock"></i> <span id="dossier-auto-hide-countdown">2:00</span>
+            </span>
+            <div style="font-family: monospace; font-size: 0.74rem; font-weight: 800; color: #065f46;">
+              HMAC-SHA256 VALID
+            </div>
           </div>
         </div>
 
@@ -657,6 +662,51 @@ include __DIR__ . '/header.php';
   let currentDbAppId = <?php echo (int)($initialDbRecord['id'] ?? 0); ?>;
   let currentAppNo = <?php echo json_encode($initialDecrypted['app_no'] ?? ''); ?>;
 
+  // Decrypted citizen details stay on screen for a maximum of 2 minutes,
+  // then auto-hide for data privacy — an admin shouldn't leave someone's
+  // Aadhaar/ABHA/address sitting open on screen indefinitely after a scan.
+  const DOSSIER_AUTO_HIDE_MS = 2 * 60 * 1000;
+  let dossierAutoHideTimeout = null;
+  let dossierCountdownInterval = null;
+  const dossierAutoHideBadge = document.getElementById("dossier-auto-hide-badge");
+  const dossierAutoHideCountdown = document.getElementById("dossier-auto-hide-countdown");
+
+  function clearDossierAutoHideTimer() {
+    if (dossierAutoHideTimeout) { clearTimeout(dossierAutoHideTimeout); dossierAutoHideTimeout = null; }
+    if (dossierCountdownInterval) { clearInterval(dossierCountdownInterval); dossierCountdownInterval = null; }
+  }
+
+  function startDossierAutoHideTimer() {
+    clearDossierAutoHideTimer();
+    const deadline = Date.now() + DOSSIER_AUTO_HIDE_MS;
+
+    const tick = () => {
+      const remainingMs = deadline - Date.now();
+      if (remainingMs <= 0) {
+        clearDossierAutoHideTimer();
+        citizenDossierPanel.style.display = "none";
+        dossierPlaceholder.style.display = "block";
+        scanAlertBox.className = "alert alert-info";
+        scanAlertBox.innerHTML = '<i class="fas fa-clock"></i> Citizen record hidden automatically after 2 minutes for data privacy. Scan again to view it.';
+        scanAlertBox.style.display = "block";
+        return;
+      }
+      if (dossierAutoHideCountdown) {
+        const totalSeconds = Math.ceil(remainingMs / 1000);
+        const mins = Math.floor(totalSeconds / 60);
+        const secs = totalSeconds % 60;
+        dossierAutoHideCountdown.innerText = mins + ":" + String(secs).padStart(2, "0");
+      }
+      if (dossierAutoHideBadge) {
+        dossierAutoHideBadge.style.background = (remainingMs <= 20000) ? "#dc2626" : "#d97706";
+      }
+    };
+
+    tick();
+    dossierCountdownInterval = setInterval(tick, 1000);
+    dossierAutoHideTimeout = setTimeout(tick, DOSSIER_AUTO_HIDE_MS + 100);
+  }
+
   // Sound Effect via Web Audio API
   function playSuccessBeep() {
     try {
@@ -715,6 +765,7 @@ include __DIR__ . '/header.php';
     scanAlertBox.style.display = "none";
     dossierPlaceholder.style.display = "none";
     citizenDossierPanel.style.display = "block";
+    startDossierAutoHideTimer();
 
     currentAppNo = payload.app_no || "";
     currentDbAppId = dbRecord ? dbRecord.id : 0;
@@ -780,6 +831,7 @@ include __DIR__ . '/header.php';
 
   function showErrorAlert(msg) {
     exitFullscreenCamera();
+    clearDossierAutoHideTimer();
     scanAlertBox.className = "alert alert-danger";
     scanAlertBox.innerHTML = '<i class="fas fa-exclamation-triangle"></i> ' + msg;
     scanAlertBox.style.display = "block";
@@ -797,7 +849,20 @@ include __DIR__ . '/header.php';
     scannerStatusBadge.style.background = "#f59e0b";
     scannerStatusBadge.innerText = "Starting Camera...";
 
-    const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+    // A fixed 250x250 qrbox can be larger than the actual camera viewport on
+    // some screens/windows, which makes html5-qrcode silently fail to align
+    // its scan region with the visible video — the QR looks "in frame" but
+    // never triggers a result. Size the box as a percentage of whatever
+    // viewfinder the browser actually gives us instead (the library's own
+    // recommended pattern), so it always fits and detects reliably.
+    const config = {
+      fps: 10,
+      qrbox: function(viewfinderWidth, viewfinderHeight) {
+        const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+        const size = Math.floor(minEdge * 0.7);
+        return { width: size, height: size };
+      }
+    };
     html5QrCode.start({ facingMode: "environment" }, config, handleQrScanSuccess)
       .then(() => {
         isScanning = true;
@@ -819,6 +884,10 @@ include __DIR__ . '/header.php';
   // Scanner starts automatically as soon as the page opens — no manual start needed.
   if (!<?php echo $initialDecrypted ? 'true' : 'false'; ?>) {
     startCameraScanner();
+  } else {
+    // A record was already decrypted server-side (e.g. opened via ?token=...) —
+    // start its 2-minute auto-hide window immediately too.
+    startDossierAutoHideTimer();
   }
 
   function stopCameraScanner() {
@@ -910,6 +979,7 @@ include __DIR__ . '/header.php';
   const btnScanNext = document.getElementById("btn-scan-next");
   if (btnScanNext) {
     btnScanNext.addEventListener("click", function() {
+      clearDossierAutoHideTimer();
       citizenDossierPanel.style.display = "none";
       dossierPlaceholder.style.display = "block";
       scanAlertBox.style.display = "none";
