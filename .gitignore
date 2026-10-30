@@ -4,3 +4,6 @@ node_modules/
 *.log
 .DS_Store
 storage/*.log
+uploads/ayushman/*
+!uploads/ayushman/.gitkeep
+!uploads/.htaccess

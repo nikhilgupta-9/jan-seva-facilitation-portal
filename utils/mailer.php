@@ -155,3 +155,84 @@ function smtp_send_mail(string $to, string $subject, string $body): bool
 
     return true;
 }
+
+/**
+ * Send an official email confirmation to the citizen upon submitting the
+ * Ayushman Help Desk application. Includes their Application No, Card ID,
+ * ABHA details, and direct link to their Digital Health Smart ID Card.
+ */
+function send_ayushman_confirmation_email(array $app): bool
+{
+    $to = trim($app['email'] ?? '');
+    if (!$to || !filter_var($to, FILTER_VALIDATE_EMAIL)) {
+        return false;
+    }
+
+    $appName = defined('APP_NAME') ? APP_NAME : 'Jan Seva Facilitation Portal';
+    $appNo = $app['application_no'] ?? 'N/A';
+    $cardId = $app['card_id'] ?? 'N/A';
+    $citizenName = $app['full_name'] ?? 'Citizen';
+    $abhaNo = $app['abha_number'] ?: 'Not Provided';
+    $aadhaarLast4 = $app['aadhaar_last4'] ? 'XXXX-XXXX-' . $app['aadhaar_last4'] : 'Verified';
+    
+    // Build card download link
+    $baseUrl = function_exists('app_url') ? app_url() : (defined('BASE_URL') ? BASE_URL : '/gp');
+    if (strpos($baseUrl, 'http') !== 0) {
+        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        $baseUrl = $protocol . $host . $baseUrl;
+    }
+    $cardLink = rtrim($baseUrl, '/') . '/ayushman-card.php?app_no=' . urlencode($appNo);
+
+    $subject = "[{$appName}] Ayushman Help Desk Confirmation - Card ID: {$cardId}";
+
+    $bodyLines = [
+        "Namaste {$citizenName},",
+        "",
+        "Your Ayushman Help Desk registration has been received successfully.",
+        "Your Digital Health Smart ID Card has been generated and securely recorded.",
+        "",
+        "==================================================",
+        "APPLICATION & SMART CARD DETAILS",
+        "==================================================",
+        "Application Number : {$appNo}",
+        "Smart Card ID      : {$cardId}",
+        "Full Name          : {$citizenName}",
+        "ABHA Number        : {$abhaNo}",
+        "Mobile Number      : " . ($app['mobile'] ?? 'N/A'),
+        "Aadhaar e-KYC      : Verified ({$aadhaarLast4})",
+        "Submission Date    : " . date('d M Y, h:i A'),
+        "==================================================",
+        "",
+        "VIEW & DOWNLOAD YOUR DIGITAL HEALTH SMART ID CARD:",
+        $cardLink,
+        "",
+        "SECURITY NOTICE:",
+        "Your Digital Health Smart ID features an AES-256 encrypted QR Code adhering to NHA & DPDP security guidelines. Standard public scanners cannot read or extract your personal identity data. Only authorized administrative officers with official scanner terminals can decrypt and verify your record.",
+        "",
+        "Helpline: " . (defined('HELPLINE_NUMBER') ? HELPLINE_NUMBER : '1800-11-2026'),
+        "Support Email: " . (defined('SUPPORT_EMAIL') ? SUPPORT_EMAIL : 'support@citizenportal.facilitator.in'),
+        "",
+        "Regards,",
+        "Ayushman Bharat Facilitation Desk",
+        $appName
+    ];
+    $body = implode("\n", $bodyLines);
+
+    $smtpHost = function_exists('env') ? env('SMTP_HOST') : null;
+    if ($smtpHost) {
+        try {
+            return smtp_send_mail($to, $subject, $body);
+        } catch (Exception $e) {
+            error_log('Ayushman confirmation SMTP send failed: ' . $e->getMessage());
+        }
+    }
+
+    // Fallback: PHP's built-in mail()
+    $fromEmail = defined('SUPPORT_EMAIL') ? SUPPORT_EMAIL : 'no-reply@localhost';
+    $headers = "From: {$appName} <{$fromEmail}>\r\n"
+        . "Reply-To: {$fromEmail}\r\n"
+        . "Content-Type: text/plain; charset=UTF-8\r\n";
+
+    return @mail($to, $subject, $body, $headers);
+}

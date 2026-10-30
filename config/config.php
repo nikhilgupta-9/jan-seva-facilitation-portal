@@ -91,3 +91,5 @@ function get_flash() {
     }
     return null;
 }
+
+require_once __DIR__ . '/ayushman_crypto.php';

@@ -10,11 +10,13 @@ $current_admin_page = basename($_SERVER['PHP_SELF']);
 $badge_doorstep = 0;
 $badge_messages = 0;
 $badge_feedbacks = 0;
+$badge_ayushman = 0;
 try {
     if (isset($pdo)) {
         $badge_doorstep = (int) $pdo->query("SELECT COUNT(id) FROM doorstep_requests WHERE status = 'new'")->fetchColumn();
         $badge_messages = (int) $pdo->query("SELECT COUNT(id) FROM contact_messages WHERE status = 'new'")->fetchColumn();
         $badge_feedbacks = (int) $pdo->query("SELECT COUNT(id) FROM feedbacks WHERE status = 'pending'")->fetchColumn();
+        $badge_ayushman = (int) $pdo->query("SELECT COUNT(id) FROM ayushman_applications WHERE status = 'submitted'")->fetchColumn();
     }
 } catch (Exception $e) {
     // Silent
@@ -29,6 +31,8 @@ $admin_nav_items = [
     ['page' => 'banners.php', 'icon' => 'fa-images', 'label' => 'Hero Banners', 'badge' => 0],
     ['page' => 'updates.php', 'icon' => 'fa-bullhorn', 'label' => 'Schemes & Updates', 'badge' => 0],
     ['page' => 'faqs.php', 'icon' => 'fa-question-circle', 'label' => 'Homepage FAQs', 'badge' => 0],
+    ['page' => 'ayushman-helpdesk.php', 'icon' => 'fa-hand-holding-medical', 'label' => 'Ayushman Help Desk', 'badge' => $badge_ayushman],
+    ['page' => 'ayushman-scanner.php', 'icon' => 'fa-qrcode', 'label' => 'Secure QR Scanner', 'badge' => 0],
     ['page' => 'doorstep.php', 'icon' => 'fa-user-shield', 'label' => 'Doorstep Leads', 'badge' => $badge_doorstep],
     ['page' => 'feedbacks.php', 'icon' => 'fa-comments', 'label' => 'Citizen Feedbacks', 'badge' => $badge_feedbacks],
     ['page' => 'contact-settings.php', 'icon' => 'fa-address-book', 'label' => 'Contact & Site Settings', 'badge' => 0],

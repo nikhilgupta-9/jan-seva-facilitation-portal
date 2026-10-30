@@ -21,6 +21,11 @@ ErrorDocument 404 /404.php
     # hardcoded "RewriteBase /gp/" only matched the local layout, so on
     # Hostinger every rewritten URL (/service/abha-card etc.) 404'd.
 
+    # Clean URLs for Ayushman Help Desk & Smart Cards
+    RewriteRule ^ayushman-helpdesk/?$ ayushman-helpdesk.php [L,QSA]
+    RewriteRule ^ayushman-card/?$ ayushman-card.php [L,QSA]
+    RewriteRule ^verify-id/?$ verify-id.php [L,QSA]
+
     # SEO-friendly scheme detail URL: /scheme/<slug> -> scheme_details.php?slug=<slug>
     RewriteRule ^scheme/([a-zA-Z0-9-]+)/?$ scheme_details.php?slug=$1 [L,QSA]
 

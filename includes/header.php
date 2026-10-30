@@ -222,6 +222,11 @@ $activeNav = $activeNav ?? '';
                         </div>
                     </div>
 
+                    <!-- Ayushman Help Desk (Special Initiative) -->
+                    <a href="<?= BASE_URL ?>/ayushman-helpdesk.php" class="nav-item nav-link <?= ($activeNav === 'ayushman') ? 'active' : '' ?>" style="color: #f59e0b; font-weight: 700;">
+                        <i class="fas fa-hand-holding-medical me-1"></i> Ayushman Help Desk <span class="badge bg-success" style="font-size: 0.65rem;">NEW</span>
+                    </a>
+
                     <!-- 3. Schemes & Benefits -->
                     <a href="<?= BASE_URL ?>/all-scheme.php" class="nav-item nav-link <?= ($activeNav === 'schemes') ? 'active' : '' ?>">Schemes &amp; Benefits</a>
 

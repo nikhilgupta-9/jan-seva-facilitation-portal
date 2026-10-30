@@ -428,3 +428,45 @@ VALUES
 (2, 'e-Shram Card Benefits & Social Security', '₹2 Lakh Accidental Insurance & Direct Welfare Benefits for Workers', 'image/banners/banner-eshram-benefits.webp', 'service/eshram-card', '_self', 'Social Security', 'View Benefits', 2, 1),
 (3, 'e-Shram Instant Card Application', 'Simple Online Registration & Instant Digital Card Delivery', 'image/banners/banner-eshram-application.webp', 'service/eshram-card', '_self', 'Instant Apply', 'Apply Online', 3, 1)
 ON DUPLICATE KEY UPDATE title=VALUES(title), image_url=VALUES(image_url), link_url=VALUES(link_url);
+
+-- ---------------------------------------------------------------
+-- ayushman_applications: Digital Health Smart ID & Help Desk
+-- ---------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS ayushman_applications (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    application_no VARCHAR(50) NOT NULL UNIQUE,
+    card_id VARCHAR(50) NOT NULL UNIQUE,
+    full_name VARCHAR(150) NOT NULL,
+    dob DATE NULL,
+    gender VARCHAR(20) DEFAULT 'Male',
+    mobile VARCHAR(20) NOT NULL,
+    email VARCHAR(150) NOT NULL,
+    address TEXT NULL,
+    state VARCHAR(100) NULL,
+    district VARCHAR(100) NULL,
+    pincode VARCHAR(10) NULL,
+    aadhaar_last4 VARCHAR(4) NULL,
+    aadhaar_verified TINYINT(1) DEFAULT 0,
+    aadhaar_verified_at DATETIME NULL,
+    abha_number VARCHAR(30) NULL,
+    ration_card_no VARCHAR(50) NULL,
+    bocw_reg_no VARCHAR(50) NULL,
+    pmjay_letter_no VARCHAR(50) NULL,
+    photo_url VARCHAR(500) NULL,
+    abha_card_url VARCHAR(500) NULL,
+    ayushman_card_url VARCHAR(500) NULL,
+    ration_card_url VARCHAR(500) NULL,
+    bocw_card_url VARCHAR(500) NULL,
+    pmjay_letter_url VARCHAR(500) NULL,
+    consent_accepted TINYINT(1) DEFAULT 1,
+    encrypted_qr_token LONGTEXT NOT NULL,
+    status ENUM('submitted', 'verified', 'approved', 'rejected') DEFAULT 'submitted',
+    admin_notes TEXT NULL,
+    ip_address VARCHAR(50) NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_mobile (mobile),
+    INDEX idx_email (email),
+    INDEX idx_status (status),
+    INDEX idx_app_no (application_no)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
