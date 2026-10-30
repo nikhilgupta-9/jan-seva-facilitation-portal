@@ -904,7 +904,7 @@ textarea.form-control-gov-area:focus {
                     <div class="input-group">
                       <span class="input-group-text input-group-addon-gov"><i class="fas fa-id-card"></i></span>
                       <input type="text" id="aadhaar_input" class="form-control form-control-gov"
-                             placeholder="XXXX XXXX XXXX" maxlength="14" autocomplete="off">
+                             placeholder="XXXX XXXX XXXX" maxlength="14" autocomplete="off" required>
                     </div>
                   </div>
                 </div>
