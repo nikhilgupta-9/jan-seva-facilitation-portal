@@ -198,7 +198,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_ayushman'])) {
                 $ipAddress
             ]);
 
-            // Dispatch confirmation email
+            // Clear session verification to prevent replay
+            unset($_SESSION['ayushman_aadhaar_auth']);
+            unset($_SESSION['ayushman_email_auth']);
+
+            // Redirect to Card View first, then flush the response to the
+            // browser immediately — the confirmation email's SMTP round trip
+            // (TLS handshake + auth + send, often 1-5s) shouldn't make the
+            // citizen sit and wait on the submit page before seeing their card.
+            session_write_close();
+            header("Location: " . BASE_URL . "/ayushman-card.php?app_no=" . urlencode($appNo) . "&status=success");
+
+            if (function_exists('fastcgi_finish_request')) {
+                fastcgi_finish_request();
+            } else {
+                if (ob_get_level() > 0) {
+                    @ob_end_flush();
+                }
+                flush();
+            }
+
+            // Dispatch confirmation email (best-effort, after the redirect was sent)
             $emailPayload = [
                 'application_no' => $appNo,
                 'card_id'        => $cardId,
@@ -210,12 +230,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_ayushman'])) {
             ];
             @send_ayushman_confirmation_email($emailPayload);
 
-            // Clear session verification to prevent replay
-            unset($_SESSION['ayushman_aadhaar_auth']);
-            unset($_SESSION['ayushman_email_auth']);
-
-            // Redirect to Card View
-            header("Location: " . BASE_URL . "/ayushman-card.php?app_no=" . urlencode($appNo) . "&status=success");
             exit;
 
         } catch (Exception $e) {
@@ -585,6 +599,49 @@ textarea.form-control-gov-area:focus {
     border-radius: 8px;
     border-left: 5px solid #dc2626;
     box-shadow: 0 2px 8px rgba(220,38,38,0.1);
+}
+.ayushman-submit-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.78);
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+.ayushman-submit-box {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 28px 24px;
+    max-width: 360px;
+    text-align: center;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+}
+.ayushman-submit-spinner {
+    width: 44px;
+    height: 44px;
+    border: 4px solid #e2e8f0;
+    border-top-color: #1e3a8a;
+    border-radius: 50%;
+    margin: 0 auto 16px;
+    animation: ayushman-spin 0.8s linear infinite;
+}
+@keyframes ayushman-spin {
+    to { transform: rotate(360deg); }
+}
+.ayushman-submit-box h4 {
+    margin: 0 0 8px;
+    font-weight: 800;
+    color: #1e293b;
+    font-size: 1rem;
+}
+.ayushman-submit-box p {
+    margin: 0;
+    font-size: 0.82rem;
+    color: #b91c1c;
+    font-weight: 600;
+    line-height: 1.5;
 }
 .ayush-about-card {
     background: #ffffff;
@@ -1183,8 +1240,47 @@ textarea.form-control-gov-area:focus {
   </form>
 </div>
 
+<!-- Submission Loader Overlay: shown from form submit until the server redirects to the card page -->
+<div id="ayushman-submit-overlay" class="ayushman-submit-overlay" style="display:none;">
+  <div class="ayushman-submit-box">
+    <div class="ayushman-submit-spinner"></div>
+    <h4 data-hi="आवेदन सबमिट किया जा रहा है..." data-en="Submitting your application...">Submitting your application...</h4>
+    <p data-hi="कृपया प्रतीक्षा करें, इसमें कुछ समय लग सकता है। पेज को बंद न करें, रीफ्रेश न करें और 'वापस' बटन न दबाएं।" data-en="Please wait, this may take a moment. Do not close this page, refresh, or press the back button.">Please wait, this may take a moment. Do not close this page, refresh, or press the back button.</p>
+  </div>
+</div>
+
 <!-- Scripts for Dynamic File Preview and Aadhaar OTP Flow -->
 <script>
+// Show the submission loader as soon as the form is actually being sent to the
+// server, and keep it up (with a "don't go back" warning) until the server's
+// redirect replaces this page — covers the DB write + file uploads + email send.
+(function() {
+  const form = document.getElementById('ayushman-form');
+  const overlay = document.getElementById('ayushman-submit-overlay');
+  const submitBtn = document.getElementById('btn-submit-main');
+
+  if (form && overlay && submitBtn) {
+    form.addEventListener('submit', function() {
+      // Let the browser's own required-field validation run first; only show
+      // the loader (and lock the button) once the form actually passes and submits.
+      if (!form.checkValidity()) {
+        return;
+      }
+      overlay.style.display = 'flex';
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+    });
+  }
+
+  // Warn if the citizen tries to leave/refresh while a submission is in flight
+  window.addEventListener('beforeunload', function(e) {
+    if (overlay && overlay.style.display === 'flex') {
+      e.preventDefault();
+      e.returnValue = '';
+    }
+  });
+})();
+
 // Mobile two-step flow: "Fill Application Form" reveals the real form and scrolls to it
 (function() {
   const btnGotoForm = document.getElementById('btn-goto-form');
