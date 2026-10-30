@@ -252,17 +252,32 @@ include __DIR__ . '/includes/header.php';
         position: absolute;
         left: 0;
         top: 0;
-        width: 100%;
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: 0 0 100% !important;
         padding: 0;
         margin: 0;
+    }
+    .smart-card-wrapper,
+    .smart-card-wrapper .container,
+    .smart-card-wrapper .row {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        display: block !important;
     }
     .pvc-smart-card {
         box-shadow: none !important;
         border: 1px solid #000 !important;
         page-break-inside: avoid;
-        margin-bottom: 20px !important;
+        margin: 0 auto 20px !important;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
+    }
+    @page {
+        size: auto;
+        margin: 10mm;
     }
 }
 </style>

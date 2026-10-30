@@ -34,26 +34,28 @@ include __DIR__ . '/header.php';
 <style>
 .scanner-card {
     background: #ffffff;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--adm-border);
     border-radius: 12px;
-    box-shadow: 0 4px 18px rgba(11,60,93,0.06);
+    box-shadow: 0 4px 18px rgba(2, 132, 199, 0.06);
     overflow: hidden;
     margin-bottom: 24px;
 }
 .scanner-header {
-    background: #0b3c5d;
+    background: linear-gradient(135deg, var(--adm-blue-dark) 0%, #0b3c5d 100%);
     color: #ffffff;
-    padding: 16px 20px;
+    padding: 14px 18px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
 }
 .camera-viewport-box {
     position: relative;
     background: #0f172a;
     border-radius: 10px;
     overflow: hidden;
-    min-height: 280px;
+    min-height: 240px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -61,6 +63,12 @@ include __DIR__ . '/header.php';
 #qr-reader {
     width: 100% !important;
     border: none !important;
+}
+.camera-fullscreen-overlay {
+    display: none;
+}
+.camera-fullscreen-gallery-btn {
+    display: none;
 }
 #qr-reader__dashboard {
     padding: 10px;
@@ -83,12 +91,30 @@ include __DIR__ . '/header.php';
     0%, 100% { top: 15%; opacity: 0.8; }
     50% { top: 85%; opacity: 1; }
 }
+.scanner-nav-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    border-bottom: 1px solid var(--adm-border);
+}
+.scanner-nav-tabs .nav-link {
+    white-space: nowrap;
+    font-weight: 700;
+    font-size: 0.86rem;
+    color: #475569;
+}
+.scanner-nav-tabs .nav-link.active {
+    color: var(--adm-blue-dark);
+    border-bottom: 2px solid var(--adm-blue-dark);
+    background: transparent;
+}
 .citizen-dossier-box {
     background: #ffffff;
-    border: 2px solid #10b981;
+    border: 2px solid var(--adm-green);
     border-radius: 12px;
-    padding: 24px;
-    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.12);
+    padding: 20px;
+    box-shadow: 0 6px 20px rgba(22, 163, 74, 0.1);
 }
 .dossier-header {
     display: flex;
@@ -103,8 +129,9 @@ include __DIR__ . '/header.php';
     height: 95px;
     object-fit: cover;
     border-radius: 8px;
-    border: 2px solid #0b3c5d;
+    border: 2px solid var(--adm-blue-dark);
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    flex-shrink: 0;
 }
 .dossier-meta-grid {
     display: grid;
@@ -114,7 +141,7 @@ include __DIR__ . '/header.php';
 }
 .dossier-field {
     background: #f8fafc;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--adm-border);
     border-radius: 6px;
     padding: 8px 12px;
 }
@@ -135,7 +162,7 @@ include __DIR__ . '/header.php';
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: #eff6ff;
+    background: var(--adm-blue-tint);
     border: 1px solid #bfdbfe;
     color: #1d4ed8;
     padding: 6px 12px;
@@ -151,32 +178,175 @@ include __DIR__ . '/header.php';
     background: #dbeafe;
     color: #1e40af;
 }
+.scanner-page-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+}
+.scanner-actions-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.scanner-actions-row .btn {
+    flex: 1 1 auto;
+    min-width: 150px;
+}
+
+/* ===== Mobile ===== */
 @media (max-width: 768px) {
     .dossier-meta-grid { grid-template-columns: 1fr; }
     .dossier-header { flex-direction: column; text-align: center; }
+    .scanner-page-head { text-align: center; }
+    .scanner-page-head > div:last-child { width: 100%; }
+    .scanner-page-head .btn { width: 100%; }
+    .scanner-actions-row .btn { min-width: 100%; }
+
+    /* PhonePe-style: camera takes over the entire screen on mobile */
+    #tab-camera .camera-viewport-box {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100vw;
+        height: 100vh;
+        min-height: 100vh;
+        border-radius: 0;
+        z-index: 99999;
+    }
+    #tab-camera .camera-viewport-box #qr-reader {
+        height: 100% !important;
+    }
+    #tab-camera .camera-viewport-box #qr-reader video {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+    }
+    /* Hide the default html5-qrcode chrome (file-select link etc.) in fullscreen mode */
+    #tab-camera .camera-viewport-box #qr-reader__dashboard,
+    #tab-camera .camera-viewport-box #qr-reader__camera_selection,
+    #tab-camera .camera-viewport-box img[alt="Info icon"] {
+        display: none !important;
+    }
+    .camera-fullscreen-overlay {
+        display: flex;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 100000;
+        justify-content: space-between;
+        align-items: center;
+        padding: 14px 16px;
+        background: linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0) 100%);
+    }
+    .camera-fullscreen-overlay .badge {
+        font-size: 0.78rem;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-weight: 700;
+        color: #fff;
+    }
+    .camera-fullscreen-close {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.18);
+        border: none;
+        color: #fff;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .camera-fullscreen-hint {
+        position: absolute;
+        bottom: 92px;
+        left: 16px;
+        right: 16px;
+        z-index: 100000;
+        text-align: center;
+        color: #fff;
+        font-size: 0.82rem;
+        text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+    }
+    .camera-fullscreen-gallery-btn {
+        position: absolute;
+        bottom: 28px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 100000;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(255,255,255,0.92);
+        color: #0f172a;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 30px;
+        font-size: 0.86rem;
+        font-weight: 700;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+    }
+    .camera-fullscreen-gallery-btn i {
+        font-size: 1.05rem;
+        color: var(--adm-blue-dark);
+    }
+    .camera-fullscreen-gallery-btn:active {
+        background: #e2e8f0;
+    }
+    /* Everything else on the page stays underneath/hidden while the camera is full-screen */
+    body.scanner-fullscreen-active .scanner-header,
+    body.scanner-fullscreen-active .scanner-nav-tabs,
+    body.scanner-fullscreen-active #tab-camera > div:not(.camera-viewport-box),
+    body.scanner-fullscreen-active .scanner-page-head {
+        visibility: hidden;
+    }
+    /* Also tuck away the admin shell (sidebar/topbar) so the camera truly covers the whole screen */
+    body.scanner-fullscreen-active .admin-sidebar,
+    body.scanner-fullscreen-active .admin-topbar,
+    body.scanner-fullscreen-active .admin-sidebar-backdrop {
+        display: none !important;
+    }
+    body.scanner-fullscreen-active .admin-content-wrap {
+        margin-left: 0 !important;
+        padding-top: 0 !important;
+    }
+    body.scanner-fullscreen-active main.admin-main {
+        padding: 0 !important;
+    }
+}
+@media (max-width: 575px) {
+    .scanner-header h4 { font-size: 0.92rem; }
+    .dossier-photo { width: 72px; height: 86px; }
+    .doc-pill-link { font-size: 0.78rem; padding: 5px 10px; }
 }
 </style>
 
-<div class="row" style="margin-bottom: 18px; align-items: center;">
-  <div class="col-md-8 col-sm-12">
-    <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 4px;">
-      <span class="badge" style="background: #dc2626; font-size: 0.75rem; padding: 4px 10px;">
+<div class="scanner-page-head">
+  <div>
+    <div style="display: flex; gap: 6px; align-items: center; margin-bottom: 6px; flex-wrap: wrap;">
+      <span class="label label-danger">
         <i class="fas fa-lock"></i> AES-256 RESTRICTED SCANNER
       </span>
-      <span class="badge" style="background: #059669; font-size: 0.75rem; padding: 4px 10px;">
+      <span class="label label-success">
         <i class="fas fa-shield-alt"></i> NHA & DPDP COMPLIANT
       </span>
     </div>
-    <h3 style="margin: 0; font-weight: 800; color: #0b3c5d;">
-      अधिकृत प्रशासनिक क्यूआर स्कैनर एवं डिक्रिप्शन टर्मिनल
+    <h3 style="margin: 0; font-weight: 800; color: var(--adm-blue-dark); font-size: 1.25rem;">
+      Authorized Admin QR Scanner & Decryption Terminal
     </h3>
-    <p style="margin: 2px 0 0; color: #64748b; font-size: 0.88rem;">
-      केवल अधिकृत प्रशासनिक अधिकारी ही डिजिटल हेल्थ स्मार्ट कार्ड के एन्क्रिप्टेड क्यूआर कोड को डिक्रिप्ट कर सकते हैं।
+    <p style="margin: 2px 0 0; color: #64748b; font-size: 0.86rem;">
+      Only authorized administrative officers can decrypt the encrypted QR code on a Digital Health Smart Card.
     </p>
   </div>
-  <div class="col-md-4 col-sm-12 text-right">
+  <div>
     <a href="<?php echo BASE_URL; ?>/admin/ayushman-helpdesk.php" class="btn btn-default" style="font-weight: 600; border-radius: 8px;">
-      <i class="fas fa-arrow-left"></i> आवेदन सूची पर वापस जाएं
+      <i class="fas fa-arrow-left"></i> Back to Applications List
     </a>
   </div>
 </div>
@@ -187,61 +357,73 @@ include __DIR__ . '/header.php';
     <div class="scanner-card">
       <div class="scanner-header">
         <h4 style="margin: 0; font-weight: 700; font-size: 1rem;">
-          <i class="fas fa-camera"></i> क्यूआर कोड स्कैनिंग टर्मिनल
+          <i class="fas fa-camera"></i> QR Code Scanning Terminal
         </h4>
-        <span id="scanner-status-badge" class="badge" style="background: #10b981; font-size: 0.75rem;">
+        <span id="scanner-status-badge" class="label label-success">
           Ready
         </span>
       </div>
 
-      <div style="padding: 16px;">
+      <div style="padding: 14px;">
         <!-- Nav Tabs -->
-        <ul class="nav nav-tabs" style="margin-bottom: 16px;">
-          <li class="active">
-            <a href="#tab-camera" data-toggle="tab" style="font-weight: 700; font-size: 0.86rem;">
-              <i class="fas fa-video text-primary"></i> लाइव कैमरा (Webcam)
-            </a>
+        <ul class="nav nav-tabs scanner-nav-tabs" id="scannerTabs" role="tablist" style="margin-bottom: 16px;">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="tab-camera-btn" data-bs-toggle="tab" data-bs-target="#tab-camera" type="button" role="tab" aria-selected="true">
+              <i class="fas fa-video"></i> Live Camera (Webcam)
+            </button>
           </li>
-          <li>
-            <a href="#tab-image" data-toggle="tab" style="font-weight: 700; font-size: 0.86rem;">
-              <i class="fas fa-file-image text-warning"></i> फोटो अपलोड (File)
-            </a>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab-image-btn" data-bs-toggle="tab" data-bs-target="#tab-image" type="button" role="tab" aria-selected="false">
+              <i class="fas fa-file-image"></i> Photo Upload (File)
+            </button>
           </li>
-          <li>
-            <a href="#tab-manual" data-toggle="tab" style="font-weight: 700; font-size: 0.86rem;">
-              <i class="fas fa-keyboard text-info"></i> टोकन पेस्ट (Manual)
-            </a>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab-manual-btn" data-bs-toggle="tab" data-bs-target="#tab-manual" type="button" role="tab" aria-selected="false">
+              <i class="fas fa-keyboard"></i> Paste Token (Manual)
+            </button>
           </li>
         </ul>
 
         <div class="tab-content">
           <!-- TAB 1: Live Webcam Scanner -->
-          <div class="tab-pane active" id="tab-camera">
+          <div class="tab-pane fade show active" id="tab-camera" role="tabpanel">
             <div class="camera-viewport-box" id="camera-box">
+              <div class="camera-fullscreen-overlay">
+                <span class="badge" id="fullscreen-status-badge" style="background: #10b981;">
+                  <i class="fas fa-qrcode"></i> Scanning...
+                </span>
+                <button type="button" class="camera-fullscreen-close" id="btn-fullscreen-close" title="Stop scanner / go back">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
               <div id="qr-reader"></div>
               <div class="scan-laser-line" id="laser-line" style="display: none;"></div>
+              <div class="camera-fullscreen-hint">
+                Align the smart card's QR code within the frame
+              </div>
+              <button type="button" class="camera-fullscreen-gallery-btn" id="btn-fullscreen-gallery" title="Choose QR photo from gallery">
+                <i class="fas fa-images"></i>
+                <span>Upload from Gallery</span>
+              </button>
             </div>
 
             <div style="margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap;">
-              <button type="button" id="btn-start-camera" class="btn btn-primary" style="background: #0b3c5d; border-color: #0b3c5d; font-weight: 700;">
-                <i class="fas fa-play"></i> कैमरा शुरू करें (Start Camera)
-              </button>
               <button type="button" id="btn-stop-camera" class="btn btn-default" style="font-weight: 700; display: none;">
-                <i class="fas fa-stop"></i> कैमरा बंद करें
+                <i class="fas fa-stop"></i> Stop Camera
               </button>
             </div>
             <div style="font-size: 0.78rem; color: #64748b; margin-top: 8px;">
-              <i class="fas fa-info-circle"></i> स्मार्ट आईडी कार्ड को कैमरे के सामने रखें। क्यूआर पहचानते ही डेटा तुरंत डिक्रिप्ट हो जाएगा।
+              <i class="fas fa-info-circle"></i> Hold the Smart ID Card in front of the camera. Data decrypts the instant the QR is recognized.
             </div>
           </div>
 
           <!-- TAB 2: File Upload Scanner -->
-          <div class="tab-pane" id="tab-image">
-            <div style="border: 2px dashed #cbd5e1; background: #f8fafc; border-radius: 10px; padding: 24px; text-align: center;">
-              <i class="fas fa-cloud-upload-alt fa-3x" style="color: #0b3c5d; margin-bottom: 10px;"></i>
-              <h5 style="margin: 0 0 6px; font-weight: 700;">कार्ड की फोटो या स्क्रीनशॉट चुनें</h5>
+          <div class="tab-pane fade" id="tab-image" role="tabpanel">
+            <div style="border: 2px dashed #cbd5e1; background: #f8fafc; border-radius: 10px; padding: 20px; text-align: center;">
+              <i class="fas fa-cloud-upload-alt fa-3x" style="color: var(--adm-blue-dark); margin-bottom: 10px;"></i>
+              <h5 style="margin: 0 0 6px; font-weight: 700;">Choose a photo or screenshot of the card</h5>
               <p style="font-size: 0.82rem; color: #64748b; margin-bottom: 14px;">
-                JPEG, PNG या WEBP फाइल चुनें जिसमें क्यूआर कोड मौजूद हो।
+                Select a JPEG, PNG or WEBP file that contains the QR code.
               </p>
               <input type="file" id="qr-file-input" accept="image/*" class="form-control" style="max-width: 280px; margin: 0 auto;">
             </div>
@@ -249,15 +431,15 @@ include __DIR__ . '/header.php';
           </div>
 
           <!-- TAB 3: Manual Token Input -->
-          <div class="tab-pane" id="tab-manual">
+          <div class="tab-pane fade" id="tab-manual" role="tabpanel">
             <div class="form-group">
               <label style="font-size: 0.85rem; font-weight: 700; color: #334155;">
-                सत्यापन URL अथवा एन्क्रिप्टेड टोकन पेस्ट करें:
+                Paste the verification URL or encrypted token:
               </label>
-              <textarea id="manual-token-input" rows="4" class="form-control" style="font-family: monospace; font-size: 0.82rem;" placeholder="उदा. http://localhost/.../verify-id.php?token=... अथवा SECURE-AYUSHMAN:v1:..."></textarea>
+              <textarea id="manual-token-input" rows="4" class="form-control" style="font-family: monospace; font-size: 0.82rem;" placeholder="e.g. http://localhost/.../verify-id.php?token=... or SECURE-AYUSHMAN:v1:..."></textarea>
             </div>
-            <button type="button" id="btn-decrypt-manual" class="btn btn-success btn-block" style="font-weight: 700;">
-              <i class="fas fa-unlock-alt"></i> टोकन डिक्रिप्ट करें (Decrypt Payload)
+            <button type="button" id="btn-decrypt-manual" class="btn btn-success" style="font-weight: 700; width: 100%;">
+              <i class="fas fa-unlock-alt"></i> Decrypt Token (Decrypt Payload)
             </button>
           </div>
         </div>
@@ -270,11 +452,11 @@ include __DIR__ . '/header.php';
   <div class="col-lg-7 col-md-7 col-sm-12">
     
     <!-- Empty Placeholder State -->
-    <div id="dossier-placeholder" style="<?php echo ($initialDecrypted) ? 'display: none;' : ''; ?> background: #ffffff; border: 2px dashed #cbd5e1; border-radius: 12px; padding: 60px 20px; text-align: center; color: #64748b;">
-      <i class="fas fa-qrcode fa-5x text-muted" style="margin-bottom: 18px; opacity: 0.35;"></i>
-      <h4 style="font-weight: 800; color: #1e293b; margin-top: 0;">स्कैनर प्रतीक्षा कर रहा है (Awaiting Scan)</h4>
-      <p style="max-width: 440px; margin: 0 auto; font-size: 0.9rem;">
-        बाईं ओर से कैमरा शुरू करें, स्मार्ट कार्ड का स्क्रीनशॉट अपलोड करें अथवा एन्क्रिप्टेड टोकन पेस्ट करें। डिक्रिप्टेड नागरिक विवरण यहाँ प्रदर्शित होगा।
+    <div id="dossier-placeholder" style="<?php echo ($initialDecrypted) ? 'display: none;' : ''; ?> background: #ffffff; border: 2px dashed #cbd5e1; border-radius: 12px; padding: 40px 18px; text-align: center; color: #64748b;">
+      <i class="fas fa-qrcode fa-4x" style="margin-bottom: 16px; opacity: 0.35; color: #94a3b8;"></i>
+      <h4 style="font-weight: 800; color: #1e293b; margin-top: 0; font-size: 1.1rem;">Scanner is Waiting (Awaiting Scan)</h4>
+      <p style="max-width: 440px; margin: 0 auto; font-size: 0.88rem;">
+        Start the camera on the left, upload a screenshot of the smart card, or paste the encrypted token. Decrypted citizen details will appear here.
       </p>
     </div>
 
@@ -286,16 +468,16 @@ include __DIR__ . '/header.php';
       <div class="citizen-dossier-box">
         
         <!-- Authenticated Top Banner -->
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 10px 14px; border-radius: 8px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 10px 14px; border-radius: 8px; flex-wrap: wrap; gap: 6px;">
           <div>
-            <span class="badge" style="background: #059669; font-size: 0.8rem; padding: 5px 10px;">
+            <span class="label label-success">
               <i class="fas fa-check-double"></i> AES-256 SIGNATURE VERIFIED
             </span>
-            <span id="dossier-verified-timestamp" style="font-size: 0.78rem; color: #065f46; margin-left: 8px; font-weight: 600;">
+            <span id="dossier-verified-timestamp" style="font-size: 0.76rem; color: #065f46; margin-left: 8px; font-weight: 600;">
               <?php echo date('d M Y, h:i A'); ?>
             </span>
           </div>
-          <div style="font-family: monospace; font-size: 0.78rem; font-weight: 800; color: #065f46;">
+          <div style="font-family: monospace; font-size: 0.74rem; font-weight: 800; color: #065f46;">
             HMAC-SHA256 VALID
           </div>
         </div>
@@ -318,7 +500,7 @@ include __DIR__ . '/header.php';
             </div>
             <div style="margin-top: 6px;">
               <span class="badge" style="background: #10b981; font-size: 0.78rem; padding: 4px 8px;">
-                <i class="fas fa-fingerprint"></i> आधार e-KYC: <span id="dossier-aadhaar">XXXX-XXXX-<?php echo htmlspecialchars($initialDecrypted['aadhaar_last4'] ?? '0000'); ?></span>
+                <i class="fas fa-fingerprint"></i> Aadhaar e-KYC: <span id="dossier-aadhaar">XXXX-XXXX-<?php echo htmlspecialchars($initialDecrypted['aadhaar_last4'] ?? '0000'); ?></span>
               </span>
               <span id="dossier-status-pill" class="badge" style="background: #059669; font-size: 0.78rem; text-transform: uppercase;">
                 <?php echo htmlspecialchars($initialDbRecord['status'] ?? 'Verified'); ?>
@@ -329,51 +511,51 @@ include __DIR__ . '/header.php';
 
         <!-- Detailed Identification Grid -->
         <h5 style="font-weight: 800; color: #0b3c5d; margin-top: 0; margin-bottom: 10px;">
-          <i class="fas fa-id-card text-warning"></i> राष्ट्रीय पहचान एवं स्वास्थ्य खाता विवरण
+          <i class="fas fa-id-card text-warning"></i> National Identity & Health Account Details
         </h5>
-        
+
         <div class="dossier-meta-grid">
           <div class="dossier-field">
-            <span class="dossier-field-label">आवेदन क्रमांक (Application No)</span>
+            <span class="dossier-field-label">Application No</span>
             <span class="dossier-field-value" id="dossier-app-no" style="color: #0b3c5d; font-family: monospace;">
               <?php echo htmlspecialchars($initialDecrypted['app_no'] ?? ''); ?>
             </span>
           </div>
           <div class="dossier-field">
-            <span class="dossier-field-label">डिजिटल स्मार्ट कार्ड आईडी (Card ID)</span>
+            <span class="dossier-field-label">Digital Smart Card ID (Card ID)</span>
             <span class="dossier-field-value" id="dossier-card-id" style="color: #059669; font-family: monospace;">
               <?php echo htmlspecialchars($initialDecrypted['card_id'] ?? ''); ?>
             </span>
           </div>
           <div class="dossier-field">
-            <span class="dossier-field-label">१४ अंकों का आभा नंबर (ABHA ID)</span>
+            <span class="dossier-field-label">14-Digit ABHA Number (ABHA ID)</span>
             <span class="dossier-field-value" id="dossier-abha" style="color: #0284c7; font-family: monospace;">
-              <?php echo htmlspecialchars($initialDecrypted['abha_number'] ?: 'लागू नहीं (Not Provided)'); ?>
+              <?php echo htmlspecialchars($initialDecrypted['abha_number'] ?: 'Not Provided'); ?>
             </span>
           </div>
           <div class="dossier-field">
-            <span class="dossier-field-label">राशन कार्ड नंबर (Ration Card)</span>
+            <span class="dossier-field-label">Ration Card Number</span>
             <span class="dossier-field-value" id="dossier-ration">
-              <?php echo htmlspecialchars($initialDecrypted['ration_card_no'] ?: 'लागू नहीं'); ?>
+              <?php echo htmlspecialchars($initialDecrypted['ration_card_no'] ?: 'Not Applicable'); ?>
             </span>
           </div>
           <div class="dossier-field">
-            <span class="dossier-field-label">BOCW / श्रमिक पंजीकरण संख्या</span>
+            <span class="dossier-field-label">BOCW / Labour Registration Number</span>
             <span class="dossier-field-value" id="dossier-bocw">
-              <?php echo htmlspecialchars($initialDecrypted['bocw_reg_no'] ?: 'लागू नहीं'); ?>
+              <?php echo htmlspecialchars($initialDecrypted['bocw_reg_no'] ?: 'Not Applicable'); ?>
             </span>
           </div>
           <div class="dossier-field">
-            <span class="dossier-field-label">PMJAY / आयुष्मान भारत पत्र संख्या</span>
+            <span class="dossier-field-label">PMJAY / Ayushman Bharat Letter Number</span>
             <span class="dossier-field-value" id="dossier-pmjay">
-              <?php echo htmlspecialchars($initialDecrypted['pmjay_letter_no'] ?: 'लागू नहीं'); ?>
+              <?php echo htmlspecialchars($initialDecrypted['pmjay_letter_no'] ?: 'Not Applicable'); ?>
             </span>
           </div>
         </div>
 
         <!-- Address -->
         <div class="dossier-field" style="margin-bottom: 16px;">
-          <span class="dossier-field-label">नागरिक का स्थायी पता (Residential Address)</span>
+          <span class="dossier-field-label">Citizen's Permanent Address (Residential Address)</span>
           <span class="dossier-field-value" id="dossier-address" style="font-weight: 500; font-size: 0.88rem;">
             <?php 
               $addrArr = array_filter([$initialDecrypted['address'] ?? '', $initialDecrypted['district'] ?? '', $initialDecrypted['state'] ?? '', $initialDecrypted['pincode'] ?? '']);
@@ -384,53 +566,53 @@ include __DIR__ . '/header.php';
 
         <!-- Uploaded Documents Preview Section -->
         <h5 style="font-weight: 800; color: #0b3c5d; margin-top: 18px; margin-bottom: 10px;">
-          <i class="fas fa-folder-open text-primary"></i> संलग्न सरकारी दस्तावेज (Uploaded Citizen Documents)
+          <i class="fas fa-folder-open text-primary"></i> Attached Government Documents (Uploaded Citizen Documents)
         </h5>
-        
+
         <div id="dossier-documents-box" style="margin-bottom: 18px;">
           <!-- Dynamically populated or rendered from initialDbRecord -->
           <?php if (!empty($initialDbRecord['photo_url'])): ?>
             <a href="<?php echo BASE_URL . '/' . htmlspecialchars($initialDbRecord['photo_url']); ?>" target="_blank" class="doc-pill-link">
-              <i class="fas fa-camera"></i> नागरिक फोटो देखें
+              <i class="fas fa-camera"></i> View Citizen Photo
             </a>
           <?php endif; ?>
           <?php if (!empty($initialDbRecord['abha_card_url'])): ?>
             <a href="<?php echo BASE_URL . '/' . htmlspecialchars($initialDbRecord['abha_card_url']); ?>" target="_blank" class="doc-pill-link">
-              <i class="fas fa-id-card"></i> आभा कार्ड देखें
+              <i class="fas fa-id-card"></i> View ABHA Card
             </a>
           <?php endif; ?>
           <?php if (!empty($initialDbRecord['ayushman_card_url'])): ?>
             <a href="<?php echo BASE_URL . '/' . htmlspecialchars($initialDbRecord['ayushman_card_url']); ?>" target="_blank" class="doc-pill-link">
-              <i class="fas fa-heartbeat text-danger"></i> आयुष्मान कार्ड देखें
+              <i class="fas fa-heartbeat text-danger"></i> View Ayushman Card
             </a>
           <?php endif; ?>
           <?php if (!empty($initialDbRecord['ration_card_url'])): ?>
             <a href="<?php echo BASE_URL . '/' . htmlspecialchars($initialDbRecord['ration_card_url']); ?>" target="_blank" class="doc-pill-link">
-              <i class="fas fa-wheat-awn text-warning"></i> राशन कार्ड देखें
+              <i class="fas fa-wheat-awn text-warning"></i> View Ration Card
             </a>
           <?php endif; ?>
           <?php if (!empty($initialDbRecord['bocw_card_url'])): ?>
             <a href="<?php echo BASE_URL . '/' . htmlspecialchars($initialDbRecord['bocw_card_url']); ?>" target="_blank" class="doc-pill-link">
-              <i class="fas fa-hard-hat text-secondary"></i> BOCW श्रमिक कार्ड
+              <i class="fas fa-hard-hat text-secondary"></i> BOCW Labour Card
             </a>
           <?php endif; ?>
           <?php if (!empty($initialDbRecord['pmjay_letter_url'])): ?>
             <a href="<?php echo BASE_URL . '/' . htmlspecialchars($initialDbRecord['pmjay_letter_url']); ?>" target="_blank" class="doc-pill-link">
-              <i class="fas fa-envelope-open-text text-success"></i> PMJAY पत्र
+              <i class="fas fa-envelope-open-text text-success"></i> PMJAY Letter
             </a>
           <?php endif; ?>
         </div>
 
         <!-- Administrative Actions -->
-        <div style="border-top: 1.5px dashed #cbd5e1; padding-top: 16px; display: flex; gap: 8px; flex-wrap: wrap;">
-          <a id="btn-view-card" href="<?php echo BASE_URL; ?>/ayushman-card.php?app_no=<?php echo urlencode($initialDecrypted['app_no'] ?? ''); ?>" target="_blank" class="btn btn-primary" style="background: #0b3c5d; border-color: #0b3c5d; font-weight: 700;">
-            <i class="fas fa-id-card"></i> स्मार्ट आईडी कार्ड प्रिंट/देखें
+        <div class="scanner-actions-row" style="border-top: 1.5px dashed #cbd5e1; padding-top: 16px;">
+          <a id="btn-view-card" href="<?php echo BASE_URL; ?>/ayushman-card.php?app_no=<?php echo urlencode($initialDecrypted['app_no'] ?? ''); ?>" target="_blank" class="btn btn-primary" style="font-weight: 700;">
+            <i class="fas fa-id-card"></i> Print/View Smart ID Card
           </a>
-          <button type="button" id="btn-quick-approve" class="btn btn-success" style="background: #059669; border-color: #059669; font-weight: 700;">
-            <i class="fas fa-check-circle"></i> स्वीकृत करें (Approve)
+          <button type="button" id="btn-quick-approve" class="btn btn-success" style="font-weight: 700;">
+            <i class="fas fa-check-circle"></i> Approve
           </button>
           <button type="button" id="btn-scan-next" class="btn btn-default" style="font-weight: 700;">
-            <i class="fas fa-redo"></i> अगला कार्ड स्कैन करें
+            <i class="fas fa-redo"></i> Scan Next Card
           </button>
         </div>
 
@@ -446,14 +628,26 @@ include __DIR__ . '/header.php';
 <script>
 (function() {
   const baseUrl = "<?php echo BASE_URL; ?>";
-  const btnStartCamera = document.getElementById("btn-start-camera");
   const btnStopCamera = document.getElementById("btn-stop-camera");
   const laserLine = document.getElementById("laser-line");
   const scannerStatusBadge = document.getElementById("scanner-status-badge");
+  const fullscreenStatusBadge = document.getElementById("fullscreen-status-badge");
+  const btnFullscreenClose = document.getElementById("btn-fullscreen-close");
   const qrFileInput = document.getElementById("qr-file-input");
+  const btnFullscreenGallery = document.getElementById("btn-fullscreen-gallery");
   const btnDecryptManual = document.getElementById("btn-decrypt-manual");
   const manualTokenInput = document.getElementById("manual-token-input");
-  
+  const isMobileViewport = () => window.matchMedia("(max-width: 768px)").matches;
+
+  function enterFullscreenCamera() {
+    if (isMobileViewport()) {
+      document.body.classList.add("scanner-fullscreen-active");
+    }
+  }
+  function exitFullscreenCamera() {
+    document.body.classList.remove("scanner-fullscreen-active");
+  }
+
   const dossierPlaceholder = document.getElementById("dossier-placeholder");
   const citizenDossierPanel = document.getElementById("citizen-dossier-panel");
   const scanAlertBox = document.getElementById("scan-alert-box");
@@ -486,9 +680,10 @@ include __DIR__ . '/header.php';
     if (html5QrCode && isScanning) {
       stopCameraScanner();
     }
+    exitFullscreenCamera();
     scannerStatusBadge.className = "badge";
     scannerStatusBadge.style.background = "#0284c7";
-    scannerStatusBadge.innerText = "डिक्रिप्ट हो रहा है...";
+    scannerStatusBadge.innerText = "Decrypting...";
 
     // AJAX Call to Decrypt Endpoint
     const formData = new FormData();
@@ -502,16 +697,16 @@ include __DIR__ . '/header.php';
     .then(data => {
       if (data.success && data.payload) {
         scannerStatusBadge.style.background = "#059669";
-        scannerStatusBadge.innerText = "डिक्रिप्टेड ✓";
+        scannerStatusBadge.innerText = "Decrypted ✓";
         renderDossier(data.payload, data.db_record, data.verified_at);
       } else {
         scannerStatusBadge.style.background = "#dc2626";
-        scannerStatusBadge.innerText = "अमान्य हस्ताक्षर";
-        showErrorAlert(data.message || "क्रिप्टोग्राफिक डिक्रिप्शन विफल रहा।");
+        scannerStatusBadge.innerText = "Invalid Signature";
+        showErrorAlert(data.message || "Cryptographic decryption failed.");
       }
     })
     .catch(err => {
-      showErrorAlert("सर्वर त्रुटि: " + err);
+      showErrorAlert("Server error: " + err);
     });
   }
 
@@ -525,17 +720,17 @@ include __DIR__ . '/header.php';
     currentDbAppId = dbRecord ? dbRecord.id : 0;
 
     document.getElementById("dossier-verified-timestamp").innerText = verifiedAt || "";
-    document.getElementById("dossier-name").innerText = payload.full_name || "नागरिक";
+    document.getElementById("dossier-name").innerText = payload.full_name || "Citizen";
     document.getElementById("dossier-gender-dob").innerText = (payload.gender || "Male") + " | DOB: " + (payload.dob || "N/A");
     document.getElementById("dossier-mobile").innerText = payload.mobile || "N/A";
     document.getElementById("dossier-email").innerText = payload.email || "N/A";
     document.getElementById("dossier-aadhaar").innerText = "XXXX-XXXX-" + (payload.aadhaar_last4 || "0000");
     document.getElementById("dossier-app-no").innerText = payload.app_no || "N/A";
     document.getElementById("dossier-card-id").innerText = payload.card_id || "N/A";
-    document.getElementById("dossier-abha").innerText = payload.abha_number || "लागू नहीं";
-    document.getElementById("dossier-ration").innerText = payload.ration_card_no || "लागू नहीं";
-    document.getElementById("dossier-bocw").innerText = payload.bocw_reg_no || "लागू नहीं";
-    document.getElementById("dossier-pmjay").innerText = payload.pmjay_letter_no || "लागू नहीं";
+    document.getElementById("dossier-abha").innerText = payload.abha_number || "Not Applicable";
+    document.getElementById("dossier-ration").innerText = payload.ration_card_no || "Not Applicable";
+    document.getElementById("dossier-bocw").innerText = payload.bocw_reg_no || "Not Applicable";
+    document.getElementById("dossier-pmjay").innerText = payload.pmjay_letter_no || "Not Applicable";
 
     const addrArr = [payload.address, payload.district, payload.state, payload.pincode].filter(Boolean);
     document.getElementById("dossier-address").innerText = addrArr.join(", ") || "N/A";
@@ -560,22 +755,22 @@ include __DIR__ . '/header.php';
     docBox.innerHTML = "";
     if (dbRecord) {
       if (dbRecord.photo_url) {
-        docBox.innerHTML += `<a href="${baseUrl}/${dbRecord.photo_url}" target="_blank" class="doc-pill-link"><i class="fas fa-camera"></i> नागरिक फोटो देखें</a>`;
+        docBox.innerHTML += `<a href="${baseUrl}/${dbRecord.photo_url}" target="_blank" class="doc-pill-link"><i class="fas fa-camera"></i> View Citizen Photo</a>`;
       }
       if (dbRecord.abha_card_url) {
-        docBox.innerHTML += `<a href="${baseUrl}/${dbRecord.abha_card_url}" target="_blank" class="doc-pill-link"><i class="fas fa-id-card"></i> आभा कार्ड देखें</a>`;
+        docBox.innerHTML += `<a href="${baseUrl}/${dbRecord.abha_card_url}" target="_blank" class="doc-pill-link"><i class="fas fa-id-card"></i> View ABHA Card</a>`;
       }
       if (dbRecord.ayushman_card_url) {
-        docBox.innerHTML += `<a href="${baseUrl}/${dbRecord.ayushman_card_url}" target="_blank" class="doc-pill-link"><i class="fas fa-heartbeat text-danger"></i> आयुष्मान कार्ड देखें</a>`;
+        docBox.innerHTML += `<a href="${baseUrl}/${dbRecord.ayushman_card_url}" target="_blank" class="doc-pill-link"><i class="fas fa-heartbeat text-danger"></i> View Ayushman Card</a>`;
       }
       if (dbRecord.ration_card_url) {
-        docBox.innerHTML += `<a href="${baseUrl}/${dbRecord.ration_card_url}" target="_blank" class="doc-pill-link"><i class="fas fa-wheat-awn text-warning"></i> राशन कार्ड देखें</a>`;
+        docBox.innerHTML += `<a href="${baseUrl}/${dbRecord.ration_card_url}" target="_blank" class="doc-pill-link"><i class="fas fa-wheat-awn text-warning"></i> View Ration Card</a>`;
       }
       if (dbRecord.bocw_card_url) {
-        docBox.innerHTML += `<a href="${baseUrl}/${dbRecord.bocw_card_url}" target="_blank" class="doc-pill-link"><i class="fas fa-hard-hat text-secondary"></i> BOCW श्रमिक कार्ड</a>`;
+        docBox.innerHTML += `<a href="${baseUrl}/${dbRecord.bocw_card_url}" target="_blank" class="doc-pill-link"><i class="fas fa-hard-hat text-secondary"></i> BOCW Labour Card</a>`;
       }
       if (dbRecord.pmjay_letter_url) {
-        docBox.innerHTML += `<a href="${baseUrl}/${dbRecord.pmjay_letter_url}" target="_blank" class="doc-pill-link"><i class="fas fa-envelope-open-text text-success"></i> PMJAY पत्र</a>`;
+        docBox.innerHTML += `<a href="${baseUrl}/${dbRecord.pmjay_letter_url}" target="_blank" class="doc-pill-link"><i class="fas fa-envelope-open-text text-success"></i> PMJAY Letter</a>`;
       }
     }
 
@@ -584,6 +779,7 @@ include __DIR__ . '/header.php';
   }
 
   function showErrorAlert(msg) {
+    exitFullscreenCamera();
     scanAlertBox.className = "alert alert-danger";
     scanAlertBox.innerHTML = '<i class="fas fa-exclamation-triangle"></i> ' + msg;
     scanAlertBox.style.display = "block";
@@ -592,47 +788,65 @@ include __DIR__ . '/header.php';
   }
 
   // 2. Camera Controls
-  if (btnStartCamera) {
-    btnStartCamera.addEventListener("click", function() {
-      if (!html5QrCode) {
-        html5QrCode = new Html5Qrcode("qr-reader");
-      }
+  function startCameraScanner() {
+    if (!html5QrCode) {
+      html5QrCode = new Html5Qrcode("qr-reader");
+    }
 
-      scannerStatusBadge.className = "badge";
-      scannerStatusBadge.style.background = "#f59e0b";
-      scannerStatusBadge.innerText = "कैमरा चालू...";
+    scannerStatusBadge.className = "badge";
+    scannerStatusBadge.style.background = "#f59e0b";
+    scannerStatusBadge.innerText = "Starting Camera...";
 
-      const config = { fps: 10, qrbox: { width: 250, height: 250 } };
-      html5QrCode.start({ facingMode: "environment" }, config, handleQrScanSuccess)
-        .then(() => {
-          isScanning = true;
-          btnStartCamera.style.display = "none";
-          btnStopCamera.style.display = "inline-block";
-          laserLine.style.display = "block";
-          scannerStatusBadge.style.background = "#10b981";
-          scannerStatusBadge.innerText = "स्कैनिंग जारी...";
-        })
-        .catch(err => {
-          alert("कैमरा शुरू करने में असमर्थ: " + err);
-          scannerStatusBadge.style.background = "#dc2626";
-          scannerStatusBadge.innerText = "Camera Error";
-        });
-    });
+    const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+    html5QrCode.start({ facingMode: "environment" }, config, handleQrScanSuccess)
+      .then(() => {
+        isScanning = true;
+        btnStopCamera.style.display = "inline-block";
+        laserLine.style.display = "block";
+        scannerStatusBadge.style.background = "#10b981";
+        scannerStatusBadge.innerText = "Scanning...";
+        if (fullscreenStatusBadge) fullscreenStatusBadge.style.background = "#10b981";
+        enterFullscreenCamera();
+      })
+      .catch(err => {
+        scannerStatusBadge.style.background = "#dc2626";
+        scannerStatusBadge.innerText = "Camera Error";
+        exitFullscreenCamera();
+        showErrorAlert("Unable to start camera: " + err + ". Please grant camera access and refresh the page.");
+      });
+  }
+
+  // Scanner starts automatically as soon as the page opens — no manual start needed.
+  if (!<?php echo $initialDecrypted ? 'true' : 'false'; ?>) {
+    startCameraScanner();
   }
 
   function stopCameraScanner() {
     if (html5QrCode && isScanning) {
       html5QrCode.stop().then(() => {
         isScanning = false;
-        btnStartCamera.style.display = "inline-block";
         btnStopCamera.style.display = "none";
         laserLine.style.display = "none";
       }).catch(err => console.error(err));
     }
+    exitFullscreenCamera();
   }
 
   if (btnStopCamera) {
     btnStopCamera.addEventListener("click", stopCameraScanner);
+  }
+  if (btnFullscreenClose) {
+    btnFullscreenClose.addEventListener("click", function() {
+      stopCameraScanner();
+      window.location.href = baseUrl + "/admin/ayushman-helpdesk.php";
+    });
+  }
+  if (btnFullscreenGallery && qrFileInput) {
+    btnFullscreenGallery.addEventListener("click", function() {
+      // Stop the live camera first so it doesn't fight with the file scanner over the same reader element
+      stopCameraScanner();
+      qrFileInput.click();
+    });
   }
 
   // 3. File Input Scanner
@@ -642,14 +856,14 @@ include __DIR__ . '/header.php';
       const file = e.target.files[0];
       
       const fileScanner = new Html5Qrcode("qr-reader");
-      scannerStatusBadge.innerText = "फोटो स्कैनिंग...";
-      
+      scannerStatusBadge.innerText = "Scanning Photo...";
+
       fileScanner.scanFile(file, true)
         .then(decodedText => {
           handleQrScanSuccess(decodedText);
         })
         .catch(err => {
-          showErrorAlert("इस चित्र में कोई वैध क्यूआर कोड नहीं पाया गया। कृपया स्पष्ट फोटो अपलोड करें।");
+          showErrorAlert("No valid QR code was found in this image. Please upload a clearer photo.");
         });
     });
   }
@@ -659,7 +873,7 @@ include __DIR__ . '/header.php';
     btnDecryptManual.addEventListener("click", function() {
       const val = manualTokenInput.value.trim();
       if (!val) {
-        alert("कृपया टोकन अथवा URL दर्ज करें।");
+        alert("Please enter a token or URL.");
         return;
       }
       handleQrScanSuccess(val);
@@ -671,10 +885,10 @@ include __DIR__ . '/header.php';
   if (btnQuickApprove) {
     btnQuickApprove.addEventListener("click", function() {
       if (!currentDbAppId) {
-        alert("कोई सक्रिय आवेदन रिकॉर्ड नहीं मिला।");
+        alert("No active application record found.");
         return;
       }
-      if (!confirm("क्या आप इस आवेदन को 'Approved' (स्वीकृत) के रूप में चिह्नित करना चाहते हैं?")) {
+      if (!confirm("Do you want to mark this application as 'Approved'?")) {
         return;
       }
 
@@ -703,6 +917,7 @@ include __DIR__ . '/header.php';
       if (qrFileInput) qrFileInput.value = "";
       scannerStatusBadge.style.background = "#10b981";
       scannerStatusBadge.innerText = "Ready";
+      if (!isScanning) startCameraScanner();
     });
   }
 
