@@ -830,7 +830,9 @@ textarea.form-control-gov-area:focus {
                   <label class="form-label-gov" for="email">
                     <span data-hi="ईमेल आईडी" data-en="Email ID">Email ID</span> <span class="req">*</span>
                   </label>
-                  <input type="email" name="email" id="email" class="form-control form-control-gov"
+                  <input type="text" name="email" id="email" class="form-control form-control-gov"
+                         inputmode="email" autocomplete="email" autocapitalize="off" autocorrect="off" spellcheck="false"
+                         pattern="[^\s@]+@[^\s@]+\.[^\s@]+"
                          placeholder="yourname@gmail.com"
                          value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>" required>
                   <small class="text-muted" data-hi="सबमिशन के बाद आपका डिजिटल स्मार्ट कार्ड इसी ईमेल पर भेजा जाएगा।" data-en="Your Digital Smart Card will be sent to this email after submission.">Your Digital Smart Card will be sent to this email after submission.</small>
@@ -968,9 +970,13 @@ textarea.form-control-gov-area:focus {
                 <div class="input-group">
                   <span class="input-group-text input-group-addon-gov"><i class="fas fa-envelope"></i></span>
                   <input type="text" id="email_otp_input_display" class="form-control form-control-gov" readonly
+                         style="background: #f1f5f9; color: #64748b; cursor: not-allowed;"
                          placeholder="Fill the Email ID field in Section 1 first">
+                  <button type="button" id="btn-edit-email" class="btn btn-gov-outline" style="border-radius: 0 6px 6px 0;">
+                    <i class="fas fa-pen"></i> <span data-hi="बदलें" data-en="Edit">Edit</span>
+                  </button>
                 </div>
-                <small class="text-muted" data-hi="कृपया पहले ऊपर 'ईमेल आईडी' फील्ड भरें, फिर यहाँ ओटीपी भेजें।" data-en="Please fill the 'Email ID' field in Section 1 above first, then send the OTP here.">Please fill the 'Email ID' field in Section 1 above first, then send the OTP here.</small>
+                <small class="text-muted" data-hi="यह फील्ड केवल दिखाने के लिए है और टाइप नहीं की जा सकती — कृपया पहले ऊपर सेक्शन 1 में 'ईमेल आईडी' फील्ड भरें/बदलें।" data-en="This field is read-only and cannot be typed into — please fill or edit the 'Email ID' field in Section 1 above.">This field is read-only and cannot be typed into — please fill or edit the 'Email ID' field in Section 1 above.</small>
               </div>
 
               <!-- OTP Trigger Button -->
@@ -1549,6 +1555,15 @@ function showFileName(input, targetId) {
   if (emailField && emailDisplay) {
     emailField.addEventListener('input', function() {
       emailDisplay.value = emailField.value;
+    });
+  }
+
+  // "Edit" button next to the read-only display jumps back to the real, typable field
+  const btnEditEmail = document.getElementById('btn-edit-email');
+  if (btnEditEmail && emailField) {
+    btnEditEmail.addEventListener('click', function() {
+      emailField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      emailField.focus();
     });
   }
 })();
