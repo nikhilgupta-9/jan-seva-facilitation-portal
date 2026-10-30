@@ -146,28 +146,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_ayushman'])) {
             $appNo = ayushman_generate_application_no();
             $cardId = ayushman_generate_card_id();
 
-            // Prepare cryptographic payload
+            // Prepare cryptographic payload — kept deliberately minimal.
+            // The QR only needs to carry a tamper-proof POINTER + the few
+            // fields needed before the DB lookup completes; everything else
+            // (name, DOB, address, documents, etc.) is fetched live from the
+            // ayushman_applications table by app_no on every scan anyway
+            // (see admin/api/decrypt_scanner.php and verify-id.php), so
+            // cramming the full record into the QR was pure dead weight.
+            // That dead weight was the actual bug: ~800 characters of payload
+            // pushed the QR to a very high version/module-density, which at
+            // the card's small on-screen render size (90-180px) is below
+            // what most phone cameras can physically resolve — scans would
+            // "never" produce a result even though the code looked fine.
             $qrData = [
-                'v'              => 1,
-                'app_no'         => $appNo,
-                'card_id'        => $cardId,
-                'full_name'      => $fullName,
-                'dob'            => $dob,
-                'gender'         => $gender,
-                'mobile'         => $mobile,
-                'email'          => $email,
-                'address'        => $address,
-                'state'          => $state,
-                'district'       => $district,
-                'pincode'        => $pincode,
-                'aadhaar_last4'  => $aadhaarLast4,
-                'aadhaar_verified'=> $aadhaarVerified ? 1 : 0,
-                'verification_method' => $verificationMethod,
-                'abha_number'    => $abhaNumber,
-                'ration_card_no' => $rationCardNo,
-                'bocw_reg_no'    => $bocwRegNo,
-                'pmjay_letter_no'=> $pmjayLetterNo,
-                'created_at'     => date('Y-m-d H:i:s')
+                'v'                    => 1,
+                'app_no'               => $appNo,
+                'card_id'              => $cardId,
+                'aadhaar_last4'        => $aadhaarLast4,
+                'aadhaar_verified'     => $aadhaarVerified ? 1 : 0,
+                'verification_method'  => $verificationMethod,
             ];
 
             $encryptedQrToken = ayushman_encrypt_payload($qrData);

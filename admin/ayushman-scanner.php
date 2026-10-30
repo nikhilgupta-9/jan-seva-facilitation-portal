@@ -493,15 +493,15 @@ include __DIR__ . '/header.php';
           <div style="flex: 1;">
             <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
               <h3 id="dossier-name" style="margin: 0; font-weight: 800; color: #0b3c5d;">
-                <?php echo htmlspecialchars($initialDecrypted['full_name'] ?? ''); ?>
+                <?php echo htmlspecialchars($initialDbRecord['full_name'] ?? ''); ?>
               </h3>
               <span id="dossier-gender-dob" class="badge" style="background: #0284c7; font-size: 0.75rem;">
-                <?php echo htmlspecialchars($initialDecrypted['gender'] ?? 'Male'); ?> | DOB: <?php echo htmlspecialchars($initialDecrypted['dob'] ?? 'N/A'); ?>
+                <?php echo htmlspecialchars($initialDbRecord['gender'] ?? 'Male'); ?> | DOB: <?php echo htmlspecialchars($initialDbRecord['dob'] ?? 'N/A'); ?>
               </span>
             </div>
             <div style="margin-top: 6px; font-size: 0.88rem; color: #475569;">
-              <i class="fas fa-phone text-muted"></i> <span id="dossier-mobile"><?php echo htmlspecialchars($initialDecrypted['mobile'] ?? ''); ?></span> &nbsp;|&nbsp; 
-              <i class="fas fa-envelope text-muted"></i> <span id="dossier-email"><?php echo htmlspecialchars($initialDecrypted['email'] ?? ''); ?></span>
+              <i class="fas fa-phone text-muted"></i> <span id="dossier-mobile"><?php echo htmlspecialchars($initialDbRecord['mobile'] ?? ''); ?></span> &nbsp;|&nbsp;
+              <i class="fas fa-envelope text-muted"></i> <span id="dossier-email"><?php echo htmlspecialchars($initialDbRecord['email'] ?? ''); ?></span>
             </div>
             <div style="margin-top: 6px;">
               <span class="badge" style="background: #10b981; font-size: 0.78rem; padding: 4px 8px;">
@@ -535,25 +535,25 @@ include __DIR__ . '/header.php';
           <div class="dossier-field">
             <span class="dossier-field-label">14-Digit ABHA Number (ABHA ID)</span>
             <span class="dossier-field-value" id="dossier-abha" style="color: #0284c7; font-family: monospace;">
-              <?php echo htmlspecialchars($initialDecrypted['abha_number'] ?: 'Not Provided'); ?>
+              <?php echo htmlspecialchars($initialDbRecord['abha_number'] ?? '' ?: 'Not Provided'); ?>
             </span>
           </div>
           <div class="dossier-field">
             <span class="dossier-field-label">Ration Card Number</span>
             <span class="dossier-field-value" id="dossier-ration">
-              <?php echo htmlspecialchars($initialDecrypted['ration_card_no'] ?: 'Not Applicable'); ?>
+              <?php echo htmlspecialchars($initialDbRecord['ration_card_no'] ?? '' ?: 'Not Applicable'); ?>
             </span>
           </div>
           <div class="dossier-field">
             <span class="dossier-field-label">BOCW / Labour Registration Number</span>
             <span class="dossier-field-value" id="dossier-bocw">
-              <?php echo htmlspecialchars($initialDecrypted['bocw_reg_no'] ?: 'Not Applicable'); ?>
+              <?php echo htmlspecialchars($initialDbRecord['bocw_reg_no'] ?? '' ?: 'Not Applicable'); ?>
             </span>
           </div>
           <div class="dossier-field">
             <span class="dossier-field-label">PMJAY / Ayushman Bharat Letter Number</span>
             <span class="dossier-field-value" id="dossier-pmjay">
-              <?php echo htmlspecialchars($initialDecrypted['pmjay_letter_no'] ?: 'Not Applicable'); ?>
+              <?php echo htmlspecialchars($initialDbRecord['pmjay_letter_no'] ?? '' ?: 'Not Applicable'); ?>
             </span>
           </div>
         </div>
@@ -563,7 +563,7 @@ include __DIR__ . '/header.php';
           <span class="dossier-field-label">Citizen's Permanent Address (Residential Address)</span>
           <span class="dossier-field-value" id="dossier-address" style="font-weight: 500; font-size: 0.88rem;">
             <?php 
-              $addrArr = array_filter([$initialDecrypted['address'] ?? '', $initialDecrypted['district'] ?? '', $initialDecrypted['state'] ?? '', $initialDecrypted['pincode'] ?? '']);
+              $addrArr = array_filter([$initialDbRecord['address'] ?? '', $initialDbRecord['district'] ?? '', $initialDbRecord['state'] ?? '', $initialDbRecord['pincode'] ?? '']);
               echo htmlspecialchars(implode(', ', $addrArr) ?: 'N/A');
             ?>
           </span>
@@ -770,20 +770,25 @@ include __DIR__ . '/header.php';
     currentAppNo = payload.app_no || "";
     currentDbAppId = dbRecord ? dbRecord.id : 0;
 
+    // The QR payload is deliberately minimal (just app_no/card_id/aadhaar_last4
+    // + a tamper-proof signature) to keep the QR small enough to actually be
+    // scannable — the full citizen record always comes from the live DB
+    // lookup (dbRecord) that the server does on every successful decrypt.
+    const rec = dbRecord || {};
     document.getElementById("dossier-verified-timestamp").innerText = verifiedAt || "";
-    document.getElementById("dossier-name").innerText = payload.full_name || "Citizen";
-    document.getElementById("dossier-gender-dob").innerText = (payload.gender || "Male") + " | DOB: " + (payload.dob || "N/A");
-    document.getElementById("dossier-mobile").innerText = payload.mobile || "N/A";
-    document.getElementById("dossier-email").innerText = payload.email || "N/A";
+    document.getElementById("dossier-name").innerText = rec.full_name || "Citizen";
+    document.getElementById("dossier-gender-dob").innerText = (rec.gender || "Male") + " | DOB: " + (rec.dob || "N/A");
+    document.getElementById("dossier-mobile").innerText = rec.mobile || "N/A";
+    document.getElementById("dossier-email").innerText = rec.email || "N/A";
     document.getElementById("dossier-aadhaar").innerText = "XXXX-XXXX-" + (payload.aadhaar_last4 || "0000");
     document.getElementById("dossier-app-no").innerText = payload.app_no || "N/A";
     document.getElementById("dossier-card-id").innerText = payload.card_id || "N/A";
-    document.getElementById("dossier-abha").innerText = payload.abha_number || "Not Applicable";
-    document.getElementById("dossier-ration").innerText = payload.ration_card_no || "Not Applicable";
-    document.getElementById("dossier-bocw").innerText = payload.bocw_reg_no || "Not Applicable";
-    document.getElementById("dossier-pmjay").innerText = payload.pmjay_letter_no || "Not Applicable";
+    document.getElementById("dossier-abha").innerText = rec.abha_number || "Not Applicable";
+    document.getElementById("dossier-ration").innerText = rec.ration_card_no || "Not Applicable";
+    document.getElementById("dossier-bocw").innerText = rec.bocw_reg_no || "Not Applicable";
+    document.getElementById("dossier-pmjay").innerText = rec.pmjay_letter_no || "Not Applicable";
 
-    const addrArr = [payload.address, payload.district, payload.state, payload.pincode].filter(Boolean);
+    const addrArr = [rec.address, rec.district, rec.state, rec.pincode].filter(Boolean);
     document.getElementById("dossier-address").innerText = addrArr.join(", ") || "N/A";
 
     // Photo
