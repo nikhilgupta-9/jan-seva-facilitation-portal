@@ -50,13 +50,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_ayushman'])) {
         $errors[] = 'कृपया नियम, शर्तें एवं स्व-घोषणा सहमति स्वीकार करें (Consent is required).';
     }
 
-    // 3. Aadhaar Verification Check
+    // 3. Identity Verification Check — either Aadhaar OTP or Email OTP must be completed
     $authSession = $_SESSION['ayushman_aadhaar_auth'] ?? null;
     $aadhaarVerified = !empty($authSession['verified']) && $authSession['verified'] === true;
     $aadhaarLast4 = $authSession['aadhaar_last4'] ?? null;
 
-    if (!$aadhaarVerified) {
-        $errors[] = 'कृपया फॉर्म सबमिट करने से पहले आधार ओटीपी सत्यापन पूरा करें (Aadhaar OTP verification is mandatory).';
+    $emailAuthSession = $_SESSION['ayushman_email_auth'] ?? null;
+    $emailVerified = !empty($emailAuthSession['verified']) && $emailAuthSession['verified'] === true;
+
+    $identityVerified = $aadhaarVerified || $emailVerified;
+    $verificationMethod = $aadhaarVerified ? 'aadhaar_otp' : ($emailVerified ? 'email_otp' : null);
+
+    if (!$identityVerified) {
+        $errors[] = 'कृपया फॉर्म सबमिट करने से पहले आधार ओटीपी अथवा ईमेल ओटीपी सत्यापन पूरा करें (Aadhaar OTP or Email OTP verification is mandatory).';
     }
 
     // 4. File Upload Helper
@@ -143,7 +149,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_ayushman'])) {
                 'district'       => $district,
                 'pincode'        => $pincode,
                 'aadhaar_last4'  => $aadhaarLast4,
-                'aadhaar_verified'=> 1,
+                'aadhaar_verified'=> $aadhaarVerified ? 1 : 0,
+                'verification_method' => $verificationMethod,
                 'abha_number'    => $abhaNumber,
                 'ration_card_no' => $rationCardNo,
                 'bocw_reg_no'    => $bocwRegNo,
@@ -175,7 +182,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_ayushman'])) {
                 $district,
                 $pincode,
                 $aadhaarLast4,
-                1,
+                $aadhaarVerified ? 1 : 0,
                 $abhaNumber,
                 $rationCardNo,
                 $bocwRegNo,
@@ -205,6 +212,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_ayushman'])) {
 
             // Clear session verification to prevent replay
             unset($_SESSION['ayushman_aadhaar_auth']);
+            unset($_SESSION['ayushman_email_auth']);
 
             // Redirect to Card View
             header("Location: " . BASE_URL . "/ayushman-card.php?app_no=" . urlencode($appNo) . "&status=success");
@@ -224,7 +232,7 @@ include __DIR__ . '/includes/header.php';
 .ayush-hero-banner {
     background: linear-gradient(135deg, #1e3a8a 0%, #1e5a87 60%, #0891b2 100%);
     color: #ffffff;
-    padding: 36px 0 26px;
+    padding: 26px 0 20px;
     border-bottom: 4px solid #f59e0b;
     position: relative;
     overflow: hidden;
@@ -300,15 +308,15 @@ include __DIR__ . '/includes/header.php';
     margin-right: 4px;
 }
 .ayush-hero-banner h1 {
-    font-size: 2.05rem;
-    font-weight: 800;
-    margin: 0 0 8px;
-    line-height: 1.25;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0 0 6px;
+    line-height: 1.3;
     color: #ffffff;
 }
 .ayush-hero-banner .hero-subtext {
     margin: 0;
-    font-size: 0.98rem;
+    font-size: 0.86rem;
     opacity: 0.92;
     max-width: 680px;
 }
@@ -338,9 +346,9 @@ include __DIR__ . '/includes/header.php';
 .ayush-card-header {
     background: #f8fafc;
     border-bottom: 2px solid #e2e8f0;
-    padding: 14px 20px;
+    padding: 11px 16px;
     font-weight: 700;
-    font-size: 1.05rem;
+    font-size: 0.9rem;
     color: #1e3a8a;
     display: flex;
     align-items: center;
@@ -359,13 +367,13 @@ include __DIR__ . '/includes/header.php';
 .ayush-card-header.header-warning i { color: #f59e0b; }
 .ayush-card-header.header-warning span { color: #92400e; }
 .ayush-card-body {
-    padding: 22px;
+    padding: 16px;
 }
 .form-label-gov {
     font-weight: 600;
     color: #334155;
-    font-size: 0.92rem;
-    margin-bottom: 6px;
+    font-size: 0.82rem;
+    margin-bottom: 5px;
     display: block;
 }
 .form-label-gov span.req {
@@ -373,10 +381,10 @@ include __DIR__ . '/includes/header.php';
     font-weight: 800;
 }
 .form-control-gov {
-    height: 44px;
+    height: 38px;
     border-radius: 6px;
     border: 1.5px solid #cbd5e1;
-    font-size: 0.94rem;
+    font-size: 0.86rem;
     box-shadow: none !important;
     transition: all 0.2s;
 }
@@ -397,7 +405,7 @@ textarea.form-control-gov-area:focus {
     border: 2px dashed #cbd5e1;
     background: #f8fafc;
     border-radius: 8px;
-    padding: 16px 14px;
+    padding: 12px 10px;
     text-align: center;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -406,7 +414,7 @@ textarea.form-control-gov-area:focus {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: 110px;
+    min-height: 86px;
 }
 .file-upload-tile:hover {
     border-color: #1e3a8a;
@@ -421,25 +429,25 @@ textarea.form-control-gov-area:focus {
     cursor: pointer;
 }
 .file-upload-tile i {
-    font-size: 1.5rem;
+    font-size: 1.15rem;
     color: #1e3a8a;
 }
 .file-upload-tile .tile-title {
     font-weight: 600;
-    font-size: 0.88rem;
+    font-size: 0.76rem;
     color: #334155;
-    margin-top: 8px;
+    margin-top: 6px;
 }
 .file-upload-tile .tile-hint {
-    font-size: 0.75rem;
+    font-size: 0.68rem;
     color: #64748b;
     margin-top: 2px;
 }
 .file-upload-tile .file-selected-name {
-    font-size: 0.82rem;
+    font-size: 0.74rem;
     color: #047857;
     font-weight: 600;
-    margin-top: 8px;
+    margin-top: 6px;
     word-break: break-all;
 }
 .ayush-field-group {
@@ -485,12 +493,17 @@ textarea.form-control-gov-area:focus {
     background: #ffffff;
     color: #1e3a8a;
     border: 1.5px solid #1e3a8a;
-    font-weight: 700;
-    padding: 9px 18px;
+    font-weight: 600;
+    font-size: 0.82rem;
+    padding: 7px 14px;
     border-radius: 6px;
     transition: all 0.2s;
 }
 .btn-gov-outline:hover {
+    background: #1e3a8a;
+    color: #ffffff;
+}
+.verify-method-tab.active {
     background: #1e3a8a;
     color: #ffffff;
 }
@@ -499,8 +512,9 @@ textarea.form-control-gov-area:focus {
     margin-right: 6px;
 }
 .btn-gov-verify {
-    font-weight: 700;
-    padding: 10px 22px;
+    font-weight: 600;
+    font-size: 0.82rem;
+    padding: 7px 16px;
     border-radius: 6px;
     background: #10b981;
     border-color: #10b981;
@@ -514,14 +528,14 @@ textarea.form-control-gov-area:focus {
 .btn-gov-submit {
     background: linear-gradient(135deg, #047857 0%, #10b981 100%);
     color: #ffffff;
-    font-size: 1.12rem;
-    font-weight: 800;
-    padding: 14px 32px;
+    font-size: 0.92rem;
+    font-weight: 700;
+    padding: 11px 26px;
     border: none;
     border-radius: 8px;
     box-shadow: 0 4px 14px rgba(22, 163, 74, 0.35);
     transition: all 0.2s;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.2px;
 }
 .btn-gov-submit i {
     margin-right: 8px;
@@ -572,10 +586,64 @@ textarea.form-control-gov-area:focus {
     border-left: 5px solid #dc2626;
     box-shadow: 0 2px 8px rgba(220,38,38,0.1);
 }
+.ayush-about-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 4px 18px rgba(11,60,93,0.06);
+    padding: 18px 16px;
+    margin-bottom: 20px;
+}
+.ayush-about-steps {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0 0;
+    counter-reset: ayush-step;
+}
+.ayush-about-steps li {
+    counter-increment: ayush-step;
+    position: relative;
+    padding-left: 30px;
+    font-size: 0.82rem;
+    color: #475569;
+    margin-bottom: 8px;
+    line-height: 1.45;
+}
+.ayush-about-steps li::before {
+    content: counter(ayush-step);
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #1e3a8a;
+    color: #ffffff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+#btn-goto-form {
+    width: 100%;
+    margin-top: 14px;
+}
+#ayushman-main-content { display: block; }
+.ayush-mobile-intro { display: none; }
+
 @media (max-width: 768px) {
-    .ayush-hero-banner { padding: 24px 0 18px; }
-    .ayush-card-body { padding: 16px; }
-    .btn-gov-submit { width: 100%; font-size: 1rem; }
+    .ayush-hero-banner { padding: 18px 0 14px; }
+    .ayush-hero-banner h1 { font-size: 1.2rem; }
+    .ayush-hero-banner .hero-subtext { font-size: 0.8rem; }
+    .ayush-card-body { padding: 14px; }
+    .btn-gov-submit { width: 100%; font-size: 0.9rem; }
+
+    /* Two-step mobile flow: show the About/How-it-works intro first,
+       keep the actual long form hidden until the citizen taps "Fill Application Form". */
+    .ayush-mobile-intro { display: block; }
+    #ayushman-main-content { display: none; }
+    #ayushman-main-content.show { display: block; }
 }
 </style>
 
@@ -601,8 +669,8 @@ textarea.form-control-gov-area:focus {
           </span>
         </div>
         <h1 data-hi="आयुष्मान हेल्प डेस्क एवं डिजिटल हेल्थ स्मार्ट आईडी" data-en="Ayushman Help Desk &amp; Digital Health Smart ID">Ayushman Help Desk &amp; Digital Health Smart ID</h1>
-        <p class="hero-subtext" data-hi="नागरिक सुविधा केंद्र: आयुष्मान भारत, आभा आईडी, राशन कार्ड व BOCW कार्ड विवरण दर्ज करें और अपना सुरक्षित एन्क्रिप्टेड डिजिटल हेल्थ स्मार्ट आईडी कार्ड प्राप्त करें।" data-en="Citizen Facilitation Centre: Enter your Ayushman Bharat, ABHA ID, Ration Card and BOCW Card details to get your secure, encrypted Digital Health Smart ID card.">
-          Citizen Facilitation Centre: Enter your Ayushman Bharat, ABHA ID, Ration Card and BOCW Card details to get your secure, encrypted Digital Health Smart ID card.
+        <p class="hero-subtext" data-hi="नागरिक सुविधा केंद्र: PM-JAY स्वास्थ्य बीमा योजना के अंतर्गत अपना लाभ क्लेम करने हेतु अपनी पहचान सत्यापित करें और एक सुरक्षित एन्क्रिप्टेड डिजिटल हेल्थ स्मार्ट आईडी कार्ड प्राप्त करें। ABDM डिजिटल हेल्थ इकोसिस्टम के अंतर्गत कार्यरत।" data-en="Citizen Facilitation Centre: Verify your identity to claim your benefit under the PM-JAY health insurance scheme and get your secure, encrypted Digital Health Smart ID card. Operates under the ABDM digital health ecosystem.">
+          Citizen Facilitation Centre: Verify your identity to claim your benefit under the PM-JAY health insurance scheme and get your secure, encrypted Digital Health Smart ID card. Operates under the ABDM digital health ecosystem.
         </p>
       </div>
       <div class="col-md-4 col-sm-12 text-md-end d-none d-md-block">
@@ -616,9 +684,33 @@ textarea.form-control-gov-area:focus {
   </div>
 </section>
 
+<!-- Mobile-only: About / How it works intro, shown before the form -->
+<div class="container ayush-mobile-intro" style="padding-top: 20px; <?php echo !empty($errors) ? 'display:none;' : ''; ?>">
+  <div class="ayush-about-card">
+    <h4 style="margin: 0 0 8px; font-weight: 800; color: #1e3a8a; font-size: 1rem;">
+      <i class="fas fa-circle-info"></i> <span data-hi="आयुष्मान हेल्प डेस्क के बारे में" data-en="About Ayushman Help Desk">About Ayushman Help Desk</span>
+    </h4>
+    <p style="font-size: 0.84rem; color: #475569; line-height: 1.5; margin: 0;" data-hi="आयुष्मान भारत प्रधानमंत्री जन आरोग्य योजना (PM-JAY) केंद्र सरकार की विश्व की सबसे बड़ी स्वास्थ्य बीमा योजना है, जो पात्र परिवारों को प्रति वर्ष ₹5 लाख तक का कैशलेस अस्पताल उपचार कवर प्रदान करती है। यह हेल्प डेस्क नागरिकों को अपनी पहचान व दस्तावेज डिजिटल रूप से सत्यापित करने और एक सत्यापित डिजिटल हेल्थ स्मार्ट आईडी कार्ड बनाने में सहायता करता है, जिससे वे इस योजना के अंतर्गत अपने स्वास्थ्य बीमा लाभ का दावा (claim) आसानी से कर सकें। यह प्लेटफॉर्म आयुष्मान भारत डिजिटल मिशन (ABDM) — भारत के डिजिटल हेल्थ इकोसिस्टम — के अंतर्गत कार्य करता है।" data-en="Ayushman Bharat Pradhan Mantri Jan Arogya Yojana (PM-JAY) is the Central Government's flagship health insurance scheme — the world's largest — providing eligible families cashless hospitalization cover of up to ₹5 lakh per year. This Help Desk assists citizens in digitally verifying their identity and documents and generating a verified Digital Health Smart ID card, so they can more easily claim their health insurance benefits under this scheme. The platform operates under the Ayushman Bharat Digital Mission (ABDM) — India's digital health ecosystem.">
+      Ayushman Bharat Pradhan Mantri Jan Arogya Yojana (PM-JAY) is the Central Government's flagship health insurance scheme — the world's largest — providing eligible families cashless hospitalization cover of up to ₹5 lakh per year. This Help Desk assists citizens in digitally verifying their identity and documents and generating a verified Digital Health Smart ID card, so they can more easily claim their health insurance benefits under this scheme. The platform operates under the Ayushman Bharat Digital Mission (ABDM) — India's digital health ecosystem.
+    </p>
+
+    <h5 style="margin: 14px 0 0; font-weight: 700; color: #1e293b; font-size: 0.86rem;" data-hi="इसका उपयोग कैसे करें" data-en="How to use this">How to use this</h5>
+    <ol class="ayush-about-steps">
+      <li data-hi="आधार ओटीपी अथवा ईमेल ओटीपी से अपनी पहचान सत्यापित करें।" data-en="Verify your identity using Aadhaar OTP or Email OTP.">Verify your identity using Aadhaar OTP or Email OTP.</li>
+      <li data-hi="अपना व्यक्तिगत विवरण, स्वास्थ्य आईडी एवं पता भरें।" data-en="Fill in your personal details, health IDs and address.">Fill in your personal details, health IDs and address.</li>
+      <li data-hi="अपने उपलब्ध दस्तावेजों (आभा, आयुष्मान, राशन, BOCW) की स्पष्ट फोटो अपलोड करें।" data-en="Upload clear photos of your available documents (ABHA, Ayushman, Ration, BOCW).">Upload clear photos of your available documents (ABHA, Ayushman, Ration, BOCW).</li>
+      <li data-hi="सहमति स्वीकार करें और सबमिट करें — आपका एन्क्रिप्टेड स्मार्ट आईडी कार्ड तुरंत जनरेट होकर ईमेल पर भेजा जाएगा।" data-en="Accept the consent and submit — your encrypted Smart ID card is generated instantly and emailed to you.">Accept the consent and submit — your encrypted Smart ID card is generated instantly and emailed to you.</li>
+    </ol>
+
+    <button type="button" id="btn-goto-form" class="btn btn-gov-submit">
+      <i class="fas fa-file-pen"></i> <span data-hi="आवेदन फॉर्म भरें" data-en="Fill Application Form">Fill Application Form</span>
+    </button>
+  </div>
+</div>
+
 <!-- Main Container -->
-<div class="container" style="padding-top: 32px; padding-bottom: 50px;">
-  
+<div class="container <?php echo !empty($errors) ? 'show' : ''; ?>" id="ayushman-main-content" style="padding-top: 32px; padding-bottom: 50px;">
+
   <?php if (!empty($errors)): ?>
     <div class="alert alert-danger ayush-alert-errors">
       <h4 style="margin: 0 0 8px; font-weight: 800;"><i class="fas fa-exclamation-triangle"></i> <span data-hi="कृपया निम्नलिखित त्रुटियों को सुधारें:" data-en="Please correct the following errors:">Please correct the following errors:</span></h4>
@@ -702,6 +794,18 @@ textarea.form-control-gov-area:focus {
                     <img id="photo-img-preview" src="" alt="Photo Preview" style="display:none; max-width: 110px; max-height: 120px; border-radius: 6px; border: 2px solid #0b3c5d; margin: 8px auto 4px;">
                     <div id="photo-file-name" class="file-selected-name" style="display:none;"></div>
                   </div>
+
+                  <!-- Explicit Upload / Live Camera Capture choice -->
+                  <div style="display: flex; gap: 8px; margin-top: 8px;">
+                    <button type="button" class="btn btn-gov-outline" style="flex: 1; padding: 7px 10px; font-size: 0.82rem;" onclick="document.getElementById('photo_input').click()">
+                      <i class="fas fa-upload"></i> <span data-hi="अपलोड करें" data-en="Upload">Upload</span>
+                    </button>
+                    <button type="button" class="btn btn-gov-outline" style="flex: 1; padding: 7px 10px; font-size: 0.82rem;" onclick="document.getElementById('photo_camera_input').click()">
+                      <i class="fas fa-camera"></i> <span data-hi="कैमरा से खींचें" data-en="Capture with Camera">Capture with Camera</span>
+                    </button>
+                  </div>
+                  <!-- Hidden input that opens the device's live camera directly (mobile) -->
+                  <input type="file" id="photo_camera_input" accept="image/*" capture="user" style="display:none;" onchange="captureCitizenPhotoFromCamera(this)">
                 </div>
               </div>
             </div>
@@ -715,7 +819,23 @@ textarea.form-control-gov-area:focus {
             <span data-hi="२. आधार ई-केवाईसी एवं मोबाइल नंबर सत्यापन" data-en="2. Aadhaar OTP Verification">2. Aadhaar OTP Verification</span>
           </div>
           <div class="ayush-card-body">
-            <div class="aadhaar-verify-box">
+
+            <!-- Verification Method Toggle -->
+            <div class="btn-group" role="group" style="margin-bottom: 16px; display: flex; flex-wrap: wrap; gap: 8px;">
+              <button type="button" id="method-tab-aadhaar" class="btn btn-gov-outline verify-method-tab active" data-method="aadhaar">
+                <i class="fas fa-fingerprint"></i> <span data-hi="आधार ओटीपी (मोबाइल)" data-en="Aadhaar OTP (Mobile)">Aadhaar OTP (Mobile)</span>
+              </button>
+              <button type="button" id="method-tab-email" class="btn btn-gov-outline verify-method-tab" data-method="email">
+                <i class="fas fa-envelope"></i> <span data-hi="ईमेल ओटीपी" data-en="Email OTP">Email OTP</span>
+              </button>
+            </div>
+            <p style="font-size: 0.8rem; color: #64748b; margin: -8px 0 14px;">
+              <i class="fas fa-info-circle"></i>
+              <span data-hi="ग्रामीण नागरिक जो ईमेल से परिचित नहीं हैं, वे आधार ओटीपी (मोबाइल) चुन सकते हैं। किसी एक विधि से सत्यापन पर्याप्त है।" data-en="Citizens unfamiliar with email can use Aadhaar OTP (mobile) instead. Verifying with either method is enough.">Citizens unfamiliar with email can use Aadhaar OTP (mobile) instead. Verifying with either method is enough.</span>
+            </p>
+
+            <!-- PANEL A: Aadhaar OTP -->
+            <div class="aadhaar-verify-box" id="verify-panel-aadhaar">
               <div class="row align-items-center">
                 <div class="col-md-6 col-sm-12">
                   <div class="form-group" style="margin-bottom: 10px;">
@@ -738,7 +858,7 @@ textarea.form-control-gov-area:focus {
                     <div class="input-group">
                       <span class="input-group-text input-group-addon-gov">+91</span>
                       <input type="tel" name="mobile" id="mobile" class="form-control form-control-gov"
-                             placeholder="9876543210" maxlength="10" 
+                             placeholder="9876543210" maxlength="10"
                              value="<?php echo htmlspecialchars($_POST['mobile'] ?? ''); ?>" required>
                     </div>
                   </div>
@@ -780,6 +900,57 @@ textarea.form-control-gov-area:focus {
               </div>
 
               <div id="otp-msg-box" style="margin-top: 10px; display: none;"></div>
+            </div>
+
+            <!-- PANEL B: Email OTP -->
+            <div class="aadhaar-verify-box" id="verify-panel-email" style="display: none;">
+              <div class="form-group" style="margin-bottom: 10px;">
+                <label class="form-label-gov" for="email_otp_input_display">
+                  <span data-hi="ईमेल आईडी (ऊपर दर्ज की गई)" data-en="Email ID (entered above)">Email ID (entered above)</span>
+                </label>
+                <div class="input-group">
+                  <span class="input-group-text input-group-addon-gov"><i class="fas fa-envelope"></i></span>
+                  <input type="text" id="email_otp_input_display" class="form-control form-control-gov" readonly
+                         placeholder="Fill the Email ID field in Section 1 first">
+                </div>
+                <small class="text-muted" data-hi="कृपया पहले ऊपर 'ईमेल आईडी' फील्ड भरें, फिर यहाँ ओटीपी भेजें।" data-en="Please fill the 'Email ID' field in Section 1 above first, then send the OTP here.">Please fill the 'Email ID' field in Section 1 above first, then send the OTP here.</small>
+              </div>
+
+              <!-- OTP Trigger Button -->
+              <div style="margin-top: 10px;">
+                <button type="button" id="btn-send-email-otp" class="btn btn-gov-outline">
+                  <i class="fas fa-paper-plane"></i> <span data-hi="ईमेल ओटीपी भेजें" data-en="Send Email OTP">Send Email OTP</span>
+                </button>
+                <span id="email-otp-timer-badge" class="badge-gov-saffron" style="display:none; margin-left: 8px; font-size: 0.85rem;">60s</span>
+              </div>
+
+              <!-- OTP Input Row (Hidden initially) -->
+              <div id="email-otp-verify-row" style="display: none; margin-top: 16px; padding-top: 14px; border-top: 1px dashed #cbd5e1;">
+                <div class="row align-items-center">
+                  <div class="col-md-6 col-sm-12">
+                    <label class="form-label-gov" for="email_otp_input">
+                      <span data-hi="प्राप्त ६ अंकों का ओटीपी दर्ज करें" data-en="Enter 6-Digit OTP">Enter 6-Digit OTP</span> <span class="req">*</span>
+                    </label>
+                    <input type="text" id="email_otp_input" class="form-control form-control-gov"
+                           placeholder="123456" maxlength="6" style="letter-spacing: 4px; font-weight: 700; font-size: 1.1rem;">
+                    <div id="email-otp-sandbox-hint" class="text-success" style="font-size: 0.8rem; margin-top: 4px; font-weight: 600;"></div>
+                  </div>
+                  <div class="col-md-6 col-sm-12" style="margin-top: 24px;">
+                    <button type="button" id="btn-verify-email-otp" class="btn btn-gov-verify">
+                      <i class="fas fa-check-circle"></i> <span data-hi="सत्यापित करें" data-en="Verify OTP">Verify OTP</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Verified Success State -->
+              <div id="email-verified-badge" style="display: none; margin-top: 14px;" class="alert alert-success">
+                <i class="fas fa-check-circle fa-lg"></i>
+                <strong style="margin-left: 6px;" data-hi="ईमेल सत्यापित (Email Verified ✓)" data-en="Email Verified ✓">Email Verified ✓</strong>
+                <span id="verified-email-text" style="margin-left: 8px; font-family: monospace; font-weight: 700;"></span>
+              </div>
+
+              <div id="email-otp-msg-box" style="margin-top: 10px; display: none;"></div>
             </div>
           </div>
         </div>
@@ -967,25 +1138,24 @@ textarea.form-control-gov-area:focus {
       <div class="col-lg-4 col-md-4 col-sm-12">
         <div class="ayush-sidebar-sticky">
 
-          <!-- Security Notice Card -->
+          <!-- About Card -->
           <div class="ayush-card-box" style="border-top: 4px solid #10b981;">
             <div class="ayush-card-body">
-              <div style="text-align: center; margin-bottom: 12px;">
-                <i class="fas fa-shield-alt fa-3x ayush-side-icon"></i>
-                <h4 class="ayush-side-title" data-hi="एन्क्रिप्टेड क्यूआर कोड सुरक्षा" data-en="Encrypted QR Code Security">Encrypted QR Code Security</h4>
+              <div style="text-align: center; margin-bottom: 10px;">
+                <i class="fas fa-circle-info fa-2x ayush-side-icon"></i>
+                <h4 class="ayush-side-title" style="font-size: 0.95rem;" data-hi="आयुष्मान हेल्प डेस्क के बारे में" data-en="About Ayushman Help Desk">About Ayushman Help Desk</h4>
                 <span class="security-encrypted-badge">DPDP Act 2023 Compliant</span>
               </div>
-              <p style="font-size: 0.86rem; color: #334155; line-height: 1.55; margin-bottom: 12px;" data-hi="आपके डिजिटल हेल्थ स्मार्ट आईडी कार्ड पर उत्पन्न होने वाला QR कोड AES-256-CBC एवं HMAC-SHA256 द्वारा एन्क्रिप्टेड होगा।" data-en="The QR code generated on your Digital Health Smart ID card will be encrypted using AES-256-CBC and HMAC-SHA256.">
-                The QR code generated on your Digital Health Smart ID card will be encrypted using AES-256-CBC and HMAC-SHA256.
+              <p style="font-size: 0.8rem; color: #334155; line-height: 1.5; margin-bottom: 10px;" data-hi="PM-JAY केंद्र सरकार की विश्व की सबसे बड़ी स्वास्थ्य बीमा योजना है — पात्र परिवारों को ₹5 लाख/वर्ष तक कैशलेस अस्पताल कवर। यह हेल्प डेस्क आपकी पहचान सत्यापित कर एक डिजिटल स्मार्ट आईडी बनाता है, जिससे आप इस योजना का लाभ आसानी से क्लेम कर सकें। यह ABDM डिजिटल हेल्थ इकोसिस्टम के अंतर्गत कार्य करता है।" data-en="PM-JAY is the Central Government's flagship health insurance scheme — the world's largest — giving eligible families cashless hospital cover up to ₹5 lakh/year. This Help Desk verifies your identity and generates a Digital Smart ID so you can claim that benefit easily. Operates under the ABDM digital health ecosystem.">
+                PM-JAY is the Central Government's flagship health insurance scheme — the world's largest — giving eligible families cashless hospital cover up to ₹5 lakh/year. This Help Desk verifies your identity and generates a Digital Smart ID so you can claim that benefit easily. Operates under the ABDM digital health ecosystem.
               </p>
-              <div class="ayush-side-note">
-                <i class="fas fa-info-circle"></i> <strong data-hi="सुरक्षा सूचना:" data-en="Security Notice:">Security Notice:</strong> <span data-hi="आम पब्लिक स्कैनर से स्कैन करने पर व्यक्तिगत जानकारी नहीं दिखेगी। केवल अधिकृत प्रशासनिक अधिकारी अपने Admin Scanner से ही डेटा डिक्रिप्ट और सत्यापित कर सकते हैं।" data-en="Scanning with a public scanner will not reveal any personal information. Only authorized administrative officers can decrypt and verify the data using the Admin Scanner.">Scanning with a public scanner will not reveal any personal information. Only authorized administrative officers can decrypt and verify the data using the Admin Scanner.</span>
-              </div>
-              <ul style="padding-left: 18px; margin: 0; font-size: 0.84rem; color: #475569; line-height: 1.6;">
-                <li data-hi="आधार ई-केवाईसी सत्यापन आवश्यक है।" data-en="Aadhaar e-KYC verification is mandatory.">Aadhaar e-KYC verification is mandatory.</li>
-                <li data-hi="दस्तावेज स्पष्ट एवं पठनीय होने चाहिए (अधिकतम 10MB)।" data-en="Documents must be clear and legible (max 10MB).">Documents must be clear and legible (max 10MB).</li>
-                <li data-hi="कार्ड की डिजिटल प्रति तुरंत ईमेल पर भेजी जाएगी।" data-en="A digital copy of the card will be emailed to you instantly.">A digital copy of the card will be emailed to you instantly.</li>
-              </ul>
+              <h5 style="margin: 10px 0 0; font-weight: 700; color: #1e293b; font-size: 0.8rem;" data-hi="इसका उपयोग कैसे करें" data-en="How to use this">How to use this</h5>
+              <ol class="ayush-about-steps" style="margin-top: 8px;">
+                <li data-hi="आधार ओटीपी अथवा ईमेल ओटीपी से अपनी पहचान सत्यापित करें।" data-en="Verify your identity using Aadhaar OTP or Email OTP.">Verify your identity using Aadhaar OTP or Email OTP.</li>
+                <li data-hi="अपना व्यक्तिगत विवरण, स्वास्थ्य आईडी एवं पता भरें।" data-en="Fill in your personal details, health IDs and address.">Fill in your personal details, health IDs and address.</li>
+                <li data-hi="अपने उपलब्ध दस्तावेजों की स्पष्ट फोटो अपलोड करें (अधिकतम 10MB)।" data-en="Upload clear photos of your available documents (max 10MB).">Upload clear photos of your available documents (max 10MB).</li>
+                <li data-hi="सहमति स्वीकार करें और सबमिट करें — कार्ड तुरंत ईमेल पर भेजा जाएगा।" data-en="Accept the consent and submit — the card is emailed to you instantly.">Accept the consent and submit — the card is emailed to you instantly.</li>
+              </ol>
             </div>
           </div>
 
@@ -1015,6 +1185,18 @@ textarea.form-control-gov-area:focus {
 
 <!-- Scripts for Dynamic File Preview and Aadhaar OTP Flow -->
 <script>
+// Mobile two-step flow: "Fill Application Form" reveals the real form and scrolls to it
+(function() {
+  const btnGotoForm = document.getElementById('btn-goto-form');
+  const mainContent = document.getElementById('ayushman-main-content');
+  if (btnGotoForm && mainContent) {
+    btnGotoForm.addEventListener('click', function() {
+      mainContent.classList.add('show');
+      mainContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+})();
+
 // Live Image Preview for Citizen Photo
 function previewCitizenPhoto(input) {
   if (input.files && input.files[0]) {
@@ -1034,6 +1216,26 @@ function previewCitizenPhoto(input) {
     }
     reader.readAsDataURL(file);
   }
+}
+
+// Live Camera Capture: move the captured photo into the real #photo_input
+// (which is what actually submits with the form) and reuse the same preview logic.
+function captureCitizenPhotoFromCamera(cameraInput) {
+  if (!cameraInput.files || !cameraInput.files[0]) return;
+  const capturedFile = cameraInput.files[0];
+  const photoInput = document.getElementById('photo_input');
+
+  try {
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(capturedFile);
+    photoInput.files = dataTransfer.files;
+  } catch (e) {
+    alert("इस ब्राउज़र में लाइव कैमरा कैप्चर समर्थित नहीं है। कृपया 'Upload' बटन से फोटो चुनें। (Live camera capture isn't supported in this browser — please use 'Upload' instead.)");
+    return;
+  }
+
+  previewCitizenPhoto(photoInput);
+  cameraInput.value = ""; // reset so the same camera button can be used again
 }
 
 // Show selected file name for document inputs
@@ -1217,6 +1419,184 @@ function showFileName(input, targetId) {
         btnSendOtp.style.display = 'none';
         aadhaarVerifiedBadge.style.display = 'block';
         verifiedAadhaarText.innerText = 'XXXX-XXXX-' + status.last4;
+      }
+    });
+
+})();
+</script>
+
+<!-- Verification Method Toggle (Aadhaar OTP vs Email OTP) -->
+<script>
+(function() {
+  const tabAadhaar = document.getElementById('method-tab-aadhaar');
+  const tabEmail = document.getElementById('method-tab-email');
+  const panelAadhaar = document.getElementById('verify-panel-aadhaar');
+  const panelEmail = document.getElementById('verify-panel-email');
+  const emailField = document.getElementById('email');
+  const emailDisplay = document.getElementById('email_otp_input_display');
+
+  function showMethod(method) {
+    const isEmail = method === 'email';
+    panelAadhaar.style.display = isEmail ? 'none' : 'block';
+    panelEmail.style.display = isEmail ? 'block' : 'none';
+    tabAadhaar.classList.toggle('active', !isEmail);
+    tabEmail.classList.toggle('active', isEmail);
+    if (isEmail && emailField && emailDisplay) {
+      emailDisplay.value = emailField.value || '';
+    }
+  }
+
+  if (tabAadhaar) tabAadhaar.addEventListener('click', function() { showMethod('aadhaar'); });
+  if (tabEmail) tabEmail.addEventListener('click', function() { showMethod('email'); });
+
+  // Keep the read-only email display in sync with the real Email ID field in Section 1
+  if (emailField && emailDisplay) {
+    emailField.addEventListener('input', function() {
+      emailDisplay.value = emailField.value;
+    });
+  }
+})();
+</script>
+
+<!-- Email OTP Verification AJAX -->
+<script>
+(function() {
+  const emailField = document.getElementById('email');
+  const btnSendEmailOtp = document.getElementById('btn-send-email-otp');
+  const emailOtpTimerBadge = document.getElementById('email-otp-timer-badge');
+  const emailOtpVerifyRow = document.getElementById('email-otp-verify-row');
+  const emailOtpInput = document.getElementById('email_otp_input');
+  const btnVerifyEmailOtp = document.getElementById('btn-verify-email-otp');
+  const emailVerifiedBadge = document.getElementById('email-verified-badge');
+  const verifiedEmailText = document.getElementById('verified-email-text');
+  const emailOtpMsgBox = document.getElementById('email-otp-msg-box');
+  const emailOtpSandboxHint = document.getElementById('email-otp-sandbox-hint');
+
+  let emailCountdownInterval = null;
+
+  // 1. Send Email OTP Click
+  if (btnSendEmailOtp) {
+    btnSendEmailOtp.addEventListener('click', function() {
+      const email = (emailField ? emailField.value : '').trim();
+
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        alert('Please enter a valid Email ID in Section 1 above first.');
+        if (emailField) emailField.focus();
+        return;
+      }
+
+      btnSendEmailOtp.disabled = true;
+      btnSendEmailOtp.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending OTP...';
+      emailOtpMsgBox.style.display = 'none';
+
+      const formData = new FormData();
+      formData.append('action', 'send_otp');
+      formData.append('email', email);
+
+      fetch('<?php echo BASE_URL; ?>/api/ayushman_email_otp.php?action=send_otp', {
+        method: 'POST',
+        body: formData
+      })
+      .then(res => res.json())
+      .then(data => {
+        btnSendEmailOtp.disabled = false;
+        btnSendEmailOtp.innerHTML = '<i class="fas fa-redo"></i> Resend OTP';
+
+        if (data.success) {
+          emailOtpVerifyRow.style.display = 'block';
+          emailOtpMsgBox.className = 'alert alert-info';
+          emailOtpMsgBox.innerHTML = '<i class="fas fa-check-circle"></i> ' + data.message;
+          emailOtpMsgBox.style.display = 'block';
+
+          if (data.test_mode && data.demo_otp) {
+            emailOtpSandboxHint.innerHTML = '<i class="fas fa-vial"></i> <strong>Sandbox OTP:</strong> ' + data.demo_otp + ' (enter this)';
+          }
+
+          let seconds = 60;
+          emailOtpTimerBadge.style.display = 'inline-block';
+          emailOtpTimerBadge.innerText = seconds + 's';
+          clearInterval(emailCountdownInterval);
+          emailCountdownInterval = setInterval(() => {
+            seconds--;
+            emailOtpTimerBadge.innerText = seconds + 's';
+            if (seconds <= 0) {
+              clearInterval(emailCountdownInterval);
+              emailOtpTimerBadge.style.display = 'none';
+            }
+          }, 1000);
+        } else {
+          emailOtpMsgBox.className = 'alert alert-danger';
+          emailOtpMsgBox.innerHTML = '<i class="fas fa-exclamation-circle"></i> ' + data.message;
+          emailOtpMsgBox.style.display = 'block';
+        }
+      })
+      .catch(err => {
+        btnSendEmailOtp.disabled = false;
+        btnSendEmailOtp.innerHTML = '<i class="fas fa-paper-plane"></i> Send Email OTP';
+        alert('Error contacting server: ' + err);
+      });
+    });
+  }
+
+  // 2. Verify Email OTP Click
+  if (btnVerifyEmailOtp) {
+    btnVerifyEmailOtp.addEventListener('click', function() {
+      const otpVal = emailOtpInput.value.trim();
+      if (otpVal.length !== 6) {
+        alert('Please enter the 6-digit OTP.');
+        emailOtpInput.focus();
+        return;
+      }
+
+      btnVerifyEmailOtp.disabled = true;
+      btnVerifyEmailOtp.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
+
+      const formData = new FormData();
+      formData.append('action', 'verify_otp');
+      formData.append('otp', otpVal);
+
+      fetch('<?php echo BASE_URL; ?>/api/ayushman_email_otp.php?action=verify_otp', {
+        method: 'POST',
+        body: formData
+      })
+      .then(res => res.json())
+      .then(data => {
+        btnVerifyEmailOtp.disabled = false;
+        btnVerifyEmailOtp.innerHTML = '<i class="fas fa-check-circle"></i> Verify OTP';
+
+        if (data.success) {
+          emailOtpVerifyRow.style.display = 'none';
+          btnSendEmailOtp.style.display = 'none';
+          emailOtpTimerBadge.style.display = 'none';
+          emailOtpMsgBox.style.display = 'none';
+
+          if (emailField) emailField.readOnly = true;
+
+          emailVerifiedBadge.style.display = 'block';
+          verifiedEmailText.innerText = data.email || '';
+        } else {
+          emailOtpMsgBox.className = 'alert alert-danger';
+          emailOtpMsgBox.innerHTML = '<i class="fas fa-times-circle"></i> ' + data.message;
+          emailOtpMsgBox.style.display = 'block';
+        }
+      })
+      .catch(err => {
+        btnVerifyEmailOtp.disabled = false;
+        btnVerifyEmailOtp.innerHTML = '<i class="fas fa-check-circle"></i> Verify OTP';
+        alert('Verification error: ' + err);
+      });
+    });
+  }
+
+  // Check if already verified in session
+  fetch('<?php echo BASE_URL; ?>/api/ayushman_email_otp.php?action=check_status')
+    .then(r => r.json())
+    .then(status => {
+      if (status.verified && status.email) {
+        if (emailField) emailField.readOnly = true;
+        btnSendEmailOtp.style.display = 'none';
+        emailVerifiedBadge.style.display = 'block';
+        verifiedEmailText.innerText = status.email;
       }
     });
 
