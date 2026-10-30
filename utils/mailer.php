@@ -67,7 +67,7 @@ function send_contact_notification_email(array $inquiry): bool
 }
 
 /**
- * Tiny SMTP client: connects, optionally upgrades to TLS via STARTTLS,
+ * Tiny SMTP client: connects (implicit TLS on port 465, or STARTTLS on 587),
  * authenticates with AUTH LOGIN, and sends one plain-text message.
  * Throws on any unexpected server response.
  */
@@ -77,11 +77,29 @@ function smtp_send_mail(string $to, string $subject, string $body): bool
     $port = (int) (env('SMTP_PORT', '587'));
     $user = env('SMTP_USER');
     $pass = env('SMTP_PASS');
-    $fromEmail = defined('SUPPORT_EMAIL') ? SUPPORT_EMAIL : $user;
+    // The envelope/header "From" must be the authenticated mailbox itself —
+    // most providers (Hostinger included) reject or spam-flag mail where
+    // MAIL FROM doesn't match the authenticated account. Replies still go
+    // to the portal's own public SUPPORT_EMAIL via the Reply-To header below.
+    $fromEmail = $user ?: (defined('SUPPORT_EMAIL') ? SUPPORT_EMAIL : 'no-reply@localhost');
+    $replyToEmail = defined('SUPPORT_EMAIL') ? SUPPORT_EMAIL : $fromEmail;
     $appName = defined('APP_NAME') ? APP_NAME : 'Citizen Portal';
 
     $timeout = 15;
-    $socket = @fsockopen($host, $port, $errno, $errstr, $timeout);
+    // Port 465 requires implicit TLS from the first byte of the connection;
+    // port 587 (or anything else) starts in plaintext and upgrades via STARTTLS below.
+    if ($port === 465) {
+        $socket = @stream_socket_client(
+            "ssl://{$host}:{$port}",
+            $errno,
+            $errstr,
+            $timeout,
+            STREAM_CLIENT_CONNECT,
+            stream_context_create(['ssl' => ['verify_peer' => true, 'verify_peer_name' => true]])
+        );
+    } else {
+        $socket = @fsockopen($host, $port, $errno, $errstr, $timeout);
+    }
     if (!$socket) {
         throw new Exception("Could not connect to SMTP host {$host}:{$port} - {$errstr}");
     }
@@ -139,6 +157,7 @@ function smtp_send_mail(string $to, string $subject, string $body): bool
     $expect('DATA');
 
     $headers = "From: {$appName} <{$fromEmail}>\r\n"
+        . "Reply-To: {$replyToEmail}\r\n"
         . "To: <{$to}>\r\n"
         . "Subject: {$subject}\r\n"
         . "MIME-Version: 1.0\r\n"
