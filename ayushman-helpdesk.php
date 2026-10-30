@@ -831,7 +831,7 @@ textarea.form-control-gov-area:focus {
                     <span data-hi="ईमेल आईडी" data-en="Email ID">Email ID</span> <span class="req">*</span>
                   </label>
                   <input type="text" name="email" id="email" class="form-control form-control-gov"
-                         inputmode="email" autocomplete="email" autocapitalize="off" autocorrect="off" spellcheck="false"
+                         inputmode="email" 
                          pattern="[^\s@]+@[^\s@]+\.[^\s@]+"
                          placeholder="yourname@gmail.com"
                          value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>" required>
