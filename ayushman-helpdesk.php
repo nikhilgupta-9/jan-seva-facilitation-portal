@@ -65,6 +65,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_ayushman'])) {
         $errors[] = 'कृपया फॉर्म सबमिट करने से पहले आधार ओटीपी अथवा ईमेल ओटीपी सत्यापन पूरा करें (Aadhaar OTP or Email OTP verification is mandatory).';
     }
 
+    // When verifying via Email OTP, Aadhaar OTP is never run, so the Aadhaar
+    // number is collected as a plain record field instead (Panel B's
+    // "aadhaar_number_manual" input) — it is NOT used for any OTP, only stored.
+    if ($emailVerified && !$aadhaarVerified) {
+        $manualAadhaar = preg_replace('/\D/', '', $_POST['aadhaar_number_manual'] ?? '');
+        if (strlen($manualAadhaar) !== 12 || in_array($manualAadhaar[0] ?? '', ['0', '1'])) {
+            $errors[] = 'कृपया रिकॉर्ड हेतु 12 अंकों का वैध आधार नंबर दर्ज करें (A valid 12-digit Aadhaar number is required).';
+        } else {
+            $aadhaarLast4 = substr($manualAadhaar, -4);
+        }
+    }
+
     // 4. File Upload Helper
     $uploadDir = __DIR__ . '/uploads/ayushman/';
     if (!is_dir($uploadDir)) {
@@ -981,6 +993,19 @@ textarea.form-control-gov-area:focus {
                 <small class="text-muted" data-hi="यह फील्ड केवल दिखाने के लिए है और टाइप नहीं की जा सकती — कृपया पहले ऊपर सेक्शन 1 में 'ईमेल आईडी' फील्ड भरें/बदलें।" data-en="This field is read-only and cannot be typed into — please fill or edit the 'Email ID' field in Section 1 above.">This field is read-only and cannot be typed into — please fill or edit the 'Email ID' field in Section 1 above.</small>
               </div>
 
+              <!-- Aadhaar Number (record only — not used for OTP when verifying via Email) -->
+              <div class="form-group" style="margin-bottom: 10px;">
+                <label class="form-label-gov" for="aadhaar_input_email">
+                  <span data-hi="१२ अंकों का आधार नंबर" data-en="12-Digit Aadhaar No">12-Digit Aadhaar No</span> <span class="req">*</span>
+                </label>
+                <div class="input-group">
+                  <span class="input-group-text input-group-addon-gov"><i class="fas fa-id-card"></i></span>
+                  <input type="text" id="aadhaar_input_email" name="aadhaar_number_manual" class="form-control form-control-gov"
+                         placeholder="XXXX XXXX XXXX" maxlength="14" autocomplete="off" required>
+                </div>
+                <small class="text-muted" data-hi="ईमेल ओटीपी से सत्यापन करते समय भी रिकॉर्ड हेतु आधार नंबर आवश्यक है (यह ओटीपी के लिए उपयोग नहीं होगा)।" data-en="Aadhaar number is required for record-keeping even when verifying via Email OTP (it won't be used for OTP).">Aadhaar number is required for record-keeping even when verifying via Email OTP (it won't be used for OTP).</small>
+              </div>
+
               <!-- OTP Trigger Button -->
               <div style="margin-top: 10px;">
                 <button type="button" id="btn-send-email-otp" class="btn btn-gov-outline">
@@ -1376,12 +1401,20 @@ function showFileName(input, targetId) {
   let countdownInterval = null;
 
   // Format Aadhaar input with spaces: XXXX XXXX XXXX
-  if (aadhaarInput) {
-    aadhaarInput.addEventListener('input', function(e) {
+  function formatAadhaarInput(el) {
+    el.addEventListener('input', function() {
       let val = this.value.replace(/\D/g, '').substring(0, 12);
       let formatted = val.match(/.{1,4}/g)?.join(' ') || val;
       this.value = formatted;
     });
+  }
+  if (aadhaarInput) {
+    formatAadhaarInput(aadhaarInput);
+  }
+  // Same formatting for the Aadhaar number field shown in the Email OTP panel
+  const aadhaarInputEmail = document.getElementById('aadhaar_input_email');
+  if (aadhaarInputEmail) {
+    formatAadhaarInput(aadhaarInputEmail);
   }
 
   // 1. Send OTP Click
