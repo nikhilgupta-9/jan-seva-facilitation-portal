@@ -774,7 +774,15 @@ include __DIR__ . '/header.php';
       if (data.success && data.payload) {
         scannerStatusBadge.style.background = "#059669";
         scannerStatusBadge.innerText = "Decrypted ✓";
-        renderDossier(data.payload, data.db_record, data.verified_at);
+        const cardId = (data.payload && data.payload.card_id) || (data.db_record && data.db_record.card_id) || "";
+        if (cardId) {
+          // Open the dedicated, auto-logging-out detail page instead of
+          // rendering inline — a real page navigation so the 2-minute
+          // privacy window is server-enforced and survives refresh/back.
+          window.location.href = baseUrl + "/admin/ayushman-scan-detail.php?id=" + encodeURIComponent(cardId);
+        } else {
+          renderDossier(data.payload, data.db_record, data.verified_at);
+        }
       } else {
         scannerStatusBadge.style.background = "#dc2626";
         scannerStatusBadge.innerText = "Invalid Signature";

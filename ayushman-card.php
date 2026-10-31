@@ -586,7 +586,7 @@ include __DIR__ . '/includes/header.php';
                 </p>
                 <?php if ($isAdmin): ?>
                   <div style="margin-top: 12px;">
-                    <a href="<?php echo BASE_URL; ?>/admin/ayushman-scanner.php?id=<?php echo urlencode($record['card_id']); ?>" class="btn btn-warning btn-sm" style="font-weight: 700; color: #1e293b; background: #f59e0b;">
+                    <a href="<?php echo BASE_URL; ?>/admin/ayushman-scan-detail.php?id=<?php echo urlencode($record['card_id']); ?>" class="btn btn-warning btn-sm" style="font-weight: 700; color: #1e293b; background: #f59e0b;">
                       <i class="fas fa-qrcode"></i> एडमिन स्कैनर से टेस्ट करें (Test in Admin Scanner)
                     </a>
                   </div>

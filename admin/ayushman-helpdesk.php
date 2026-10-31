@@ -443,7 +443,7 @@ include __DIR__ . '/header.php';
                     <i class="fas fa-id-card text-warning"></i>
                   </a>
                   <!-- Open in Scanner -->
-                  <a href="<?php echo BASE_URL; ?>/admin/ayushman-scanner.php?id=<?php echo urlencode($row['card_id']); ?>" class="btn btn-default btn-xs" title="डिक्रिप्ट एवं स्कैन करें">
+                  <a href="<?php echo BASE_URL; ?>/admin/ayushman-scan-detail.php?id=<?php echo urlencode($row['card_id']); ?>" class="btn btn-default btn-xs" title="डिक्रिप्ट एवं स्कैन करें">
                     <i class="fas fa-qrcode text-success"></i>
                   </a>
                   <!-- Update Status Trigger -->

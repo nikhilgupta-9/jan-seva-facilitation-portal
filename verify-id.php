@@ -113,7 +113,7 @@ header('X-Robots-Tag: noindex, nofollow');
 
     <?php if ($isAdmin && !empty($cardId)): ?>
       <div>
-        <a class="admin-link" href="<?php echo htmlspecialchars(BASE_URL . '/admin/ayushman-scanner.php?id=' . urlencode($cardId)); ?>">
+        <a class="admin-link" href="<?php echo htmlspecialchars(BASE_URL . '/admin/ayushman-scan-detail.php?id=' . urlencode($cardId)); ?>">
           Open in Admin Scanner
         </a>
       </div>
