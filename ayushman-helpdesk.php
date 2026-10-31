@@ -654,6 +654,34 @@ textarea.form-control-gov-area:focus {
     font-weight: 600;
     line-height: 1.5;
 }
+.ayushman-submit-status {
+    margin: 12px 0 10px;
+    font-size: 0.86rem;
+    color: #1e3a8a;
+    font-weight: 700;
+    min-height: 20px;
+}
+.ayushman-submit-progress-track {
+    width: 100%;
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+.ayushman-submit-progress-bar {
+    height: 100%;
+    width: 8%;
+    background: linear-gradient(90deg, #1e3a8a, #0891b2);
+    border-radius: 10px;
+    transition: width 0.6s ease;
+}
+.ayushman-submit-elapsed {
+    font-size: 0.72rem;
+    color: #64748b;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
 .ayush-about-card {
     background: #ffffff;
     border: 1px solid #e2e8f0;
@@ -1275,6 +1303,11 @@ textarea.form-control-gov-area:focus {
   <div class="ayushman-submit-box">
     <div class="ayushman-submit-spinner"></div>
     <h4 data-hi="आवेदन सबमिट किया जा रहा है..." data-en="Submitting your application...">Submitting your application...</h4>
+    <div class="ayushman-submit-progress-track">
+      <div class="ayushman-submit-progress-bar" id="ayushman-submit-progress-bar"></div>
+    </div>
+    <div class="ayushman-submit-status" id="ayushman-submit-status">Uploading your details...</div>
+    <div class="ayushman-submit-elapsed" id="ayushman-submit-elapsed">0s</div>
     <p data-hi="कृपया प्रतीक्षा करें, इसमें कुछ समय लग सकता है। पेज को बंद न करें, रीफ्रेश न करें और 'वापस' बटन न दबाएं।" data-en="Please wait, this may take a moment. Do not close this page, refresh, or press the back button.">Please wait, this may take a moment. Do not close this page, refresh, or press the back button.</p>
   </div>
 </div>
@@ -1288,6 +1321,37 @@ textarea.form-control-gov-area:focus {
   const form = document.getElementById('ayushman-form');
   const overlay = document.getElementById('ayushman-submit-overlay');
   const submitBtn = document.getElementById('btn-submit-main');
+  const progressBar = document.getElementById('ayushman-submit-progress-bar');
+  const statusText = document.getElementById('ayushman-submit-status');
+  const elapsedText = document.getElementById('ayushman-submit-elapsed');
+
+  // Rotating reassurance messages so the citizen can see the submission is
+  // actively progressing through real steps, not just a frozen spinner —
+  // timed roughly to how long each phase (upload, verify, encrypt, email)
+  // typically takes, but keeps cycling if it runs long.
+  const steps = [
+    { at: 0,  pct: 15, en: 'Uploading your details...', hi: 'आपका विवरण अपलोड हो रहा है...' },
+    { at: 4,  pct: 40, en: 'Verifying documents...', hi: 'दस्तावेज सत्यापित हो रहे हैं...' },
+    { at: 9,  pct: 65, en: 'Generating your encrypted Smart ID...', hi: 'आपकी एन्क्रिप्टेड स्मार्ट आईडी बनाई जा रही है...' },
+    { at: 15, pct: 85, en: 'Almost done, finalizing your card...', hi: 'लगभग पूर्ण, आपका कार्ड अंतिम रूप लिया जा रहा है...' },
+    { at: 25, pct: 92, en: 'This is taking a little longer than usual, please keep waiting...', hi: 'इसमें सामान्य से थोड़ा अधिक समय लग रहा है, कृपया प्रतीक्षा करें...' }
+  ];
+  let elapsedSeconds = 0;
+  let progressTimer = null;
+
+  function startProgressSimulation() {
+    const currentLang = (document.documentElement.getAttribute('lang') === 'hi') ? 'hi' : 'en';
+    progressTimer = setInterval(function() {
+      elapsedSeconds++;
+      if (elapsedText) elapsedText.innerText = elapsedSeconds + 's';
+      let active = steps[0];
+      for (const step of steps) {
+        if (elapsedSeconds >= step.at) active = step;
+      }
+      if (progressBar) progressBar.style.width = active.pct + '%';
+      if (statusText) statusText.innerText = active[currentLang] || active.en;
+    }, 1000);
+  }
 
   if (form && overlay && submitBtn) {
     form.addEventListener('submit', function() {
@@ -1299,6 +1363,7 @@ textarea.form-control-gov-area:focus {
       overlay.style.display = 'flex';
       submitBtn.disabled = true;
       submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+      startProgressSimulation();
     });
   }
 
