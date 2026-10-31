@@ -4,12 +4,38 @@ require_once __DIR__ . '/auth.php';
 
 $page_title = 'Official Admin Encrypted QR Scanner & Dossier Terminal';
 
+// Cards now carry just a short Card ID in their QR (?id=...) — no AES
+// decryption needed, just a direct authenticated DB lookup. The old
+// encrypted ?token= path is still honored for any cards printed/saved
+// before this change.
+$initialCardId = trim($_GET['id'] ?? '');
 $initialToken = trim($_GET['token'] ?? '');
 $initialDecrypted = null;
 $initialDbRecord = null;
 
-if (!empty($initialToken)) {
-    // Clean token if full URL was passed
+if (!empty($initialCardId) && isset($pdo)) {
+    $cardIdToLookup = $initialCardId;
+    if (strpos($cardIdToLookup, 'id=') !== false) {
+        $parsed = parse_url($cardIdToLookup);
+        if (!empty($parsed['query'])) {
+            parse_str($parsed['query'], $q);
+            if (!empty($q['id'])) {
+                $cardIdToLookup = $q['id'];
+            }
+        }
+    }
+    $stmt = $pdo->prepare("SELECT * FROM ayushman_applications WHERE card_id = ? LIMIT 1");
+    $stmt->execute([$cardIdToLookup]);
+    $initialDbRecord = $stmt->fetch();
+    if ($initialDbRecord) {
+        $initialDecrypted = [
+            'app_no'       => $initialDbRecord['application_no'],
+            'card_id'      => $initialDbRecord['card_id'],
+            'aadhaar_last4'=> $initialDbRecord['aadhaar_last4'],
+        ];
+    }
+} elseif (!empty($initialToken)) {
+    // Legacy: clean token if a full URL was passed
     $tokenToDecrypt = $initialToken;
     if (strpos($initialToken, 'token=') !== false) {
         $parsed = parse_url($initialToken);

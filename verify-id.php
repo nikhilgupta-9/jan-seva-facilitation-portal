@@ -19,6 +19,10 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 require_once __DIR__ . '/config/config.php';
 
+// Cards now encode a short Card ID (?id=...); the old encrypted ?token=
+// form is still accepted here purely to pass through to the admin scanner
+// for any cards printed/saved before this change.
+$cardId = trim($_GET['id'] ?? '');
 $token = trim($_GET['token'] ?? '');
 $isAdmin = !empty($_SESSION['admin_logged_in']) || !empty($_SESSION['admin_user']) || !empty($_SESSION['admin_id']);
 
@@ -107,7 +111,13 @@ header('X-Robots-Tag: noindex, nofollow');
     <p>This record is encrypted and only readable by an authorized administrative Scanner. No information is shown here.</p>
     <span class="badge">AES-256 PROTECTED</span>
 
-    <?php if ($isAdmin && !empty($token)): ?>
+    <?php if ($isAdmin && !empty($cardId)): ?>
+      <div>
+        <a class="admin-link" href="<?php echo htmlspecialchars(BASE_URL . '/admin/ayushman-scanner.php?id=' . urlencode($cardId)); ?>">
+          Open in Admin Scanner
+        </a>
+      </div>
+    <?php elseif ($isAdmin && !empty($token)): ?>
       <div>
         <a class="admin-link" href="<?php echo htmlspecialchars(BASE_URL . '/admin/ayushman-scanner.php?token=' . urlencode($token)); ?>">
           Open in Admin Scanner

@@ -13,11 +13,17 @@ if (!empty($appNo) && isset($pdo)) {
 
 $page_title = $record ? 'Digital Health Smart ID - ' . $record['full_name'] : 'Ayushman Health Card Search';
 
-// Build the public verification URL to embed in the QR code
+// Build the public verification URL to embed in the QR code.
+// Kept deliberately short (just the Card ID) instead of the long encrypted
+// token — a long AES payload pushes the QR to a very dense, hard-to-scan
+// code at the card's small print/screen size. Security is unaffected: this
+// gate page (verify-id.php) never discloses anything to a plain scan either
+// way, and the Card ID is still only resolvable to real data via the
+// authenticated admin scanner.
 $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
 $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
 $base = defined('BASE_URL') ? BASE_URL : '/id-card';
-$qrVerificationUrl = $protocol . $host . rtrim($base, '/') . '/verify-id.php?token=' . urlencode($record['encrypted_qr_token'] ?? '');
+$qrVerificationUrl = $protocol . $host . rtrim($base, '/') . '/verify-id.php?id=' . urlencode($record['card_id'] ?? '');
 
 $isAdmin = !empty($_SESSION['admin_logged_in']) || !empty($_SESSION['admin_user']) || !empty($_SESSION['admin_id']);
 
@@ -580,7 +586,7 @@ include __DIR__ . '/includes/header.php';
                 </p>
                 <?php if ($isAdmin): ?>
                   <div style="margin-top: 12px;">
-                    <a href="<?php echo BASE_URL; ?>/admin/ayushman-scanner.php?token=<?php echo urlencode($record['encrypted_qr_token']); ?>" class="btn btn-warning btn-sm" style="font-weight: 700; color: #1e293b; background: #f59e0b;">
+                    <a href="<?php echo BASE_URL; ?>/admin/ayushman-scanner.php?id=<?php echo urlencode($record['card_id']); ?>" class="btn btn-warning btn-sm" style="font-weight: 700; color: #1e293b; background: #f59e0b;">
                       <i class="fas fa-qrcode"></i> एडमिन स्कैनर से टेस्ट करें (Test in Admin Scanner)
                     </a>
                   </div>
