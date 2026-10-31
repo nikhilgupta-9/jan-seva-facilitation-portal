@@ -4,6 +4,7 @@ require_once __DIR__ . '/config/config.php';
 
 $appNo = trim($_GET['app_no'] ?? '');
 $record = null;
+$isExistingCard = (($_GET['status'] ?? '') === 'existing');
 
 if (!empty($appNo) && isset($pdo)) {
     $stmt = $pdo->prepare("SELECT * FROM ayushman_applications WHERE application_no = ? LIMIT 1");
@@ -348,11 +349,18 @@ include __DIR__ . '/includes/header.php';
         <div class="row align-items-center">
           <div class="col-md-8 col-sm-12">
             <h4 style="margin: 0 0 6px; font-weight: 800; color: #065f46;">
-              <i class="fas fa-check-circle text-success"></i> डिजिटल हेल्थ स्मार्ट आईडी कार्ड सफलतापूर्वक जनरेट हुआ!
+              <?php if ($isExistingCard): ?>
+                <i class="fas fa-id-card text-success"></i> इस मोबाइल नंबर पर पहले से एक डिजिटल हेल्थ स्मार्ट आईडी कार्ड मौजूद है!
+              <?php else: ?>
+                <i class="fas fa-check-circle text-success"></i> डिजिटल हेल्थ स्मार्ट आईडी कार्ड सफलतापूर्वक जनरेट हुआ!
+              <?php endif; ?>
             </h4>
             <p style="margin: 0; font-size: 0.88rem;">
-              आवेदन क्रमांक: <strong><?php echo htmlspecialchars($record['application_no']); ?></strong> | 
-              कार्ड आईडी: <strong><?php echo htmlspecialchars($record['card_id']); ?></strong> | 
+              <?php if ($isExistingCard): ?>
+                प्रति मोबाइल नंबर केवल एक ही कार्ड जारी किया जाता है, इसलिए आपका मौजूदा कार्ड नीचे दिखाया जा रहा है।
+              <?php endif; ?>
+              आवेदन क्रमांक: <strong><?php echo htmlspecialchars($record['application_no']); ?></strong> |
+              कार्ड आईडी: <strong><?php echo htmlspecialchars($record['card_id']); ?></strong> |
               पुष्टि एवं डाउनलोड लिंक आपकी ईमेल <code><?php echo htmlspecialchars($record['email']); ?></code> पर भी भेज दी गई है।
             </p>
           </div>

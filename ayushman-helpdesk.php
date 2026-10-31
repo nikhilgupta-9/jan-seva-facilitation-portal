@@ -92,6 +92,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_ayushman'])) {
         }
     }
 
+    // 3b. One card per mobile number: if this mobile already has a
+    // Digital Health Smart ID, send the citizen to their existing card
+    // instead of minting a duplicate. Only trusted when the mobile itself
+    // was the one OTP-verified (Aadhaar path) — the Email OTP path proves
+    // the email, not the mobile, so it is deliberately excluded here to
+    // avoid letting anyone probe an arbitrary mobile number straight to
+    // another citizen's existing card without proving they control it.
+    if (empty($errors) && $aadhaarVerified) {
+        $verifiedMobileForLookup = $authSession['mobile'] ?? null;
+        if ($verifiedMobileForLookup) {
+            $dupStmt = $pdo->prepare("SELECT application_no FROM ayushman_applications WHERE mobile = ? ORDER BY id DESC LIMIT 1");
+            $dupStmt->execute([$verifiedMobileForLookup]);
+            $existingAppNo = $dupStmt->fetchColumn();
+            if ($existingAppNo) {
+                unset($_SESSION['ayushman_aadhaar_auth']);
+                unset($_SESSION['ayushman_email_auth']);
+                header('Location: ' . BASE_URL . '/ayushman-card.php?app_no=' . urlencode($existingAppNo) . '&status=existing');
+                exit;
+            }
+        }
+    }
+
     // 4. File Upload Helper
     $uploadDir = __DIR__ . '/uploads/ayushman/';
     if (!is_dir($uploadDir)) {
