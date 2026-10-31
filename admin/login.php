@@ -1,8 +1,7 @@
 <?php
 // admin/login.php - Facilitator Admin Login
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+require_once __DIR__ . '/../utils/session_init.php';
+ayushman_start_secure_session();
 require_once __DIR__ . '/../config/config.php';
 
 $error = '';
@@ -12,38 +11,55 @@ if (!empty($_SESSION['admin_logged_in'])) {
     exit;
 }
 
+// Basic brute-force throttle: lock out after 5 failed attempts within 10
+// minutes (per session/browser). Not a substitute for IP-level protection,
+// but stops naive automated password guessing against this form.
+$maxAttempts = 5;
+$lockoutWindow = 10 * 60;
+$now = time();
+if (!isset($_SESSION['login_attempts'])) {
+    $_SESSION['login_attempts'] = [];
+}
+$_SESSION['login_attempts'] = array_filter($_SESSION['login_attempts'], function ($t) use ($now, $lockoutWindow) {
+    return ($now - $t) < $lockoutWindow;
+});
+$isLockedOut = count($_SESSION['login_attempts']) >= $maxAttempts;
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username = trim($_POST['username'] ?? '');
-    $password = trim($_POST['password'] ?? '');
-
-    if (!empty($username) && !empty($password)) {
-        $stmt = $pdo->prepare("SELECT * FROM admin_users WHERE username = ? LIMIT 1");
-        $stmt->execute([$username]);
-        $user = $stmt->fetch();
-
-        // Check password against hash or allow fallback default 'admin123' / 'password'
-        $valid = false;
-        if ($user) {
-            if (password_verify($password, $user['password_hash']) || $password === 'admin123' || $password === 'admin') {
-                $valid = true;
-            }
-        } elseif ($username === 'admin' && ($password === 'admin123' || $password === 'password' || $password === 'admin')) {
-            $valid = true;
-            $user = ['id' => 1, 'name' => 'System Admin', 'username' => 'admin', 'role' => 'superadmin'];
-        }
-
-        if ($valid) {
-            $_SESSION['admin_logged_in'] = true;
-            $_SESSION['admin_id'] = $user['id'];
-            $_SESSION['admin_user'] = $user['name'] ?? $user['username'];
-            $_SESSION['admin_role'] = $user['role'] ?? 'admin';
-            header('Location: ' . BASE_URL . '/admin/index.php');
-            exit;
-        } else {
-            $error = 'Invalid administrative credentials. Please try again.';
-        }
+    if ($isLockedOut) {
+        $error = 'Too many failed attempts. Please try again in a few minutes.';
     } else {
-        $error = 'Please enter both username and password.';
+        $username = trim($_POST['username'] ?? '');
+        $password = trim($_POST['password'] ?? '');
+
+        if (!empty($username) && !empty($password)) {
+            $stmt = $pdo->prepare("SELECT * FROM admin_users WHERE username = ? LIMIT 1");
+            $stmt->execute([$username]);
+            $user = $stmt->fetch();
+
+            // Password must match the stored hash — no fallback/default
+            // passwords. The previous bypass here let anyone log into ANY
+            // existing admin account with a guessable password regardless
+            // of what that account's real password actually was.
+            $valid = $user && password_verify($password, $user['password_hash']);
+
+            if ($valid) {
+                $_SESSION['login_attempts'] = [];
+                // Regenerate the session ID on privilege change to prevent session fixation.
+                session_regenerate_id(true);
+                $_SESSION['admin_logged_in'] = true;
+                $_SESSION['admin_id'] = $user['id'];
+                $_SESSION['admin_user'] = $user['name'] ?? $user['username'];
+                $_SESSION['admin_role'] = $user['role'] ?? 'admin';
+                header('Location: ' . BASE_URL . '/admin/index.php');
+                exit;
+            } else {
+                $_SESSION['login_attempts'][] = $now;
+                $error = 'Invalid administrative credentials. Please try again.';
+            }
+        } else {
+            $error = 'Please enter both username and password.';
+        }
     }
 }
 ?>

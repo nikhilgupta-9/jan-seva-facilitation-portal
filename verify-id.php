@@ -14,9 +14,8 @@
 // scanner, which is the sole place the encrypted payload actually gets
 // decrypted and matched against the live database record.
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+require_once __DIR__ . '/utils/session_init.php';
+ayushman_start_secure_session();
 require_once __DIR__ . '/config/config.php';
 
 // Cards now encode a short Card ID (?id=...); the old encrypted ?token=

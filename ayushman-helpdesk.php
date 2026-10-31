@@ -20,6 +20,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_ayushman'])) {
         $errors[] = 'सुरक्षा टोकन अमान्य है। कृपया पुनः प्रयास करें (Invalid CSRF Token).';
     }
 
+    // 1b. Basic flood/abuse throttle: block automated mass-submission from
+    // one browser session (max 5 submissions per 10 minutes).
+    $now = time();
+    if (!isset($_SESSION['ayushman_submit_attempts'])) {
+        $_SESSION['ayushman_submit_attempts'] = [];
+    }
+    $_SESSION['ayushman_submit_attempts'] = array_filter($_SESSION['ayushman_submit_attempts'], function ($t) use ($now) {
+        return ($now - $t) < 600;
+    });
+    if (count($_SESSION['ayushman_submit_attempts']) >= 5) {
+        $errors[] = 'बहुत अधिक प्रयास किए गए हैं। कृपया कुछ मिनट बाद पुनः प्रयास करें (Too many submissions — please try again later).';
+    } else {
+        $_SESSION['ayushman_submit_attempts'][] = $now;
+    }
+
     // 2. Validate Inputs
     $fullName = trim($_POST['full_name'] ?? '');
     $dob = trim($_POST['dob'] ?? '');
@@ -80,7 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_ayushman'])) {
     // 4. File Upload Helper
     $uploadDir = __DIR__ . '/uploads/ayushman/';
     if (!is_dir($uploadDir)) {
-        mkdir($uploadDir, 0777, true);
+        mkdir($uploadDir, 0755, true);
     }
 
     $uploadedFiles = [

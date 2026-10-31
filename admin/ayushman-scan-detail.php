@@ -8,6 +8,10 @@ require_once __DIR__ . '/auth.php';
 
 $page_title = 'Citizen Record - Digital Health Smart ID';
 
+if (empty($_SESSION['admin_csrf_token'])) {
+    $_SESSION['admin_csrf_token'] = bin2hex(random_bytes(32));
+}
+
 $cardId = trim($_GET['id'] ?? '');
 $record = null;
 $expired = false;
@@ -268,6 +272,7 @@ include __DIR__ . '/header.php';
           <i class="fas fa-id-card"></i> Print/View Smart ID Card
         </a>
         <form method="POST" action="<?php echo BASE_URL; ?>/admin/ayushman-helpdesk.php" style="display:inline;">
+          <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['admin_csrf_token']); ?>">
           <input type="hidden" name="action" value="update_status">
           <input type="hidden" name="app_id" value="<?php echo (int) $record['id']; ?>">
           <input type="hidden" name="status" value="approved">

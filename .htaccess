@@ -7,6 +7,16 @@ ErrorDocument 404 /404.php
 <IfModule mod_headers.c>
     Header set X-Content-Type-Options "nosniff"
     Header set X-Frame-Options "SAMEORIGIN"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+    # Camera is needed on-origin for the admin QR scanner; everything else
+    # sensitive (mic, geolocation, payment UI) is denied by default.
+    Header set Permissions-Policy "camera=(self), microphone=(), geolocation=(), payment=()"
+    Header set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    # Deliberately permissive on script/style sources (CDN libraries +
+    # several existing inline <script>/<style> blocks across the site) —
+    # this is a baseline against unexpected third-party/injected origins,
+    # not a strict nonce-based policy, to avoid breaking existing pages.
+    Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://checkout.razorpay.com https://api.qrserver.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' data: https://cdnjs.cloudflare.com https://fonts.gstatic.com; connect-src 'self' https:; frame-src 'self' https://checkout.razorpay.com; object-src 'none'; base-uri 'self'; frame-ancestors 'self'"
 </IfModule>
 
 <FilesMatch "^\.env">

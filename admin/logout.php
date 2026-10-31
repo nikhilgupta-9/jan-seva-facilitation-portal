@@ -1,8 +1,7 @@
 <?php
 // admin/logout.php - Admin Logout
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+require_once __DIR__ . '/../utils/session_init.php';
+ayushman_start_secure_session();
 require_once __DIR__ . '/../config/config.php';
 
 unset($_SESSION['admin_logged_in']);

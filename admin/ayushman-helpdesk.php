@@ -4,8 +4,18 @@ require_once __DIR__ . '/auth.php';
 
 $page_title = 'Ayushman Help Desk Applications & Health IDs';
 
+if (empty($_SESSION['admin_csrf_token'])) {
+    $_SESSION['admin_csrf_token'] = bin2hex(random_bytes(32));
+}
+
 // Status Update Handler
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update_status') {
+    if (!hash_equals($_SESSION['admin_csrf_token'], $_POST['csrf_token'] ?? '')) {
+        set_flash('error', 'सुरक्षा टोकन अमान्य है। कृपया पुनः प्रयास करें (Invalid security token — please retry).');
+        header('Location: ' . BASE_URL . '/admin/ayushman-helpdesk.php');
+        exit;
+    }
+
     $appId = (int) ($_POST['app_id'] ?? 0);
     $newStatus = trim($_POST['status'] ?? '');
     $adminNotes = trim($_POST['admin_notes'] ?? '');
@@ -457,6 +467,7 @@ include __DIR__ . '/header.php';
                   <div class="modal-dialog modal-dialog-centered" role="document">
                     <div class="modal-content" style="border-radius: 10px; overflow: hidden;">
                       <form method="POST" action="">
+                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['admin_csrf_token']); ?>">
                         <input type="hidden" name="action" value="update_status">
                         <input type="hidden" name="app_id" value="<?php echo $row['id']; ?>">
 

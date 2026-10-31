@@ -7,9 +7,8 @@ header('Content-Type: application/json; charset=utf-8');
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../utils/mailer.php';
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+require_once __DIR__ . '/../utils/session_init.php';
+ayushman_start_secure_session();
 
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
