@@ -190,7 +190,7 @@ include __DIR__ . '/header.php';
           </div>
           <div style="margin-top: 6px;">
             <span class="badge" style="background: #10b981; font-size: 0.78rem; padding: 4px 8px;">
-              <i class="fas fa-fingerprint"></i> Aadhaar e-KYC: XXXX-XXXX-<?php echo htmlspecialchars($record['aadhaar_last4'] ?? '0000'); ?>
+              <i class="fas fa-fingerprint"></i> Aadhaar Number: XXXX-XXXX-<?php echo htmlspecialchars($record['aadhaar_last4'] ?? '0000'); ?>
             </span>
             <span class="badge" style="background: #059669; font-size: 0.78rem; text-transform: uppercase;">
               <?php echo htmlspecialchars($record['status'] ?? 'Submitted'); ?>

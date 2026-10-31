@@ -192,7 +192,7 @@ function send_ayushman_confirmation_email(array $app): bool
     $cardId = $app['card_id'] ?? 'N/A';
     $citizenName = $app['full_name'] ?? 'Citizen';
     $abhaNo = $app['abha_number'] ?: 'Not Provided';
-    $aadhaarLast4 = $app['aadhaar_last4'] ? 'XXXX-XXXX-' . $app['aadhaar_last4'] : 'Verified';
+    $aadhaarLast4 = $app['aadhaar_last4'] ? 'XXXX-XXXX-' . $app['aadhaar_last4'] : 'N/A';
     
     // Build card download link
     $baseUrl = function_exists('app_url') ? app_url() : (defined('BASE_URL') ? BASE_URL : '/gp');
@@ -219,7 +219,7 @@ function send_ayushman_confirmation_email(array $app): bool
         "Full Name          : {$citizenName}",
         "ABHA Number        : {$abhaNo}",
         "Mobile Number      : " . ($app['mobile'] ?? 'N/A'),
-        "Aadhaar e-KYC      : Verified ({$aadhaarLast4})",
+        "Aadhaar Number     : {$aadhaarLast4}",
         "Submission Date    : " . date('d M Y, h:i A'),
         "==================================================",
         "",

@@ -65,52 +65,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_ayushman'])) {
         $errors[] = 'कृपया नियम, शर्तें एवं स्व-घोषणा सहमति स्वीकार करें (Consent is required).';
     }
 
-    // 3. Identity Verification Check — either Aadhaar OTP or Email OTP must be completed
-    $authSession = $_SESSION['ayushman_aadhaar_auth'] ?? null;
-    $aadhaarVerified = !empty($authSession['verified']) && $authSession['verified'] === true;
-    $aadhaarLast4 = $authSession['aadhaar_last4'] ?? null;
-
-    $emailAuthSession = $_SESSION['ayushman_email_auth'] ?? null;
-    $emailVerified = !empty($emailAuthSession['verified']) && $emailAuthSession['verified'] === true;
-
-    $identityVerified = $aadhaarVerified || $emailVerified;
-    $verificationMethod = $aadhaarVerified ? 'aadhaar_otp' : ($emailVerified ? 'email_otp' : null);
-
-    if (!$identityVerified) {
-        $errors[] = 'कृपया फॉर्म सबमिट करने से पहले आधार ओटीपी अथवा ईमेल ओटीपी सत्यापन पूरा करें (Aadhaar OTP or Email OTP verification is mandatory).';
+    // 3. Aadhaar Number — plain mandatory field, no OTP verification.
+    $aadhaarNumber = preg_replace('/\D/', '', $_POST['aadhaar_number'] ?? '');
+    $aadhaarLast4 = null;
+    if (strlen($aadhaarNumber) !== 12 || in_array($aadhaarNumber[0] ?? '', ['0', '1'])) {
+        $errors[] = 'कृपया 12 अंकों का वैध आधार नंबर दर्ज करें (A valid 12-digit Aadhaar number is required).';
+    } else {
+        $aadhaarLast4 = substr($aadhaarNumber, -4);
     }
 
-    // When verifying via Email OTP, Aadhaar OTP is never run, so the Aadhaar
-    // number is collected as a plain record field instead (Panel B's
-    // "aadhaar_number_manual" input) — it is NOT used for any OTP, only stored.
-    if ($emailVerified && !$aadhaarVerified) {
-        $manualAadhaar = preg_replace('/\D/', '', $_POST['aadhaar_number_manual'] ?? '');
-        if (strlen($manualAadhaar) !== 12 || in_array($manualAadhaar[0] ?? '', ['0', '1'])) {
-            $errors[] = 'कृपया रिकॉर्ड हेतु 12 अंकों का वैध आधार नंबर दर्ज करें (A valid 12-digit Aadhaar number is required).';
-        } else {
-            $aadhaarLast4 = substr($manualAadhaar, -4);
-        }
-    }
-
-    // 3b. One card per mobile number: if this mobile already has a
-    // Digital Health Smart ID, send the citizen to their existing card
-    // instead of minting a duplicate. Only trusted when the mobile itself
-    // was the one OTP-verified (Aadhaar path) — the Email OTP path proves
-    // the email, not the mobile, so it is deliberately excluded here to
-    // avoid letting anyone probe an arbitrary mobile number straight to
-    // another citizen's existing card without proving they control it.
-    if (empty($errors) && $aadhaarVerified) {
-        $verifiedMobileForLookup = $authSession['mobile'] ?? null;
-        if ($verifiedMobileForLookup) {
-            $dupStmt = $pdo->prepare("SELECT application_no FROM ayushman_applications WHERE mobile = ? ORDER BY id DESC LIMIT 1");
-            $dupStmt->execute([$verifiedMobileForLookup]);
-            $existingAppNo = $dupStmt->fetchColumn();
-            if ($existingAppNo) {
-                unset($_SESSION['ayushman_aadhaar_auth']);
-                unset($_SESSION['ayushman_email_auth']);
-                header('Location: ' . BASE_URL . '/ayushman-card.php?app_no=' . urlencode($existingAppNo) . '&status=existing');
-                exit;
-            }
+    // 3b. One card per mobile number: if this mobile already has a Digital
+    // Health Smart ID on record, send the citizen to their existing card
+    // instead of minting a duplicate.
+    if (empty($errors) && strlen($mobile) === 10) {
+        $dupStmt = $pdo->prepare("SELECT application_no FROM ayushman_applications WHERE mobile = ? ORDER BY id DESC LIMIT 1");
+        $dupStmt->execute([$mobile]);
+        $existingAppNo = $dupStmt->fetchColumn();
+        if ($existingAppNo) {
+            header('Location: ' . BASE_URL . '/ayushman-card.php?app_no=' . urlencode($existingAppNo) . '&status=existing');
+            exit;
         }
     }
 
@@ -200,8 +173,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_ayushman'])) {
                 'app_no'               => $appNo,
                 'card_id'              => $cardId,
                 'aadhaar_last4'        => $aadhaarLast4,
-                'aadhaar_verified'     => $aadhaarVerified ? 1 : 0,
-                'verification_method'  => $verificationMethod,
             ];
 
             $encryptedQrToken = ayushman_encrypt_payload($qrData);
@@ -228,7 +199,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_ayushman'])) {
                 $district,
                 $pincode,
                 $aadhaarLast4,
-                $aadhaarVerified ? 1 : 0,
+                0,
                 $abhaNumber,
                 $rationCardNo,
                 $bocwRegNo,
@@ -243,10 +214,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_ayushman'])) {
                 $encryptedQrToken,
                 $ipAddress
             ]);
-
-            // Clear session verification to prevent replay
-            unset($_SESSION['ayushman_aadhaar_auth']);
-            unset($_SESSION['ayushman_email_auth']);
 
             // Redirect to Card View first, then flush the response to the
             // browser immediately — the confirmation email's SMTP round trip
@@ -829,7 +796,7 @@ textarea.form-control-gov-area:focus {
 
     <h5 style="margin: 14px 0 0; font-weight: 700; color: #1e293b; font-size: 0.86rem;" data-hi="इसका उपयोग कैसे करें" data-en="How to use this">How to use this</h5>
     <ol class="ayush-about-steps">
-      <li data-hi="आधार ओटीपी अथवा ईमेल ओटीपी से अपनी पहचान सत्यापित करें।" data-en="Verify your identity using Aadhaar OTP or Email OTP.">Verify your identity using Aadhaar OTP or Email OTP.</li>
+      <li data-hi="अपना १२ अंकों का आधार नंबर एवं मोबाइल नंबर दर्ज करें।" data-en="Enter your 12-digit Aadhaar number and mobile number.">Enter your 12-digit Aadhaar number and mobile number.</li>
       <li data-hi="अपना व्यक्तिगत विवरण, स्वास्थ्य आईडी एवं पता भरें।" data-en="Fill in your personal details, health IDs and address.">Fill in your personal details, health IDs and address.</li>
       <li data-hi="अपने उपलब्ध दस्तावेजों (आभा, आयुष्मान, राशन, BOCW) की स्पष्ट फोटो अपलोड करें।" data-en="Upload clear photos of your available documents (ABHA, Ayushman, Ration, BOCW).">Upload clear photos of your available documents (ABHA, Ayushman, Ration, BOCW).</li>
       <li data-hi="सहमति स्वीकार करें और सबमिट करें — आपका एन्क्रिप्टेड स्मार्ट आईडी कार्ड तुरंत जनरेट होकर ईमेल पर भेजा जाएगा।" data-en="Accept the consent and submit — your encrypted Smart ID card is generated instantly and emailed to you.">Accept the consent and submit — your encrypted Smart ID card is generated instantly and emailed to you.</li>
@@ -947,162 +914,43 @@ textarea.form-control-gov-area:focus {
           </div>
         </div>
 
-        <!-- SECTION 2: Aadhaar e-KYC & Mobile OTP Verification -->
+        <!-- SECTION 2: Aadhaar & Mobile Number -->
         <div class="ayush-card-box">
           <div class="ayush-card-header header-success">
             <i class="fas fa-fingerprint"></i>
-            <span data-hi="२. आधार ई-केवाईसी एवं मोबाइल नंबर सत्यापन" data-en="2. Aadhaar OTP Verification">2. Aadhaar OTP Verification</span>
+            <span data-hi="२. आधार एवं मोबाइल नंबर" data-en="2. Aadhaar &amp; Mobile Number">2. Aadhaar &amp; Mobile Number</span>
           </div>
           <div class="ayush-card-body">
-
-            <!-- Verification Method Toggle -->
-            <div class="btn-group" role="group" style="margin-bottom: 16px; display: flex; flex-wrap: wrap; gap: 8px;">
-              <button type="button" id="method-tab-aadhaar" class="btn btn-gov-outline verify-method-tab active" data-method="aadhaar">
-                <i class="fas fa-fingerprint"></i> <span data-hi="आधार ओटीपी (मोबाइल)" data-en="Aadhaar OTP (Mobile)">Aadhaar OTP (Mobile)</span>
-              </button>
-              <button type="button" id="method-tab-email" class="btn btn-gov-outline verify-method-tab" data-method="email">
-                <i class="fas fa-envelope"></i> <span data-hi="ईमेल ओटीपी" data-en="Email OTP">Email OTP</span>
-              </button>
-            </div>
-            <p style="font-size: 0.8rem; color: #64748b; margin: -8px 0 14px;">
-              <i class="fas fa-info-circle"></i>
-              <span data-hi="ग्रामीण नागरिक जो ईमेल से परिचित नहीं हैं, वे आधार ओटीपी (मोबाइल) चुन सकते हैं। किसी एक विधि से सत्यापन पर्याप्त है।" data-en="Citizens unfamiliar with email can use Aadhaar OTP (mobile) instead. Verifying with either method is enough.">Citizens unfamiliar with email can use Aadhaar OTP (mobile) instead. Verifying with either method is enough.</span>
-            </p>
-
-            <!-- PANEL A: Aadhaar OTP -->
-            <div class="aadhaar-verify-box" id="verify-panel-aadhaar">
-              <div class="row align-items-center">
-                <div class="col-md-6 col-sm-12">
-                  <div class="form-group" style="margin-bottom: 10px;">
-                    <label class="form-label-gov" for="aadhaar_input">
-                      <span data-hi="१२ अंकों का आधार नंबर" data-en="12-Digit Aadhaar No">12-Digit Aadhaar No</span> <span class="req">*</span>
-                    </label>
-                    <div class="input-group">
-                      <span class="input-group-text input-group-addon-gov"><i class="fas fa-id-card"></i></span>
-                      <input type="text" id="aadhaar_input" class="form-control form-control-gov"
-                             placeholder="XXXX XXXX XXXX" maxlength="14" autocomplete="off" required>
-                    </div>
+            <div class="row align-items-center">
+              <div class="col-md-6 col-sm-12">
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label class="form-label-gov" for="aadhaar_input">
+                    <span data-hi="१२ अंकों का आधार नंबर" data-en="12-Digit Aadhaar No">12-Digit Aadhaar No</span> <span class="req">*</span>
+                  </label>
+                  <div class="input-group">
+                    <span class="input-group-text input-group-addon-gov"><i class="fas fa-id-card"></i></span>
+                    <input type="text" name="aadhaar_number" id="aadhaar_input" class="form-control form-control-gov"
+                           placeholder="XXXX XXXX XXXX" maxlength="14" autocomplete="off"
+                           pattern="[2-9][0-9]{3}\s?[0-9]{4}\s?[0-9]{4}" required>
                   </div>
-                </div>
-
-                <div class="col-md-6 col-sm-12">
-                  <div class="form-group" style="margin-bottom: 10px;">
-                    <label class="form-label-gov" for="mobile">
-                      <span data-hi="मोबाइल नंबर" data-en="WhatsApp No">WhatsApp No</span> <span class="req">*</span>
-                    </label>
-                    <div class="input-group">
-                      <span class="input-group-text input-group-addon-gov">+91</span>
-                      <input type="tel" name="mobile" id="mobile" class="form-control form-control-gov"
-                             placeholder="9876543210" maxlength="10"
-                             value="<?php echo htmlspecialchars($_POST['mobile'] ?? ''); ?>" required>
-                    </div>
-                  </div>
+                  <small class="text-muted" data-hi="वैध 12 अंकों का आधार नंबर दर्ज करें।" data-en="Enter a valid 12-digit Aadhaar number.">Enter a valid 12-digit Aadhaar number.</small>
                 </div>
               </div>
 
-              <!-- OTP Trigger Button -->
-              <div style="margin-top: 10px;">
-                <button type="button" id="btn-send-otp" class="btn btn-gov-outline">
-                  <i class="fas fa-paper-plane"></i> <span data-hi="आधार ओटीपी भेजें" data-en="Send Aadhaar OTP">Send Aadhaar OTP</span>
-                </button>
-                <span id="otp-timer-badge" class="badge-gov-saffron" style="display:none; margin-left: 8px; font-size: 0.85rem;">60s</span>
-              </div>
-
-              <!-- OTP Input Row (Hidden initially) -->
-              <div id="otp-verify-row" style="display: none; margin-top: 16px; padding-top: 14px; border-top: 1px dashed #cbd5e1;">
-                <div class="row align-items-center">
-                  <div class="col-md-6 col-sm-12">
-                    <label class="form-label-gov" for="otp_input">
-                      <span data-hi="प्राप्त ६ अंकों का ओटीपी दर्ज करें" data-en="Enter 6-Digit OTP">Enter 6-Digit OTP</span> <span class="req">*</span>
-                    </label>
-                    <input type="text" id="otp_input" class="form-control form-control-gov"
-                           placeholder="123456" maxlength="6" style="letter-spacing: 4px; font-weight: 700; font-size: 1.1rem;">
-                    <div id="otp-sandbox-hint" class="text-success" style="font-size: 0.8rem; margin-top: 4px; font-weight: 600;"></div>
+              <div class="col-md-6 col-sm-12">
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label class="form-label-gov" for="mobile">
+                    <span data-hi="मोबाइल नंबर" data-en="Mobile Number">Mobile Number</span> <span class="req">*</span>
+                  </label>
+                  <div class="input-group">
+                    <span class="input-group-text input-group-addon-gov">+91</span>
+                    <input type="tel" name="mobile" id="mobile" class="form-control form-control-gov"
+                           placeholder="9876543210" maxlength="10" pattern="[6-9][0-9]{9}"
+                           value="<?php echo htmlspecialchars($_POST['mobile'] ?? ''); ?>" required>
                   </div>
-                  <div class="col-md-6 col-sm-12" style="margin-top: 24px;">
-                    <button type="button" id="btn-verify-otp" class="btn btn-gov-verify">
-                      <i class="fas fa-check-circle"></i> <span data-hi="सत्यापित करें" data-en="Verify OTP">Verify OTP</span>
-                    </button>
-                  </div>
+                  <small class="text-muted" data-hi="10 अंकों का वैध मोबाइल नंबर दर्ज करें।" data-en="Enter a valid 10-digit mobile number.">Enter a valid 10-digit mobile number.</small>
                 </div>
               </div>
-
-              <!-- Verified Success State -->
-              <div id="aadhaar-verified-badge" style="display: none; margin-top: 14px;" class="alert alert-success">
-                <i class="fas fa-check-circle fa-lg"></i>
-                <strong style="margin-left: 6px;" data-hi="आधार ई-केवाईसी सत्यापित (Aadhaar Verified ✓)" data-en="Aadhaar Verified ✓">Aadhaar Verified ✓</strong>
-                <span id="verified-aadhaar-text" style="margin-left: 8px; font-family: monospace; font-weight: 700;"></span>
-              </div>
-
-              <div id="otp-msg-box" style="margin-top: 10px; display: none;"></div>
-            </div>
-
-            <!-- PANEL B: Email OTP -->
-            <div class="aadhaar-verify-box" id="verify-panel-email" style="display: none;">
-              <div class="form-group" style="margin-bottom: 10px;">
-                <label class="form-label-gov" for="email_otp_input_display">
-                  <span data-hi="ईमेल आईडी (ऊपर दर्ज की गई)" data-en="Email ID (entered above)">Email ID (entered above)</span>
-                </label>
-                <div class="input-group">
-                  <span class="input-group-text input-group-addon-gov"><i class="fas fa-envelope"></i></span>
-                  <input type="text" id="email_otp_input_display" class="form-control form-control-gov" readonly
-                         style="background: #f1f5f9; color: #64748b; cursor: not-allowed;"
-                         placeholder="Fill the Email ID field in Section 1 first">
-                  <button type="button" id="btn-edit-email" class="btn btn-gov-outline" style="border-radius: 0 6px 6px 0;">
-                    <i class="fas fa-pen"></i> <span data-hi="बदलें" data-en="Edit">Edit</span>
-                  </button>
-                </div>
-                <small class="text-muted" data-hi="यह फील्ड केवल दिखाने के लिए है और टाइप नहीं की जा सकती — कृपया पहले ऊपर सेक्शन 1 में 'ईमेल आईडी' फील्ड भरें/बदलें।" data-en="This field is read-only and cannot be typed into — please fill or edit the 'Email ID' field in Section 1 above.">This field is read-only and cannot be typed into — please fill or edit the 'Email ID' field in Section 1 above.</small>
-              </div>
-
-              <!-- Aadhaar Number (record only — not used for OTP when verifying via Email) -->
-              <div class="form-group" style="margin-bottom: 10px;">
-                <label class="form-label-gov" for="aadhaar_input_email">
-                  <span data-hi="१२ अंकों का आधार नंबर" data-en="12-Digit Aadhaar No">12-Digit Aadhaar No</span> <span class="req">*</span>
-                </label>
-                <div class="input-group">
-                  <span class="input-group-text input-group-addon-gov"><i class="fas fa-id-card"></i></span>
-                  <input type="text" id="aadhaar_input_email" name="aadhaar_number_manual" class="form-control form-control-gov"
-                         placeholder="XXXX XXXX XXXX" maxlength="14" autocomplete="off" required>
-                </div>
-                <small class="text-muted" data-hi="ईमेल ओटीपी से सत्यापन करते समय भी रिकॉर्ड हेतु आधार नंबर आवश्यक है (यह ओटीपी के लिए उपयोग नहीं होगा)।" data-en="Aadhaar number is required for record-keeping even when verifying via Email OTP (it won't be used for OTP).">Aadhaar number is required for record-keeping even when verifying via Email OTP (it won't be used for OTP).</small>
-              </div>
-
-              <!-- OTP Trigger Button -->
-              <div style="margin-top: 10px;">
-                <button type="button" id="btn-send-email-otp" class="btn btn-gov-outline">
-                  <i class="fas fa-paper-plane"></i> <span data-hi="ईमेल ओटीपी भेजें" data-en="Send Email OTP">Send Email OTP</span>
-                </button>
-                <span id="email-otp-timer-badge" class="badge-gov-saffron" style="display:none; margin-left: 8px; font-size: 0.85rem;">60s</span>
-              </div>
-
-              <!-- OTP Input Row (Hidden initially) -->
-              <div id="email-otp-verify-row" style="display: none; margin-top: 16px; padding-top: 14px; border-top: 1px dashed #cbd5e1;">
-                <div class="row align-items-center">
-                  <div class="col-md-6 col-sm-12">
-                    <label class="form-label-gov" for="email_otp_input">
-                      <span data-hi="प्राप्त ६ अंकों का ओटीपी दर्ज करें" data-en="Enter 6-Digit OTP">Enter 6-Digit OTP</span> <span class="req">*</span>
-                    </label>
-                    <input type="text" id="email_otp_input" class="form-control form-control-gov"
-                           placeholder="123456" maxlength="6" style="letter-spacing: 4px; font-weight: 700; font-size: 1.1rem;">
-                    <div id="email-otp-sandbox-hint" class="text-success" style="font-size: 0.8rem; margin-top: 4px; font-weight: 600;"></div>
-                  </div>
-                  <div class="col-md-6 col-sm-12" style="margin-top: 24px;">
-                    <button type="button" id="btn-verify-email-otp" class="btn btn-gov-verify">
-                      <i class="fas fa-check-circle"></i> <span data-hi="सत्यापित करें" data-en="Verify OTP">Verify OTP</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Verified Success State -->
-              <div id="email-verified-badge" style="display: none; margin-top: 14px;" class="alert alert-success">
-                <i class="fas fa-check-circle fa-lg"></i>
-                <strong style="margin-left: 6px;" data-hi="ईमेल सत्यापित (Email Verified ✓)" data-en="Email Verified ✓">Email Verified ✓</strong>
-                <span id="verified-email-text" style="margin-left: 8px; font-family: monospace; font-weight: 700;"></span>
-              </div>
-
-              <div id="email-otp-msg-box" style="margin-top: 10px; display: none;"></div>
             </div>
           </div>
         </div>
@@ -1303,7 +1151,7 @@ textarea.form-control-gov-area:focus {
               </p>
               <h5 style="margin: 10px 0 0; font-weight: 700; color: #1e293b; font-size: 0.8rem;" data-hi="इसका उपयोग कैसे करें" data-en="How to use this">How to use this</h5>
               <ol class="ayush-about-steps" style="margin-top: 8px;">
-                <li data-hi="आधार ओटीपी अथवा ईमेल ओटीपी से अपनी पहचान सत्यापित करें।" data-en="Verify your identity using Aadhaar OTP or Email OTP.">Verify your identity using Aadhaar OTP or Email OTP.</li>
+                <li data-hi="अपना १२ अंकों का आधार नंबर एवं मोबाइल नंबर दर्ज करें।" data-en="Enter your 12-digit Aadhaar number and mobile number.">Enter your 12-digit Aadhaar number and mobile number.</li>
                 <li data-hi="अपना व्यक्तिगत विवरण, स्वास्थ्य आईडी एवं पता भरें।" data-en="Fill in your personal details, health IDs and address.">Fill in your personal details, health IDs and address.</li>
                 <li data-hi="अपने उपलब्ध दस्तावेजों की स्पष्ट फोटो अपलोड करें (अधिकतम 10MB)।" data-en="Upload clear photos of your available documents (max 10MB).">Upload clear photos of your available documents (max 10MB).</li>
                 <li data-hi="सहमति स्वीकार करें और सबमिट करें — कार्ड तुरंत ईमेल पर भेजा जाएगा।" data-en="Accept the consent and submit — the card is emailed to you instantly.">Accept the consent and submit — the card is emailed to you instantly.</li>
@@ -1349,7 +1197,7 @@ textarea.form-control-gov-area:focus {
   </div>
 </div>
 
-<!-- Scripts for Dynamic File Preview and Aadhaar OTP Flow -->
+<!-- Scripts for Dynamic File Preview -->
 <script>
 // Show the submission loader as soon as the form is actually being sent to the
 // server, and keep it up (with a "don't go back" warning) until the server's
@@ -1483,368 +1331,16 @@ function showFileName(input, targetId) {
   }
 }
 
-// Aadhaar OTP Verification AJAX
+// Format Aadhaar number input with spaces: XXXX XXXX XXXX
 (function() {
   const aadhaarInput = document.getElementById('aadhaar_input');
-  const mobileInput = document.getElementById('mobile');
-  const btnSendOtp = document.getElementById('btn-send-otp');
-  const otpTimerBadge = document.getElementById('otp-timer-badge');
-  const otpVerifyRow = document.getElementById('otp-verify-row');
-  const otpInput = document.getElementById('otp_input');
-  const btnVerifyOtp = document.getElementById('btn-verify-otp');
-  const aadhaarVerifiedBadge = document.getElementById('aadhaar-verified-badge');
-  const verifiedAadhaarText = document.getElementById('verified-aadhaar-text');
-  const otpMsgBox = document.getElementById('otp-msg-box');
-  const otpSandboxHint = document.getElementById('otp-sandbox-hint');
-
-  let countdownInterval = null;
-
-  // Format Aadhaar input with spaces: XXXX XXXX XXXX
-  function formatAadhaarInput(el) {
-    el.addEventListener('input', function() {
+  if (aadhaarInput) {
+    aadhaarInput.addEventListener('input', function() {
       let val = this.value.replace(/\D/g, '').substring(0, 12);
       let formatted = val.match(/.{1,4}/g)?.join(' ') || val;
       this.value = formatted;
     });
   }
-  if (aadhaarInput) {
-    formatAadhaarInput(aadhaarInput);
-  }
-  // Same formatting for the Aadhaar number field shown in the Email OTP panel
-  const aadhaarInputEmail = document.getElementById('aadhaar_input_email');
-  if (aadhaarInputEmail) {
-    formatAadhaarInput(aadhaarInputEmail);
-  }
-
-  // 1. Send OTP Click
-  if (btnSendOtp) {
-    btnSendOtp.addEventListener('click', function() {
-      const rawAadhaar = aadhaarInput.value.replace(/\s+/g, '');
-      const mobile = mobileInput.value.trim();
-
-      if (rawAadhaar.length !== 12) {
-        alert('कृपया 12 अंकों का वैध आधार नंबर दर्ज करें।');
-        aadhaarInput.focus();
-        return;
-      }
-      if (mobile.length !== 10) {
-        alert('कृपया 10 अंकों का वैध मोबाइल नंबर दर्ज करें।');
-        mobileInput.focus();
-        return;
-      }
-
-      btnSendOtp.disabled = true;
-      btnSendOtp.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ओटीपी भेजा जा रहा है...';
-      otpMsgBox.style.display = 'none';
-
-      const formData = new FormData();
-      formData.append('action', 'send_otp');
-      formData.append('aadhaar_number', rawAadhaar);
-      formData.append('mobile', mobile);
-
-      fetch('<?php echo BASE_URL; ?>/api/ayushman_aadhaar_otp.php?action=send_otp', {
-        method: 'POST',
-        body: formData
-      })
-      .then(res => res.json())
-      .then(data => {
-        btnSendOtp.disabled = false;
-        btnSendOtp.innerHTML = '<i class="fas fa-redo"></i> पुनः ओटीपी भेजें (Resend OTP)';
-
-        if (data.success) {
-          otpVerifyRow.style.display = 'block';
-          otpMsgBox.className = 'alert alert-info';
-          otpMsgBox.innerHTML = '<i class="fas fa-check-circle"></i> ' + data.message;
-          otpMsgBox.style.display = 'block';
-
-          if (data.test_mode && data.demo_otp) {
-            otpSandboxHint.innerHTML = '<i class="fas fa-vial"></i> <strong>UIDAI Sandbox OTP:</strong> ' + data.demo_otp + ' (दर्ज करें)';
-          }
-
-          // Start 60s countdown
-          let seconds = 60;
-          otpTimerBadge.style.display = 'inline-block';
-          otpTimerBadge.innerText = seconds + 's';
-          clearInterval(countdownInterval);
-          countdownInterval = setInterval(() => {
-            seconds--;
-            otpTimerBadge.innerText = seconds + 's';
-            if (seconds <= 0) {
-              clearInterval(countdownInterval);
-              otpTimerBadge.style.display = 'none';
-            }
-          }, 1000);
-
-        } else {
-          otpMsgBox.className = 'alert alert-danger';
-          otpMsgBox.innerHTML = '<i class="fas fa-exclamation-circle"></i> ' + data.message;
-          otpMsgBox.style.display = 'block';
-        }
-      })
-      .catch(err => {
-        btnSendOtp.disabled = false;
-        btnSendOtp.innerHTML = '<i class="fas fa-paper-plane"></i> आधार ओटीपी भेजें';
-        alert('सर्वर से संपर्क करने में त्रुटि: ' + err);
-      });
-    });
-  }
-
-  // 2. Verify OTP Click
-  if (btnVerifyOtp) {
-    btnVerifyOtp.addEventListener('click', function() {
-      const otpVal = otpInput.value.trim();
-      if (otpVal.length !== 6) {
-        alert('कृपया 6 अंकों का ओटीपी दर्ज करें।');
-        otpInput.focus();
-        return;
-      }
-
-      btnVerifyOtp.disabled = true;
-      btnVerifyOtp.innerHTML = '<i class="fas fa-spinner fa-spin"></i> सत्यापन हो रहा है...';
-
-      const formData = new FormData();
-      formData.append('action', 'verify_otp');
-      formData.append('otp', otpVal);
-
-      fetch('<?php echo BASE_URL; ?>/api/ayushman_aadhaar_otp.php?action=verify_otp', {
-        method: 'POST',
-        body: formData
-      })
-      .then(res => res.json())
-      .then(data => {
-        btnVerifyOtp.disabled = false;
-        btnVerifyOtp.innerHTML = '<i class="fas fa-check-circle"></i> सत्यापित करें';
-
-        if (data.success) {
-          otpVerifyRow.style.display = 'none';
-          btnSendOtp.style.display = 'none';
-          otpTimerBadge.style.display = 'none';
-          otpMsgBox.style.display = 'none';
-
-          // Lock inputs
-          aadhaarInput.readOnly = true;
-          mobileInput.readOnly = true;
-
-          aadhaarVerifiedBadge.style.display = 'block';
-          verifiedAadhaarText.innerText = 'XXXX-XXXX-' + data.last4;
-        } else {
-          otpMsgBox.className = 'alert alert-danger';
-          otpMsgBox.innerHTML = '<i class="fas fa-times-circle"></i> ' + data.message;
-          otpMsgBox.style.display = 'block';
-        }
-      })
-      .catch(err => {
-        btnVerifyOtp.disabled = false;
-        btnVerifyOtp.innerHTML = '<i class="fas fa-check-circle"></i> सत्यापित करें';
-        alert('सत्यापन त्रुटि: ' + err);
-      });
-    });
-  }
-
-  // Check if already verified in session
-  fetch('<?php echo BASE_URL; ?>/api/ayushman_aadhaar_otp.php?action=check_status')
-    .then(r => r.json())
-    .then(status => {
-      if (status.verified && status.last4) {
-        aadhaarInput.value = 'XXXX XXXX ' + status.last4;
-        aadhaarInput.readOnly = true;
-        if (status.mobile) {
-          mobileInput.value = status.mobile;
-          mobileInput.readOnly = true;
-        }
-        btnSendOtp.style.display = 'none';
-        aadhaarVerifiedBadge.style.display = 'block';
-        verifiedAadhaarText.innerText = 'XXXX-XXXX-' + status.last4;
-      }
-    });
-
-})();
-</script>
-
-<!-- Verification Method Toggle (Aadhaar OTP vs Email OTP) -->
-<script>
-(function() {
-  const tabAadhaar = document.getElementById('method-tab-aadhaar');
-  const tabEmail = document.getElementById('method-tab-email');
-  const panelAadhaar = document.getElementById('verify-panel-aadhaar');
-  const panelEmail = document.getElementById('verify-panel-email');
-  const emailField = document.getElementById('email');
-  const emailDisplay = document.getElementById('email_otp_input_display');
-
-  function showMethod(method) {
-    const isEmail = method === 'email';
-    panelAadhaar.style.display = isEmail ? 'none' : 'block';
-    panelEmail.style.display = isEmail ? 'block' : 'none';
-    tabAadhaar.classList.toggle('active', !isEmail);
-    tabEmail.classList.toggle('active', isEmail);
-    if (isEmail && emailField && emailDisplay) {
-      emailDisplay.value = emailField.value || '';
-    }
-  }
-
-  if (tabAadhaar) tabAadhaar.addEventListener('click', function() { showMethod('aadhaar'); });
-  if (tabEmail) tabEmail.addEventListener('click', function() { showMethod('email'); });
-
-  // Keep the read-only email display in sync with the real Email ID field in Section 1
-  if (emailField && emailDisplay) {
-    emailField.addEventListener('input', function() {
-      emailDisplay.value = emailField.value;
-    });
-  }
-
-  // "Edit" button next to the read-only display jumps back to the real, typable field
-  const btnEditEmail = document.getElementById('btn-edit-email');
-  if (btnEditEmail && emailField) {
-    btnEditEmail.addEventListener('click', function() {
-      emailField.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      emailField.focus();
-    });
-  }
-})();
-</script>
-
-<!-- Email OTP Verification AJAX -->
-<script>
-(function() {
-  const emailField = document.getElementById('email');
-  const btnSendEmailOtp = document.getElementById('btn-send-email-otp');
-  const emailOtpTimerBadge = document.getElementById('email-otp-timer-badge');
-  const emailOtpVerifyRow = document.getElementById('email-otp-verify-row');
-  const emailOtpInput = document.getElementById('email_otp_input');
-  const btnVerifyEmailOtp = document.getElementById('btn-verify-email-otp');
-  const emailVerifiedBadge = document.getElementById('email-verified-badge');
-  const verifiedEmailText = document.getElementById('verified-email-text');
-  const emailOtpMsgBox = document.getElementById('email-otp-msg-box');
-  const emailOtpSandboxHint = document.getElementById('email-otp-sandbox-hint');
-
-  let emailCountdownInterval = null;
-
-  // 1. Send Email OTP Click
-  if (btnSendEmailOtp) {
-    btnSendEmailOtp.addEventListener('click', function() {
-      const email = (emailField ? emailField.value : '').trim();
-
-      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        alert('Please enter a valid Email ID in Section 1 above first.');
-        if (emailField) emailField.focus();
-        return;
-      }
-
-      btnSendEmailOtp.disabled = true;
-      btnSendEmailOtp.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending OTP...';
-      emailOtpMsgBox.style.display = 'none';
-
-      const formData = new FormData();
-      formData.append('action', 'send_otp');
-      formData.append('email', email);
-
-      fetch('<?php echo BASE_URL; ?>/api/ayushman_email_otp.php?action=send_otp', {
-        method: 'POST',
-        body: formData
-      })
-      .then(res => res.json())
-      .then(data => {
-        btnSendEmailOtp.disabled = false;
-        btnSendEmailOtp.innerHTML = '<i class="fas fa-redo"></i> Resend OTP';
-
-        if (data.success) {
-          emailOtpVerifyRow.style.display = 'block';
-          emailOtpMsgBox.className = 'alert alert-info';
-          emailOtpMsgBox.innerHTML = '<i class="fas fa-check-circle"></i> ' + data.message;
-          emailOtpMsgBox.style.display = 'block';
-
-          if (data.test_mode && data.demo_otp) {
-            emailOtpSandboxHint.innerHTML = '<i class="fas fa-vial"></i> <strong>Sandbox OTP:</strong> ' + data.demo_otp + ' (enter this)';
-          }
-
-          let seconds = 60;
-          emailOtpTimerBadge.style.display = 'inline-block';
-          emailOtpTimerBadge.innerText = seconds + 's';
-          clearInterval(emailCountdownInterval);
-          emailCountdownInterval = setInterval(() => {
-            seconds--;
-            emailOtpTimerBadge.innerText = seconds + 's';
-            if (seconds <= 0) {
-              clearInterval(emailCountdownInterval);
-              emailOtpTimerBadge.style.display = 'none';
-            }
-          }, 1000);
-        } else {
-          emailOtpMsgBox.className = 'alert alert-danger';
-          emailOtpMsgBox.innerHTML = '<i class="fas fa-exclamation-circle"></i> ' + data.message;
-          emailOtpMsgBox.style.display = 'block';
-        }
-      })
-      .catch(err => {
-        btnSendEmailOtp.disabled = false;
-        btnSendEmailOtp.innerHTML = '<i class="fas fa-paper-plane"></i> Send Email OTP';
-        alert('Error contacting server: ' + err);
-      });
-    });
-  }
-
-  // 2. Verify Email OTP Click
-  if (btnVerifyEmailOtp) {
-    btnVerifyEmailOtp.addEventListener('click', function() {
-      const otpVal = emailOtpInput.value.trim();
-      if (otpVal.length !== 6) {
-        alert('Please enter the 6-digit OTP.');
-        emailOtpInput.focus();
-        return;
-      }
-
-      btnVerifyEmailOtp.disabled = true;
-      btnVerifyEmailOtp.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
-
-      const formData = new FormData();
-      formData.append('action', 'verify_otp');
-      formData.append('otp', otpVal);
-
-      fetch('<?php echo BASE_URL; ?>/api/ayushman_email_otp.php?action=verify_otp', {
-        method: 'POST',
-        body: formData
-      })
-      .then(res => res.json())
-      .then(data => {
-        btnVerifyEmailOtp.disabled = false;
-        btnVerifyEmailOtp.innerHTML = '<i class="fas fa-check-circle"></i> Verify OTP';
-
-        if (data.success) {
-          emailOtpVerifyRow.style.display = 'none';
-          btnSendEmailOtp.style.display = 'none';
-          emailOtpTimerBadge.style.display = 'none';
-          emailOtpMsgBox.style.display = 'none';
-
-          if (emailField) emailField.readOnly = true;
-
-          emailVerifiedBadge.style.display = 'block';
-          verifiedEmailText.innerText = data.email || '';
-        } else {
-          emailOtpMsgBox.className = 'alert alert-danger';
-          emailOtpMsgBox.innerHTML = '<i class="fas fa-times-circle"></i> ' + data.message;
-          emailOtpMsgBox.style.display = 'block';
-        }
-      })
-      .catch(err => {
-        btnVerifyEmailOtp.disabled = false;
-        btnVerifyEmailOtp.innerHTML = '<i class="fas fa-check-circle"></i> Verify OTP';
-        alert('Verification error: ' + err);
-      });
-    });
-  }
-
-  // Check if already verified in session
-  fetch('<?php echo BASE_URL; ?>/api/ayushman_email_otp.php?action=check_status')
-    .then(r => r.json())
-    .then(status => {
-      if (status.verified && status.email) {
-        if (emailField) emailField.readOnly = true;
-        btnSendEmailOtp.style.display = 'none';
-        emailVerifiedBadge.style.display = 'block';
-        verifiedEmailText.innerText = status.email;
-      }
-    });
-
 })();
 </script>
 

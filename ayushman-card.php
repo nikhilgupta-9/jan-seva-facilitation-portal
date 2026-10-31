@@ -303,7 +303,7 @@ include __DIR__ . '/includes/header.php';
       <div class="col-md-5 col-sm-12 text-right">
         <?php if ($record): ?>
           <span class="badge" style="background: #16a34a; font-size: 0.85rem; padding: 6px 14px;">
-            <i class="fas fa-check-circle"></i> आधार सत्यापित • कार्ड जनरेटेड
+            <i class="fas fa-check-circle"></i> कार्ड जनरेटेड
           </span>
         <?php endif; ?>
       </div>
@@ -411,7 +411,7 @@ include __DIR__ . '/includes/header.php';
               <div class="card-photo-col">
                 <img src="<?php echo !empty($record['photo_url']) ? BASE_URL . '/' . htmlspecialchars($record['photo_url']) : BASE_URL . '/images/tuser1.jpg'; ?>" alt="Citizen Photo">
                 <span class="card-verified-badge">
-                  <i class="fas fa-check"></i> Aadhaar e-KYC
+                  <i class="fas fa-id-card"></i> Aadhaar Linked
                 </span>
               </div>
 

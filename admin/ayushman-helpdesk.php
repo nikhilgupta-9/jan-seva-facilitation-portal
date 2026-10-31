@@ -373,16 +373,16 @@ include __DIR__ . '/header.php';
                 <div><i class="fas fa-phone text-muted" style="font-size: 0.75rem;"></i> <?php echo htmlspecialchars($row['mobile']); ?></div>
                 <div style="font-size: 0.78rem; color: #64748b;"><?php echo htmlspecialchars($row['email']); ?></div>
               </td>
-              <td data-label="आधार e-KYC">
-                <?php if ($row['aadhaar_verified']): ?>
-                  <span class="badge" style="background: #10b981; font-size: 0.75rem; padding: 4px 8px;">
-                    <i class="fas fa-check"></i> आधार Verified
+              <td data-label="आधार नंबर">
+                <?php if (!empty($row['aadhaar_last4'])): ?>
+                  <span class="badge" style="background: #0284c7; font-size: 0.75rem; padding: 4px 8px;">
+                    <i class="fas fa-id-card"></i> On File
                   </span>
                   <div style="font-family: monospace; font-size: 0.75rem; color: #334155; margin-top: 2px;">
-                    XXXX-XXXX-<?php echo htmlspecialchars($row['aadhaar_last4'] ?? '0000'); ?>
+                    XXXX-XXXX-<?php echo htmlspecialchars($row['aadhaar_last4']); ?>
                   </div>
                 <?php else: ?>
-                  <span class="badge" style="background: #ef4444; font-size: 0.75rem;">Unverified</span>
+                  <span class="badge" style="background: #ef4444; font-size: 0.75rem;">Not Provided</span>
                 <?php endif; ?>
               </td>
               <td data-label="आभा/स्वास्थ्य">

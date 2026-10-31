@@ -531,7 +531,7 @@ include __DIR__ . '/header.php';
             </div>
             <div style="margin-top: 6px;">
               <span class="badge" style="background: #10b981; font-size: 0.78rem; padding: 4px 8px;">
-                <i class="fas fa-fingerprint"></i> Aadhaar e-KYC: <span id="dossier-aadhaar">XXXX-XXXX-<?php echo htmlspecialchars($initialDecrypted['aadhaar_last4'] ?? '0000'); ?></span>
+                <i class="fas fa-fingerprint"></i> Aadhaar Number: <span id="dossier-aadhaar">XXXX-XXXX-<?php echo htmlspecialchars($initialDecrypted['aadhaar_last4'] ?? '0000'); ?></span>
               </span>
               <span id="dossier-status-pill" class="badge" style="background: #059669; font-size: 0.78rem; text-transform: uppercase;">
                 <?php echo htmlspecialchars($initialDbRecord['status'] ?? 'Verified'); ?>
