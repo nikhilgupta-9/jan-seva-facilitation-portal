@@ -215,23 +215,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_ayushman'])) {
                 $ipAddress
             ]);
 
-            // Redirect to Card View first, then flush the response to the
-            // browser immediately — the confirmation email's SMTP round trip
-            // (TLS handshake + auth + send, often 1-5s) shouldn't make the
-            // citizen sit and wait on the submit page before seeing their card.
-            session_write_close();
-            header("Location: " . BASE_URL . "/ayushman-card.php?app_no=" . urlencode($appNo) . "&status=success");
-
-            if (function_exists('fastcgi_finish_request')) {
-                fastcgi_finish_request();
-            } else {
-                if (ob_get_level() > 0) {
-                    @ob_end_flush();
-                }
-                flush();
-            }
-
-            // Dispatch confirmation email (best-effort, after the redirect was sent)
+            // Dispatch the confirmation email to a detached background
+            // process BEFORE redirecting. On XAMPP's Apache (mod_php there's
+            // no fastcgi_finish_request()), the connection stays open until
+            // the script fully exits no matter what flush() does, so the
+            // citizen would otherwise still sit through the SMTP round-trip
+            // (TLS handshake + auth + send, often 1-5s). Spawning a separate
+            // OS process for the email removes that wait entirely.
             $emailPayload = [
                 'application_no' => $appNo,
                 'card_id'        => $cardId,
@@ -241,8 +231,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_ayushman'])) {
                 'abha_number'    => $abhaNumber,
                 'aadhaar_last4'  => $aadhaarLast4
             ];
-            @send_ayushman_confirmation_email($emailPayload);
+            ayushman_dispatch_email_async($emailPayload);
 
+            session_write_close();
+            header("Location: " . BASE_URL . "/ayushman-card.php?app_no=" . urlencode($appNo) . "&status=success");
             exit;
 
         } catch (Exception $e) {
@@ -257,7 +249,7 @@ include __DIR__ . '/includes/header.php';
 <style>
 /* Ayushman Help Desk — aligned to site light theme (css/gigw-theme.css tokens) */
 .ayush-hero-banner {
-    background: linear-gradient(135deg, rgb(30 58 138 / 74%) 0%, rgb(30 90 135 / 65%) 60%, rgb(8 145 178 / 58%) 100%), url(/gp/image/barr.png);
+    background: linear-gradient(135deg, rgb(30 58 138 / 74%) 0%, rgb(30 90 135 / 30%) 60%, rgb(8 145 178 / 0%) 100%), url(/gp/image/barr.png);
     background-position: center;
     background-size: cover;
     color: #ffffff;

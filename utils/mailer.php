@@ -176,6 +176,119 @@ function smtp_send_mail(string $to, string $subject, string $body): bool
 }
 
 /**
+ * Hand the confirmation email off so the current request never waits on the
+ * SMTP round-trip (TLS handshake + auth + send, often 1-5s, more on a slow
+ * or flaky SMTP host). Three tiers, most portable first:
+ *
+ *  1. Fire-and-forget HTTP ping to our own worker endpoint: open a socket,
+ *     write the request, close WITHOUT reading the response. This is the
+ *     one path that works on both local XAMPP (mod_php has no
+ *     fastcgi_finish_request(), so flush() alone can't release the
+ *     connection before the script exits) and on typical shared hosting
+ *     (where exec()/proc_open() are usually disabled). The connect is to
+ *     our own host, so it should resolve in milliseconds, not SMTP-level
+ *     latency.
+ *  2. A detached background CLI process via exec(), for environments where
+ *     outbound-to-self sockets are blocked but exec() is available.
+ *  3. Last resort: synchronous, suppressed send — slower, but delivery
+ *     still happens instead of silently dropping the email.
+ */
+function ayushman_dispatch_email_async(array $payload): void
+{
+    $tmpDir = sys_get_temp_dir();
+    $token = bin2hex(random_bytes(16));
+    $tmpFile = $tmpDir . '/ayushman_mail_' . $token . '.json';
+    if (@file_put_contents($tmpFile, json_encode($payload)) === false) {
+        @send_ayushman_confirmation_email($payload);
+        return;
+    }
+
+    if (ayushman_fire_and_forget_ping($token)) {
+        return;
+    }
+
+    if (ayushman_spawn_background_cli($tmpFile)) {
+        return;
+    }
+
+    // Fallback: send inline, best-effort (adds latency but still delivers).
+    $payload = json_decode((string) @file_get_contents($tmpFile), true) ?: $payload;
+    @unlink($tmpFile);
+    @send_ayushman_confirmation_email($payload);
+}
+
+/**
+ * Opens a socket to our own worker endpoint and returns as soon as the
+ * request bytes are written, without waiting for (or reading) the
+ * response. The web server picks the request up and runs the actual send
+ * on its own time, fully outside this request's lifecycle.
+ */
+function ayushman_fire_and_forget_ping(string $token): bool
+{
+    $workerUrl = function_exists('app_url') ? app_url('utils/ayushman_email_worker.php') : null;
+    if (!$workerUrl) {
+        return false;
+    }
+
+    $parts = parse_url($workerUrl);
+    if (empty($parts['host'])) {
+        return false;
+    }
+
+    $scheme = ($parts['scheme'] ?? 'http') === 'https' ? 'ssl://' : '';
+    $port = $parts['port'] ?? ($scheme ? 443 : 80);
+    $path = ($parts['path'] ?? '/') . '?token=' . urlencode($token);
+
+    $fp = @fsockopen($scheme . $parts['host'], $port, $errno, $errstr, 3);
+    if (!$fp) {
+        return false;
+    }
+
+    $request = "GET {$path} HTTP/1.1\r\n"
+        . "Host: {$parts['host']}\r\n"
+        . "Connection: Close\r\n\r\n";
+    @fwrite($fp, $request);
+    @fclose($fp);
+
+    return true;
+}
+
+/** Spawns utils/send_ayushman_email_cli.php as a detached background process. */
+function ayushman_spawn_background_cli(string $tmpFile): bool
+{
+    if (!function_exists('exec')) {
+        return false;
+    }
+    $disabled = array_map('trim', explode(',', (string) ini_get('disable_functions')));
+    if (in_array('exec', $disabled, true)) {
+        return false;
+    }
+
+    $cliCandidates = [
+        '/Applications/XAMPP/xamppfiles/bin/php',
+        PHP_BINDIR . '/php',
+        'php',
+    ];
+    $phpBin = null;
+    foreach ($cliCandidates as $candidate) {
+        if ($candidate === 'php' || (is_file($candidate) && is_executable($candidate))) {
+            $phpBin = $candidate;
+            break;
+        }
+    }
+    if (!$phpBin) {
+        return false;
+    }
+
+    $script = __DIR__ . '/send_ayushman_email_cli.php';
+    $cmd = escapeshellarg($phpBin) . ' ' . escapeshellarg($script) . ' ' . escapeshellarg($tmpFile)
+        . ' > /dev/null 2>&1 &';
+    @exec($cmd);
+
+    return true;
+}
+
+/**
  * Send an official email confirmation to the citizen upon submitting the
  * Ayushman Help Desk application. Includes their Application No, Card ID,
  * ABHA details, and direct link to their Digital Health Smart ID Card.
