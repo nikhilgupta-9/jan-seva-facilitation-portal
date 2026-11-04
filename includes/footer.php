@@ -82,7 +82,7 @@
                             </div>
                         </div>
                         <p class="text-white-50 small mb-3 lh-sm">
-                            An independent digital public facilitator portal providing doorstep and online digital pass issuance, scheme awareness, and assisted government services for Indian citizens.
+                            An independent digital public facilitator portal providing doorstep and online digital pass issuance, scheme awareness, and assisted citizen services under <a href="https://rejuvenatedigitalhealth.com/" target="_blank" rel="noopener noreferrer" class="text-warning text-decoration-none fw-bold">Rejuvenate Digital Health</a>.
                         </p>
                     </div>
 

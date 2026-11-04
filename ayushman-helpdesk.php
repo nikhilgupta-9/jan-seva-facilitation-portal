@@ -39,16 +39,16 @@ include __DIR__ . '/includes/header.php';
           <li class="active"><span data-hi="आयुष्मान हेल्प डेस्क" data-en="Ayushman Help Desk">Ayushman Help Desk</span></li>
         </ol>
         <div class="ayush-hero-badges">
-          <span class="badge-gov-saffron">
-            <i class="fas fa-shield-virus"></i> <span data-hi="राष्ट्रीय स्वास्थ्य प्राधिकरण (NHA)" data-en="National Health Authority (NHA)">National Health Authority (NHA)</span>
+          <span class="badge-gov-saffron" style="background: #0073cb; color: #ffffff;">
+            <i class="fas fa-heartbeat"></i> <span data-hi="रीजूवेनेट डिजिटल हेल्थ (Rejuvenate Digital Health)" data-en="Rejuvenate Digital Health">Rejuvenate Digital Health</span>
           </span>
           <span class="security-encrypted-badge">
             <i class="fas fa-lock"></i> 256-Bit Encrypted Health Smart ID
           </span>
         </div>
         <h1 data-hi="आयुष्मान हेल्प डेस्क एवं डिजिटल हेल्थ स्मार्ट आईडी" data-en="Ayushman Help Desk &amp; Digital Health Smart ID">Ayushman Help Desk &amp; Digital Health Smart ID</h1>
-        <p class="hero-subtext" data-hi="नागरिक सुविधा केंद्र: PM-JAY स्वास्थ्य बीमा योजना के अंतर्गत अपना लाभ क्लेम करने हेतु अपनी पहचान सत्यापित करें और एक सुरक्षित एन्क्रिप्टेड डिजिटल हेल्थ स्मार्ट आईडी कार्ड प्राप्त करें। ABDM डिजिटल हेल्थ इकोसिस्टम के अंतर्गत कार्यरत।" data-en="Citizen Facilitation Centre: Verify your identity to claim your benefit under the PM-JAY health insurance scheme and get your secure, encrypted Digital Health Smart ID card. Operates under the ABDM digital health ecosystem.">
-          Citizen Facilitation Centre: Verify your identity to claim your benefit under the PM-JAY health insurance scheme and get your secure, encrypted Digital Health Smart ID card. Operates under the ABDM digital health ecosystem.
+        <p class="hero-subtext" data-hi="Rejuvenate Digital Health नागरिक सुविधा केंद्र: डिजिटल हेल्थ इकोसिस्टम के अंतर्गत अपनी पहचान सत्यापित करें और एक सुरक्षित एन्क्रिप्टेड डिजिटल हेल्थ स्मार्ट आईडी कार्ड प्राप्त करें। Powered by rejuvenatedigitalhealth.com" data-en="Rejuvenate Digital Health Citizen Facilitation Centre: Verify your identity and get your secure, encrypted Digital Health Smart ID card powered by rejuvenatedigitalhealth.com.">
+          Rejuvenate Digital Health Citizen Facilitation Centre: Verify your identity and get your secure, encrypted Digital Health Smart ID card powered by rejuvenatedigitalhealth.com.
         </p>
       </div>
       <div class="col-md-4 col-sm-12 text-md-end d-none d-md-block">

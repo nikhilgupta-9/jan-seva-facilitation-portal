@@ -65,13 +65,31 @@ include __DIR__ . '/includes/header.php';
     z-index: 5;
 }
 .card-header-bar {
-    background: linear-gradient(135deg, #0b3c5d 0%, #174b73 100%);
+    background: linear-gradient(135deg, #0b3c5d 0%, #0d4a75 100%);
     color: #ffffff;
     padding: 10px 16px 8px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 2px solid #f59e0b;
+    border-bottom: 2px solid #0073cb;
+}
+.card-brand-pill {
+    background: #ffffff;
+    border-radius: 6px;
+    padding: 3px 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.14);
+    height: 38px;
+    flex-shrink: 0;
+}
+.card-brand-pill img {
+    height: 28px;
+    width: auto;
+    max-width: 130px;
+    object-fit: contain;
+    display: block;
 }
 .card-header-titles h4 {
     margin: 0;
@@ -84,7 +102,7 @@ include __DIR__ . '/includes/header.php';
 .card-header-titles p {
     margin: 1px 0 0;
     font-size: 0.72rem;
-    color: #fde047;
+    color: #93c5fd;
     font-weight: 600;
     letter-spacing: 0.3px;
 }
@@ -444,12 +462,15 @@ include __DIR__ . '/includes/header.php';
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 3mm;
+        gap: 3.5mm;
         margin-bottom: 1.5mm;
     }
-    .print-gov-row svg {
-        width: 8mm;
-        height: 8mm;
+    .print-sheet-logo {
+        height: 8.5mm !important;
+        width: auto !important;
+        max-width: 32mm !important;
+        object-fit: contain !important;
+        display: block !important;
     }
     .print-gov-title h2 {
         font-size: 11pt !important;
@@ -573,36 +594,52 @@ include __DIR__ . '/includes/header.php';
         height: 7.8mm !important;
         min-height: 7.8mm !important;
         max-height: 7.8mm !important;
-        padding: 1.2mm 2.2mm 0.8mm !important;
+        padding: 0.8mm 2mm !important;
         box-sizing: border-box !important;
         display: flex !important;
         align-items: center !important;
         justify-content: space-between !important;
-        border-bottom: 0.4pt solid #f59e0b !important;
+        border-bottom: 0.4pt solid #0073cb !important;
         margin-top: 1.2mm !important;
     }
-    .card-header-bar svg {
-        width: 5.2mm !important;
-        height: 5.2mm !important;
+    .card-brand-pill {
+        background: #ffffff !important;
+        border-radius: 0.8mm !important;
+        padding: 0.3mm 1.2mm !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        height: 5.6mm !important;
+        box-shadow: none !important;
         flex-shrink: 0 !important;
     }
+    .card-brand-pill img {
+        height: 4.8mm !important;
+        width: auto !important;
+        max-width: 20mm !important;
+        object-fit: contain !important;
+        display: block !important;
+    }
     .card-header-titles h4 {
-        font-size: 5.4pt !important;
+        font-size: 5.2pt !important;
         font-weight: 800 !important;
         line-height: 1.1 !important;
         margin: 0 !important;
         letter-spacing: 0.15pt !important;
+        color: #ffffff !important;
     }
     .card-header-titles p {
-        font-size: 3.8pt !important;
+        font-size: 3.6pt !important;
         font-weight: 600 !important;
         line-height: 1.1 !important;
         margin: 0.2mm 0 0 !important;
         letter-spacing: 0.1pt !important;
+        color: #93c5fd !important;
     }
-    .card-header-bar i.fa-shield-alt {
-        font-size: 6pt !important;
-        line-height: 1 !important;
+    .card-header-badge-right .badge {
+        font-size: 3.6pt !important;
+        padding: 0.3mm 0.8mm !important;
+        border-radius: 0.4mm !important;
     }
 
     /* Card Body Section (39.5mm) */
@@ -920,16 +957,10 @@ include __DIR__ . '/includes/header.php';
           <!-- Official Printable Sheet Header (A4 Print Only) -->
           <div class="print-sheet-header">
             <div class="print-gov-row">
-              <svg viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="44" stroke="#0b3c5d" stroke-width="4" fill="none" />
-                <circle cx="50" cy="50" r="10" fill="#0b3c5d" />
-                <?php for ($i = 0; $i < 24; $i++): $ang = $i * 15; ?>
-                  <line x1="50" y1="50" x2="<?php echo 50 + 38 * cos(deg2rad($ang)); ?>" y2="<?php echo 50 + 38 * sin(deg2rad($ang)); ?>" stroke="#0b3c5d" stroke-width="2" />
-                <?php endfor; ?>
-              </svg>
+              <img src="<?php echo BASE_URL; ?>/images/rejuvenate-logo.png" alt="Rejuvenate Digital Health" class="print-sheet-logo" onerror="this.src='https://rejuvenatedigitalhealth.com/admin/uploads/logo/logo_header_691a7abe49524.png'">
               <div class="print-gov-title">
-                <h2>NATIONAL HEALTH AUTHORITY &bull; राष्ट्रीय स्वास्थ्य प्राधिकरण</h2>
-                <p>आयुष्मान भारत डिजिटल मिशन (ABDM) &bull; National Digital Health Smart ID Card</p>
+                <h2>REJUVENATE DIGITAL HEALTH &bull; रीजूवेनेट डिजिटल हेल्थ</h2>
+                <p>Digital Citizen Health Card &bull; https://rejuvenatedigitalhealth.com</p>
               </div>
             </div>
             <div class="print-meta-strip">
@@ -950,20 +981,18 @@ include __DIR__ . '/includes/header.php';
             <!-- Header -->
             <div class="card-header-bar">
               <div style="display: flex; align-items: center; gap: 8px;">
-                <svg viewBox="0 0 100 100" style="width: 28px; height: 28px; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));">
-                  <circle cx="50" cy="50" r="44" stroke="#f59e0b" stroke-width="4" fill="none" />
-                  <circle cx="50" cy="50" r="10" fill="#ffffff" />
-                  <?php for ($i = 0; $i < 24; $i++): $ang = $i * 15; ?>
-                    <line x1="50" y1="50" x2="<?php echo 50 + 38 * cos(deg2rad($ang)); ?>" y2="<?php echo 50 + 38 * sin(deg2rad($ang)); ?>" stroke="#ffffff" stroke-width="1.8" />
-                  <?php endfor; ?>
-                </svg>
+                <div class="card-brand-pill">
+                  <img src="<?php echo BASE_URL; ?>/images/rejuvenate-logo.png" alt="Rejuvenate Digital Health" onerror="this.src='https://rejuvenatedigitalhealth.com/admin/uploads/logo/logo_header_691a7abe49524.png'">
+                </div>
                 <div class="card-header-titles">
-                  <h4>National Health Authority</h4>
-                  <p>राष्ट्रीय डिजिटल स्वास्थ्य मिशन • Digital Health Smart ID</p>
+                  <h4>REJUVENATE DIGITAL HEALTH</h4>
+                  <p>Digital Health Facilitation Pass &bull; Smart Health ID</p>
                 </div>
               </div>
-              <div style="text-align: right;">
-                <i class="fas fa-shield-alt fa-2x" style="color: #6ee7b7;"></i>
+              <div class="card-header-badge-right">
+                <span class="badge" style="background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.35); font-size: 0.68rem; padding: 4px 7px; color: #ffffff;">
+                  <i class="fas fa-shield-alt text-success"></i> VERIFIED
+                </span>
               </div>
             </div>
 
@@ -1037,13 +1066,13 @@ include __DIR__ . '/includes/header.php';
 
           <!-- 2. CARD BACK -->
           <div id="pvc-card-back" class="pvc-smart-card pvc-smart-card-back">
-            <div class="card-header-bar" style="background: #1e293b; border-bottom: 2px solid #059669;">
+            <div class="card-header-bar" style="background: #1e293b; border-bottom: 2px solid #0073cb;">
               <div class="card-header-titles">
                 <h4>Cardholder Residential Record & Terms</h4>
-                <p>Digital Health Mission • Citizen Verification Pass</p>
+                <p>Rejuvenate Digital Health • Citizen Verification Pass</p>
               </div>
               <div style="font-size: 0.72rem; color: #94a3b8; font-family: monospace;">
-                DPDP ACT 2023 COMPLIANT
+                rejuvenatedigitalhealth.com
               </div>
             </div>
 
@@ -1058,7 +1087,7 @@ include __DIR__ . '/includes/header.php';
 
               <div class="card-back-rules">
                 <ul style="padding-left: 14px; margin: 0;">
-                  <li>यह डिजिटल हेल्थ स्मार्ट आईडी कार्ड आयुष्मान भारत डिजिटल मिशन की नागरिक सुविधा हेतु जारी किया गया है।</li>
+                  <li>यह डिजिटल हेल्थ स्मार्ट आईडी कार्ड Rejuvenate Digital Health (rejuvenatedigitalhealth.com) द्वारा नागरिक सुविधा हेतु जारी किया गया है।</li>
                   <li>कार्ड पर मौजूद QR कोड AES-256 मिलिट्री ग्रेड एन्क्रिप्टेड है, जिसे केवल अधिकृत Admin Scanner द्वारा ही पढ़ा जा सकता है।</li>
                   <li>किसी भी चिकित्सा सहायता हेतु राष्ट्रीय स्वास्थ्य हेल्पलाइन <strong>14555</strong> या आपातकालीन <strong>108</strong> पर संपर्क करें।</li>
                 </ul>
@@ -1072,7 +1101,7 @@ include __DIR__ . '/includes/header.php';
                   </div>
                 </div>
                 <div style="text-align: center;">
-                  <span class="badge" style="background: #059669; font-size: 0.68rem; padding: 4px 8px;">
+                  <span class="badge" style="background: #0073cb; font-size: 0.68rem; padding: 4px 8px;">
                     <i class="fas fa-check-double"></i> Digitally Signed
                   </span>
                 </div>
@@ -1086,15 +1115,15 @@ include __DIR__ . '/includes/header.php';
             </div>
 
             <div class="card-footer-strip" style="background: #1e293b;">
-              <span>Emergency Helpline: 14555 / 1800-11-2026</span>
-              <span>www.nha.gov.in</span>
+              <span>Emergency Helpline: 14555 / 108</span>
+              <span>www.rejuvenatedigitalhealth.com</span>
             </div>
           </div>
           </div> <!-- /.print-cards-layout -->
 
           <!-- Official Printable Sheet Footer -->
           <div class="print-sheet-footer">
-            <p><strong>Official Digital Health Pass</strong> &bull; Ministry of Health &amp; Family Welfare, Government of India</p>
+            <p><strong>Rejuvenate Digital Health Facilitation Services</strong> &bull; https://rejuvenatedigitalhealth.com</p>
             <p>कार्ड पर मौजूद QR कोड AES-256 एन्क्रिप्टेड है एवं केवल अधिकृत एडमिन स्कैनर द्वारा सत्यापन योग्य है &bull; आपातकालीन हेल्पलाइन: <strong>14555</strong> / <strong>108</strong></p>
           </div>
 

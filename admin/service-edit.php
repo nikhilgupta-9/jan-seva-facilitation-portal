@@ -299,12 +299,12 @@ include __DIR__ . '/header.php';
 
       <div class="col-md-6 mb-3">
         <label class="form-label" style="font-weight: 700; color: #334155;">Department / Ministry (English)</label>
-        <input type="text" name="department_en" value="<?php echo htmlspecialchars($service['department_en'] ?? ''); ?>" class="form-control" placeholder="e.g. National Health Authority (NHA)">
+        <input type="text" name="department_en" value="<?php echo htmlspecialchars($service['department_en'] ?? ''); ?>" class="form-control" placeholder="e.g. Rejuvenate Digital Health / Health Dept">
       </div>
 
       <div class="col-md-6 mb-3">
         <label class="form-label" style="font-weight: 700; color: #334155;">Department / Ministry (Hindi)</label>
-        <input type="text" name="department_hi" value="<?php echo htmlspecialchars($service['department_hi'] ?? ''); ?>" class="form-control" placeholder="e.g. राष्ट्रीय स्वास्थ्य प्राधिकरण">
+        <input type="text" name="department_hi" value="<?php echo htmlspecialchars($service['department_hi'] ?? ''); ?>" class="form-control" placeholder="e.g. रीजूवेनेट डिजिटल हेल्थ / स्वास्थ्य विभाग">
       </div>
     </div>
   </div>

@@ -176,7 +176,7 @@ include __DIR__ . '/includes/header.php';
                             </div>
                             <div class="card-header-titles">
                                 <h4><?= htmlspecialchars($card_data['title'] ?? 'Official Identity Card') ?></h4>
-                                <p><?= htmlspecialchars($card_data['authority'] ?? 'Govt of India Facilitation System') ?></p>
+                                <p><?= htmlspecialchars($card_data['authority'] ?? 'Rejuvenate Digital Health Facilitation') ?></p>
                             </div>
                             <div class="card-gov-emblem text-end">
                                 <i class="fas fa-shield-alt text-success fs-4"></i>
