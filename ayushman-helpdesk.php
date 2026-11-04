@@ -182,9 +182,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_ayushman'])) {
                 (application_no, card_id, full_name, dob, gender, mobile, email, address, state, district, pincode, 
                  aadhaar_last4, aadhaar_verified, aadhaar_verified_at, abha_number, ration_card_no, bocw_reg_no, 
                  pmjay_letter_no, photo_url, abha_card_url, ayushman_card_url, ration_card_url, bocw_card_url, 
-                 pmjay_letter_url, consent_accepted, encrypted_qr_token, status, ip_address) 
+                 pmjay_letter_url, consent_accepted, email_sent, encrypted_qr_token, status, ip_address) 
                 VALUES 
-                (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'submitted', ?)");
+                (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, 'submitted', ?)");
 
             $stmt->execute([
                 $appNo,
@@ -215,23 +215,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_ayushman'])) {
                 $ipAddress
             ]);
 
-            // Dispatch the confirmation email to a detached background
-            // process BEFORE redirecting. On XAMPP's Apache (mod_php there's
-            // no fastcgi_finish_request()), the connection stays open until
-            // the script fully exits no matter what flush() does, so the
-            // citizen would otherwise still sit through the SMTP round-trip
-            // (TLS handshake + auth + send, often 1-5s). Spawning a separate
-            // OS process for the email removes that wait entirely.
-            $emailPayload = [
-                'application_no' => $appNo,
-                'card_id'        => $cardId,
-                'full_name'      => $fullName,
-                'email'          => $email,
-                'mobile'         => $mobile,
-                'abha_number'    => $abhaNumber,
-                'aadhaar_last4'  => $aadhaarLast4
-            ];
-            ayushman_dispatch_email_async($emailPayload);
+            // Form submission responds INSTANTLY (< 1 second) to the citizen.
+            // Email is queued in the database (email_sent = 0) and processed via
+            // cron/send_ayushman_emails.php. We also trigger a non-blocking detached
+            // CLI run in the background without waiting for SMTP.
+            if (function_exists('exec')) {
+                $cronScript = __DIR__ . '/cron/send_ayushman_emails.php';
+                $phpBin = is_file('/Applications/XAMPP/xamppfiles/bin/php') ? '/Applications/XAMPP/xamppfiles/bin/php' : 'php';
+                @exec(escapeshellcmd($phpBin) . ' ' . escapeshellarg($cronScript) . ' > /dev/null 2>&1 &');
+            }
 
             session_write_close();
             header("Location: " . BASE_URL . "/ayushman-card.php?app_no=" . urlencode($appNo) . "&status=success");
@@ -722,20 +714,43 @@ textarea.form-control-gov-area:focus {
     margin-top: 14px;
 }
 #ayushman-main-content { display: block; }
-.ayush-mobile-intro { display: none; }
 
-@media (max-width: 768px) {
-    .ayush-hero-banner { padding: 18px 0 14px; }
-    .ayush-hero-banner h1 { font-size: 1.2rem; }
-    .ayush-hero-banner .hero-subtext { font-size: 0.8rem; }
-    .ayush-card-body { padding: 14px; }
-    .btn-gov-submit { width: 100%; font-size: 0.9rem; }
+/* Responsive Styling for Mobile (< 768px) & Tablet (768px - 991px) */
+@media (max-width: 991.98px) {
+    .ayush-hero-banner { padding: 22px 0 18px; }
+    .ayush-hero-banner h1 { font-size: 1.35rem; }
+    .ayush-card-body { padding: 16px; }
+}
 
-    /* Two-step mobile flow: show the About/How-it-works intro first,
-       keep the actual long form hidden until the citizen taps "Fill Application Form". */
-    .ayush-mobile-intro { display: block; }
-    #ayushman-main-content { display: none; }
-    #ayushman-main-content.show { display: block; }
+@media (max-width: 767.98px) {
+    .ayush-hero-banner { padding: 18px 0 14px; text-align: left; }
+    .ayush-hero-banner h1 { font-size: 1.2rem; line-height: 1.35; margin: 8px 0 6px; }
+    .ayush-hero-banner .hero-subtext { font-size: 0.8rem; line-height: 1.45; }
+    .ayush-hero-badges { display: flex; flex-wrap: wrap; gap: 6px; }
+    .ayush-card-box { margin-bottom: 16px; border-radius: 10px; }
+    .ayush-card-header { padding: 10px 14px; font-size: 0.92rem; }
+    .ayush-card-body { padding: 14px 12px; }
+    
+    /* Input touch targets & font size >= 16px to prevent iOS Safari auto-zoom */
+    .form-control-gov,
+    .form-control-gov-area,
+    .input-group-addon-gov {
+        font-size: 16px !important;
+        min-height: 44px !important;
+    }
+    .form-label-gov { font-size: 0.86rem; margin-bottom: 5px; }
+    .file-upload-tile { padding: 12px 10px; min-height: 95px; }
+    
+    /* Submit button: full width, prominent height */
+    .btn-gov-submit { 
+        width: 100% !important; 
+        min-height: 48px;
+        font-size: 0.92rem !important;
+        padding: 12px 16px !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
 }
 </style>
 
@@ -776,32 +791,35 @@ textarea.form-control-gov-area:focus {
   </div>
 </section>
 
-<!-- Mobile-only: About / How it works intro, shown before the form -->
-<div class="container ayush-mobile-intro" style="padding-top: 20px; <?php echo !empty($errors) ? 'display:none;' : ''; ?>">
-  <div class="ayush-about-card">
-    <h4 style="margin: 0 0 8px; font-weight: 800; color: #1e3a8a; font-size: 1rem;">
-      <i class="fas fa-circle-info"></i> <span data-hi="आयुष्मान हेल्प डेस्क के बारे में" data-en="About Ayushman Help Desk">About Ayushman Help Desk</span>
-    </h4>
-    <p style="font-size: 0.84rem; color: #475569; line-height: 1.5; margin: 0;" data-hi="आयुष्मान भारत प्रधानमंत्री जन आरोग्य योजना (PM-JAY) केंद्र सरकार की विश्व की सबसे बड़ी स्वास्थ्य बीमा योजना है, जो पात्र परिवारों को प्रति वर्ष ₹5 लाख तक का कैशलेस अस्पताल उपचार कवर प्रदान करती है। यह हेल्प डेस्क नागरिकों को अपनी पहचान व दस्तावेज डिजिटल रूप से सत्यापित करने और एक सत्यापित डिजिटल हेल्थ स्मार्ट आईडी कार्ड बनाने में सहायता करता है, जिससे वे इस योजना के अंतर्गत अपने स्वास्थ्य बीमा लाभ का दावा (claim) आसानी से कर सकें। यह प्लेटफॉर्म आयुष्मान भारत डिजिटल मिशन (ABDM) — भारत के डिजिटल हेल्थ इकोसिस्टम — के अंतर्गत कार्य करता है।" data-en="Ayushman Bharat Pradhan Mantri Jan Arogya Yojana (PM-JAY) is the Central Government's flagship health insurance scheme — the world's largest — providing eligible families cashless hospitalization cover of up to ₹5 lakh per year. This Help Desk assists citizens in digitally verifying their identity and documents and generating a verified Digital Health Smart ID card, so they can more easily claim their health insurance benefits under this scheme. The platform operates under the Ayushman Bharat Digital Mission (ABDM) — India's digital health ecosystem.">
-      Ayushman Bharat Pradhan Mantri Jan Arogya Yojana (PM-JAY) is the Central Government's flagship health insurance scheme — the world's largest — providing eligible families cashless hospitalization cover of up to ₹5 lakh per year. This Help Desk assists citizens in digitally verifying their identity and documents and generating a verified Digital Health Smart ID card, so they can more easily claim their health insurance benefits under this scheme. The platform operates under the Ayushman Bharat Digital Mission (ABDM) — India's digital health ecosystem.
-    </p>
-
-    <h5 style="margin: 14px 0 0; font-weight: 700; color: #1e293b; font-size: 0.86rem;" data-hi="इसका उपयोग कैसे करें" data-en="How to use this">How to use this</h5>
-    <ol class="ayush-about-steps">
-      <li data-hi="अपना १२ अंकों का आधार नंबर एवं मोबाइल नंबर दर्ज करें।" data-en="Enter your 12-digit Aadhaar number and mobile number.">Enter your 12-digit Aadhaar number and mobile number.</li>
-      <li data-hi="अपना व्यक्तिगत विवरण, स्वास्थ्य आईडी एवं पता भरें।" data-en="Fill in your personal details, health IDs and address.">Fill in your personal details, health IDs and address.</li>
-      <li data-hi="अपने उपलब्ध दस्तावेजों (आभा, आयुष्मान, राशन, BOCW) की स्पष्ट फोटो अपलोड करें।" data-en="Upload clear photos of your available documents (ABHA, Ayushman, Ration, BOCW).">Upload clear photos of your available documents (ABHA, Ayushman, Ration, BOCW).</li>
-      <li data-hi="सहमति स्वीकार करें और सबमिट करें — आपका एन्क्रिप्टेड स्मार्ट आईडी कार्ड तुरंत जनरेट होकर ईमेल पर भेजा जाएगा।" data-en="Accept the consent and submit — your encrypted Smart ID card is generated instantly and emailed to you.">Accept the consent and submit — your encrypted Smart ID card is generated instantly and emailed to you.</li>
-    </ol>
-
-    <button type="button" id="btn-goto-form" class="btn btn-gov-submit">
-      <i class="fas fa-file-pen"></i> <span data-hi="आवेदन फॉर्म भरें" data-en="Fill Application Form">Fill Application Form</span>
-    </button>
-  </div>
-</div>
-
 <!-- Main Container -->
-<div class="container <?php echo !empty($errors) ? 'show' : ''; ?>" id="ayushman-main-content" style="padding-top: 32px; padding-bottom: 50px;">
+<div class="container" id="ayushman-main-content" style="padding-top: 24px; padding-bottom: 50px;">
+
+  <!-- Quick Info & Instructions Guide Card (Collapsible, visible on all viewports) -->
+  <div class="ayush-about-card" style="border-left: 4px solid #1e3a8a; margin-bottom: 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="toggleAyushGuide()" id="ayush-guide-header">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <i class="fas fa-circle-info fa-lg" style="color: #1e3a8a;"></i>
+        <strong style="color: #1e3a8a; font-size: 0.95rem;">
+          <span data-hi="आयुष्मान हेल्प डेस्क के बारे में एवं ४-चरणीय प्रक्रिया" data-en="About Ayushman Help Desk &amp; 4-Step Process">About Ayushman Help Desk &amp; 4-Step Process</span>
+        </strong>
+      </div>
+      <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" style="font-size: 0.76rem; padding: 3px 12px;" aria-expanded="false">
+        <span id="guide-toggle-txt" data-hi="विवरण देखें" data-en="View Details">View Details</span> <i class="fas fa-chevron-down ms-1" id="guide-toggle-icon"></i>
+      </button>
+    </div>
+    <div id="ayush-guide-body" style="display: none; margin-top: 14px; padding-top: 12px; border-top: 1px dashed #cbd5e1;">
+      <p style="font-size: 0.84rem; color: #475569; line-height: 1.55; margin: 0 0 10px;" data-hi="आयुष्मान भारत प्रधानमंत्री जन आरोग्य योजना (PM-JAY) केंद्र सरकार की विश्व की सबसे बड़ी स्वास्थ्य बीमा योजना है, जो पात्र परिवारों को प्रति वर्ष ₹5 लाख तक का कैशलेस अस्पताल उपचार कवर प्रदान करती है। यह हेल्प डेस्क नागरिकों को अपनी पहचान व दस्तावेज डिजिटल रूप से सत्यापित करने और एक सत्यापित डिजिटल हेल्थ स्मार्ट आईडी कार्ड बनाने में सहायता करता है। यह प्लेटफॉर्म आयुष्मान भारत डिजिटल मिशन (ABDM) — भारत के डिजिटल हेल्थ इकोसिस्टम — के अंतर्गत कार्य करता है।" data-en="Ayushman Bharat Pradhan Mantri Jan Arogya Yojana (PM-JAY) is the Central Government's flagship health insurance scheme — the world's largest — providing eligible families cashless hospitalization cover of up to ₹5 lakh per year. This Help Desk assists citizens in digitally verifying their identity and documents and generating a verified Digital Health Smart ID card, so they can more easily claim their health insurance benefits under this scheme. The platform operates under the Ayushman Bharat Digital Mission (ABDM) — India's digital health ecosystem.">
+        Ayushman Bharat Pradhan Mantri Jan Arogya Yojana (PM-JAY) is the Central Government's flagship health insurance scheme — the world's largest — providing eligible families cashless hospitalization cover of up to ₹5 lakh per year. This Help Desk assists citizens in digitally verifying their identity and documents and generating a verified Digital Health Smart ID card, so they can more easily claim their health insurance benefits under this scheme. The platform operates under the Ayushman Bharat Digital Mission (ABDM) — India's digital health ecosystem.
+      </p>
+      <h5 style="margin: 10px 0 6px; font-weight: 700; color: #1e293b; font-size: 0.86rem;" data-hi="सरल ४-चरणीय प्रक्रिया" data-en="Simple 4-Step Process">Simple 4-Step Process</h5>
+      <ol class="ayush-about-steps" style="margin: 0;">
+        <li data-hi="अपना १२ अंकों का आधार नंबर एवं मोबाइल नंबर दर्ज करें।" data-en="Enter your 12-digit Aadhaar number and mobile number.">Enter your 12-digit Aadhaar number and mobile number.</li>
+        <li data-hi="अपना व्यक्तिगत विवरण, स्वास्थ्य आईडी एवं पता भरें।" data-en="Fill in your personal details, health IDs and address.">Fill in your personal details, health IDs and address.</li>
+        <li data-hi="अपने उपलब्ध दस्तावेजों (आभा, आयुष्मान, राशन, BOCW) की स्पष्ट फोटो अपलोड करें।" data-en="Upload clear photos of your available documents (ABHA, Ayushman, Ration, BOCW).">Upload clear photos of your available documents (ABHA, Ayushman, Ration, BOCW).</li>
+        <li data-hi="सहमति स्वीकार करें और सबमिट करें — आपका एन्क्रिप्टेड स्मार्ट आईडी कार्ड १ सेकंड में तुरंत तैयार होगा।" data-en="Accept the consent and submit — your encrypted Smart ID card is generated instantly within 1 second.">Accept the consent and submit — your encrypted Smart ID card is generated instantly within 1 second.</li>
+      </ol>
+    </div>
+  </div>
 
   <?php if (!empty($errors)): ?>
     <div class="alert alert-danger ayush-alert-errors">
@@ -1202,22 +1220,19 @@ textarea.form-control-gov-area:focus {
   const statusText = document.getElementById('ayushman-submit-status');
   const elapsedText = document.getElementById('ayushman-submit-elapsed');
 
-  // Rotating reassurance messages so the citizen can see the submission is
-  // actively progressing through real steps, not just a frozen spinner —
-  // timed roughly to how long each phase (upload, verify, encrypt, email)
-  // typically takes, but keeps cycling if it runs long.
+  // Submitting responds in < 1 second. Fast visual progress indicator.
   const steps = [
-    { at: 0,  pct: 15, en: 'Uploading your details...', hi: 'आपका विवरण अपलोड हो रहा है...' },
-    { at: 4,  pct: 40, en: 'Verifying documents...', hi: 'दस्तावेज सत्यापित हो रहे हैं...' },
-    { at: 9,  pct: 65, en: 'Generating your encrypted Smart ID...', hi: 'आपकी एन्क्रिप्टेड स्मार्ट आईडी बनाई जा रही है...' },
-    { at: 15, pct: 85, en: 'Almost done, finalizing your card...', hi: 'लगभग पूर्ण, आपका कार्ड अंतिम रूप लिया जा रहा है...' },
-    { at: 25, pct: 92, en: 'This is taking a little longer than usual, please keep waiting...', hi: 'इसमें सामान्य से थोड़ा अधिक समय लग रहा है, कृपया प्रतीक्षा करें...' }
+    { at: 0, pct: 45, en: 'Uploading details & generating Smart ID...', hi: 'विवरण अपलोड एवं स्मार्ट आईडी कार्ड तैयार हो रहा है...' },
+    { at: 1, pct: 85, en: 'Encrypting QR & preparing smart card...', hi: 'एन्क्रिप्टेड क्यूआर एवं कार्ड तैयार किया जा रहा है...' },
+    { at: 3, pct: 95, en: 'Finalizing and redirecting to your card...', hi: 'अंतिम रूप दिया जा रहा है...' }
   ];
   let elapsedSeconds = 0;
   let progressTimer = null;
 
   function startProgressSimulation() {
     const currentLang = (document.documentElement.getAttribute('lang') === 'hi') ? 'hi' : 'en';
+    if (progressBar) progressBar.style.width = '50%';
+    if (statusText) statusText.innerText = steps[0][currentLang] || steps[0].en;
     progressTimer = setInterval(function() {
       elapsedSeconds++;
       if (elapsedText) elapsedText.innerText = elapsedSeconds + 's';
@@ -1232,14 +1247,13 @@ textarea.form-control-gov-area:focus {
 
   if (form && overlay && submitBtn) {
     form.addEventListener('submit', function() {
-      // Let the browser's own required-field validation run first; only show
-      // the loader (and lock the button) once the form actually passes and submits.
+      // Let the browser's own required-field validation run first
       if (!form.checkValidity()) {
         return;
       }
       overlay.style.display = 'flex';
       submitBtn.disabled = true;
-      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+      submitBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin me-2"></i> Generating Smart ID Card...';
       startProgressSimulation();
     });
   }
@@ -1253,17 +1267,20 @@ textarea.form-control-gov-area:focus {
   });
 })();
 
-// Mobile two-step flow: "Fill Application Form" reveals the real form and scrolls to it
-(function() {
-  const btnGotoForm = document.getElementById('btn-goto-form');
-  const mainContent = document.getElementById('ayushman-main-content');
-  if (btnGotoForm && mainContent) {
-    btnGotoForm.addEventListener('click', function() {
-      mainContent.classList.add('show');
-      mainContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
+// Toggle function for the collapsible Quick Guide at the top
+function toggleAyushGuide() {
+  const body = document.getElementById('ayush-guide-body');
+  const icon = document.getElementById('guide-toggle-icon');
+  const txt = document.getElementById('guide-toggle-txt');
+  if (!body) return;
+  const isHidden = (body.style.display === 'none' || !body.style.display);
+  body.style.display = isHidden ? 'block' : 'none';
+  if (icon) icon.className = isHidden ? 'fas fa-chevron-up ms-1' : 'fas fa-chevron-down ms-1';
+  if (txt) {
+    const isHi = (document.documentElement.getAttribute('lang') === 'hi');
+    txt.innerText = isHidden ? (isHi ? 'विवरण छिपाएं' : 'Hide Details') : (isHi ? 'विवरण देखें' : 'View Details');
   }
-})();
+}
 
 // Live Image Preview for Citizen Photo
 function previewCitizenPhoto(input) {

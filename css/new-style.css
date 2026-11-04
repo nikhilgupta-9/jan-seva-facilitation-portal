@@ -3,6 +3,12 @@
  * Preserves the exact original GIGW / GP template layout and typography.
  */
 
+/* Global Responsive & Viewport Constraint (prevents horizontal scrolling/jitter across all devices) */
+html, body {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
 /* High Contrast Mode for GIGW Accessibility */
 body.gigw-high-contrast {
     background-color: #000000 !important;
@@ -2078,12 +2084,35 @@ body.gigw-high-contrast button {
 }
 
 @media (max-width: 767.98px) {
+    .header-center-body {
+        display: none !important;
+    }
     .notice-board {
         flex-direction: column;
         align-items: stretch;
     }
     .notice-board-header {
         justify-content: center;
+    }
+    #header-carousel .carousel-control-prev,
+    #header-carousel .carousel-control-next {
+        width: 36px;
+    }
+    #header-carousel .carousel-control-prev-icon,
+    #header-carousel .carousel-control-next-icon {
+        width: 20px;
+        height: 20px;
+    }
+    #header-carousel .carousel-indicators {
+        margin-bottom: 6px;
+    }
+    #header-carousel .carousel-indicators [data-bs-target] {
+        width: 8px;
+        height: 8px;
+        margin: 0 3px;
+    }
+    #header-carousel .carousel-indicators .active {
+        width: 20px;
     }
 }
 

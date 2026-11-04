@@ -244,6 +244,134 @@ include __DIR__ . '/includes/header.php';
     padding-top: 6px;
 }
 
+/* Responsive adjustments for Mobile & Tablet */
+@media (max-width: 991.98px) {
+    .printable-section {
+        margin-bottom: 30px;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .pvc-smart-card {
+        max-width: 100%;
+        height: auto;
+        min-height: 290px;
+        margin-bottom: 24px;
+        border-radius: 10px;
+    }
+    .card-header-bar {
+        padding: 8px 12px;
+    }
+    .card-header-titles h4 {
+        font-size: 0.8rem;
+    }
+    .card-header-titles p {
+        font-size: 0.65rem;
+    }
+    .card-body-section {
+        padding: 10px 12px;
+        gap: 10px;
+    }
+    .card-photo-col {
+        width: 80px;
+    }
+    .card-photo-col img {
+        width: 76px;
+        height: 94px;
+    }
+    .card-verified-badge {
+        font-size: 0.58rem;
+        padding: 2px 3px;
+        margin-top: 4px;
+    }
+    .card-name-title {
+        font-size: 0.92rem;
+        margin-bottom: 2px;
+    }
+    .card-meta-line {
+        font-size: 0.7rem;
+        margin-bottom: 1px;
+    }
+    .card-abha-pill {
+        padding: 3px 6px;
+        margin: 4px 0;
+    }
+    .card-abha-pill .label-txt {
+        font-size: 0.58rem;
+    }
+    .card-abha-pill .val-txt {
+        font-size: 0.78rem;
+        letter-spacing: 0.5px;
+    }
+    .card-qr-col {
+        width: 85px;
+    }
+    .card-qr-box {
+        width: 76px;
+        height: 76px;
+        padding: 3px;
+    }
+    .card-qr-label {
+        font-size: 0.56rem;
+    }
+    .card-footer-strip {
+        padding: 6px 12px;
+        font-size: 0.65rem;
+    }
+    .card-back-body {
+        padding: 10px 12px;
+    }
+    .card-back-address {
+        font-size: 0.68rem;
+        padding: 6px 8px;
+    }
+    .card-back-rules {
+        font-size: 0.62rem;
+        margin: 6px 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .card-header-bar {
+        padding: 6px 10px;
+    }
+    .card-header-titles h4 {
+        font-size: 0.74rem;
+    }
+    .card-body-section {
+        padding: 8px 8px;
+        gap: 6px;
+    }
+    .card-photo-col {
+        width: 66px;
+    }
+    .card-photo-col img {
+        width: 64px;
+        height: 78px;
+    }
+    .card-qr-col {
+        width: 70px;
+    }
+    .card-qr-box {
+        width: 64px;
+        height: 64px;
+    }
+    .card-name-title {
+        font-size: 0.82rem;
+    }
+    .card-meta-line {
+        font-size: 0.64rem;
+    }
+    .card-abha-pill .val-txt {
+        font-size: 0.7rem;
+        letter-spacing: 0;
+    }
+    .card-header-bar svg {
+        width: 22px;
+        height: 22px;
+    }
+}
+
 /* Print Only Styles */
 @media print {
     body * {
@@ -364,8 +492,8 @@ include __DIR__ . '/includes/header.php';
               पुष्टि एवं डाउनलोड लिंक आपकी ईमेल <code><?php echo htmlspecialchars($record['email']); ?></code> पर भी भेज दी गई है।
             </p>
           </div>
-          <div class="col-md-4 col-sm-12 text-right" style="margin-top: 8px;">
-            <button type="button" onclick="window.print();" class="btn btn-primary" style="background: #0b3c5d; border-color: #0b3c5d; font-weight: 700; margin-right: 6px;">
+          <div class="col-md-4 col-sm-12 text-md-end text-start mt-3 mt-md-0 d-flex flex-wrap gap-2 justify-content-md-end justify-content-start">
+            <button type="button" onclick="window.print();" class="btn btn-primary" style="background: #0b3c5d; border-color: #0b3c5d; font-weight: 700;">
               <i class="fas fa-print"></i> कार्ड प्रिंट करें
             </button>
             <button type="button" id="btn-download-pvc" class="btn btn-success" style="background: #059669; border-color: #059669; font-weight: 700;">

@@ -459,6 +459,10 @@ CREATE TABLE IF NOT EXISTS ayushman_applications (
     bocw_card_url VARCHAR(500) NULL,
     pmjay_letter_url VARCHAR(500) NULL,
     consent_accepted TINYINT(1) DEFAULT 1,
+    email_sent TINYINT(1) DEFAULT 0,
+    email_sent_at DATETIME NULL,
+    email_error TEXT NULL,
+    email_attempts INT DEFAULT 0,
     encrypted_qr_token LONGTEXT NOT NULL,
     status ENUM('submitted', 'verified', 'approved', 'rejected') DEFAULT 'submitted',
     admin_notes TEXT NULL,
@@ -468,5 +472,6 @@ CREATE TABLE IF NOT EXISTS ayushman_applications (
     INDEX idx_mobile (mobile),
     INDEX idx_email (email),
     INDEX idx_status (status),
-    INDEX idx_app_no (application_no)
+    INDEX idx_app_no (application_no),
+    INDEX idx_email_sent (email_sent)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
