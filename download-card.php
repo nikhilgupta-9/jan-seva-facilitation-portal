@@ -42,18 +42,80 @@ include __DIR__ . '/includes/header.php';
 
 <style>
 @media print {
+    @page {
+        size: A4 portrait;
+        margin: 15mm 15mm;
+    }
+    *, *::before, *::after {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
     body * { visibility: hidden; }
     .printable-card-area, .printable-card-area * { visibility: visible; }
     .printable-card-area {
-        position: absolute;
-        left: 50%;
-        top: 50%;
-        transform: translate(-50%, -50%);
-        width: 100%;
-        margin: 0;
-        padding: 0;
+        position: absolute !important;
+        left: 0 !important;
+        top: 15mm !important;
+        width: 100% !important;
+        margin: 0 auto !important;
+        padding: 0 !important;
+        float: none !important;
+        text-align: center !important;
     }
     .no-print { display: none !important; }
+    #pvc-card-render {
+        width: 86mm !important;
+        max-width: 86mm !important;
+        min-width: 86mm !important;
+        height: 54mm !important;
+        max-height: 54mm !important;
+        min-height: 54mm !important;
+        box-sizing: border-box !important;
+        box-shadow: none !important;
+        border: 0.5pt dashed #475569 !important;
+        border-radius: 3.18mm !important;
+        margin: 0 auto !important;
+        page-break-inside: avoid !important;
+        overflow: hidden !important;
+    }
+    #pvc-card-render .card-header-gov {
+        padding: 1mm 2mm !important;
+        height: 7.5mm !important;
+    }
+    #pvc-card-render .card-header-titles h4 {
+        font-size: 5.5pt !important;
+        line-height: 1.1 !important;
+    }
+    #pvc-card-render .card-header-titles p {
+        font-size: 4pt !important;
+        line-height: 1.1 !important;
+    }
+    #pvc-card-render .card-body-content {
+        padding: 1mm 2mm !important;
+        height: 38mm !important;
+    }
+    #pvc-card-render .card-photo-box {
+        width: 17mm !important;
+        height: 21mm !important;
+    }
+    #pvc-card-render .card-details-table {
+        font-size: 4.8pt !important;
+        line-height: 1.2 !important;
+    }
+    #pvc-card-render .card-qr-box {
+        width: 15mm !important;
+        height: 15mm !important;
+    }
+    #pvc-card-render .card-id-highlight {
+        font-size: 5.8pt !important;
+        padding: 0.5mm 1.5mm !important;
+        margin: 0.5mm auto !important;
+    }
+    #pvc-card-render .card-footer-strip {
+        padding: 0.8mm 2mm !important;
+        font-size: 4.2pt !important;
+        height: 5mm !important;
+    }
 }
 </style>
 

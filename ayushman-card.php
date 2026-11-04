@@ -372,27 +372,56 @@ include __DIR__ . '/includes/header.php';
     }
 }
 
-/* Print Only Styles */
+/* =========================================================
+   Print Only Styles - Standard ISO/IEC 7810 ID-1 (CR80) PVC Card
+   Physical Size: 86mm × 54mm (Wallet & CSC Lamination Standard)
+   ========================================================= */
+.print-sheet-header,
+.print-sheet-footer,
+.print-cut-guide,
+.print-fold-separator {
+    display: none;
+}
+
 @media print {
+    @page {
+        size: A4 portrait;
+        margin: 10mm 12mm;
+    }
+
+    *, *::before, *::after {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+    }
+
     body * {
         visibility: hidden;
     }
-    .no-print, header, footer, .ayush-hero-banner, .btn, .breadcrumb, .alert {
+
+    /* Hide web layout chrome and non-printable elements */
+    header, footer, nav, .navbar, .no-print, .breadcrumb, .alert, .ayush-hero-banner, .btn, .site-footer, .col-lg-5 {
         display: none !important;
     }
+
+    /* Enable only the printable section */
     .printable-section, .printable-section * {
         visibility: visible;
     }
+
     .printable-section {
-        position: absolute;
-        left: 0;
-        top: 0;
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
         width: 100% !important;
         max-width: 100% !important;
         flex: 0 0 100% !important;
-        padding: 0;
-        margin: 0;
+        padding: 0 !important;
+        margin: 0 !important;
+        display: block !important;
+        float: none !important;
     }
+
     .smart-card-wrapper,
     .smart-card-wrapper .container,
     .smart-card-wrapper .row {
@@ -402,17 +431,394 @@ include __DIR__ . '/includes/header.php';
         margin: 0 !important;
         display: block !important;
     }
-    .pvc-smart-card {
-        box-shadow: none !important;
-        border: 1px solid #000 !important;
-        page-break-inside: avoid;
-        margin: 0 auto 20px !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
+
+    /* Printable Official Header */
+    .print-sheet-header {
+        display: block !important;
+        text-align: center;
+        border-bottom: 1.5pt solid #0b3c5d;
+        padding-bottom: 2.5mm;
+        margin-bottom: 3.5mm;
     }
-    @page {
-        size: auto;
-        margin: 10mm;
+    .print-gov-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 3mm;
+        margin-bottom: 1.5mm;
+    }
+    .print-gov-row svg {
+        width: 8mm;
+        height: 8mm;
+    }
+    .print-gov-title h2 {
+        font-size: 11pt !important;
+        font-weight: 800 !important;
+        color: #0b3c5d !important;
+        margin: 0 !important;
+        line-height: 1.15 !important;
+        text-transform: uppercase;
+        letter-spacing: 0.3pt;
+    }
+    .print-gov-title p {
+        font-size: 7.5pt !important;
+        font-weight: 600 !important;
+        color: #475569 !important;
+        margin: 0.5mm 0 0 !important;
+        line-height: 1.15 !important;
+    }
+    .print-meta-strip {
+        display: flex;
+        justify-content: space-between;
+        background: #f1f5f9 !important;
+        border: 0.5pt solid #cbd5e1 !important;
+        border-radius: 1.5mm;
+        padding: 1.2mm 3mm;
+        font-size: 6.5pt !important;
+        color: #1e293b !important;
+        margin-top: 1.5mm;
+    }
+    .print-meta-strip strong {
+        color: #0b3c5d !important;
+    }
+
+    /* Cutting Guideline Banner */
+    .print-cut-guide {
+        display: block !important;
+        text-align: center;
+        font-size: 6.2pt !important;
+        color: #475569 !important;
+        margin: 2mm 0 3.5mm !important;
+        padding: 1.2mm 2mm;
+        background: #fefce8 !important;
+        border: 0.4pt dashed #ca8a04 !important;
+        border-radius: 1mm;
+    }
+
+    /* Cards Side-by-Side Flex Layout */
+    .print-cards-layout {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        justify-content: center !important;
+        align-items: center !important;
+        gap: 0 !important;
+        margin: 0 auto !important;
+        width: 100% !important;
+        page-break-inside: avoid !important;
+    }
+
+    /* Vertical Fold/Cut Separator between cards */
+    .print-fold-separator {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        height: 54mm !important;
+        width: 6mm !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-sizing: border-box !important;
+    }
+    .print-fold-separator .fold-line {
+        flex: 1 !important;
+        width: 0 !important;
+        border-left: 0.5pt dashed #94a3b8 !important;
+    }
+    .print-fold-separator .fold-text {
+        font-size: 3.5pt !important;
+        color: #64748b !important;
+        writing-mode: vertical-rl !important;
+        transform: rotate(180deg) !important;
+        white-space: nowrap !important;
+        letter-spacing: 0.2pt !important;
+        padding: 1.5mm 0 !important;
+    }
+
+    /* FIXED STANDARD CR80 PVC DIMENSIONS (86mm × 54mm) - NEVER STRETCHES ACROSS A4 SHEET */
+    .pvc-smart-card {
+        width: 86mm !important;
+        max-width: 86mm !important;
+        min-width: 86mm !important;
+        height: 54mm !important;
+        max-height: 54mm !important;
+        min-height: 54mm !important;
+        box-sizing: border-box !important;
+        border: 0.5pt dashed #475569 !important;
+        border-radius: 3.18mm !important;
+        box-shadow: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        position: relative !important;
+        overflow: hidden !important;
+        page-break-inside: avoid !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: space-between !important;
+        background: #ffffff !important;
+    }
+
+    /* Tri-color stripe at top of card */
+    .pvc-smart-card::before {
+        height: 1.2mm !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        z-index: 10 !important;
+    }
+
+    /* Card Header Bar (7.8mm) */
+    .card-header-bar {
+        height: 7.8mm !important;
+        min-height: 7.8mm !important;
+        max-height: 7.8mm !important;
+        padding: 1.2mm 2.2mm 0.8mm !important;
+        box-sizing: border-box !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        border-bottom: 0.4pt solid #f59e0b !important;
+        margin-top: 1.2mm !important;
+    }
+    .card-header-bar svg {
+        width: 5.2mm !important;
+        height: 5.2mm !important;
+        flex-shrink: 0 !important;
+    }
+    .card-header-titles h4 {
+        font-size: 5.4pt !important;
+        font-weight: 800 !important;
+        line-height: 1.1 !important;
+        margin: 0 !important;
+        letter-spacing: 0.15pt !important;
+    }
+    .card-header-titles p {
+        font-size: 3.8pt !important;
+        font-weight: 600 !important;
+        line-height: 1.1 !important;
+        margin: 0.2mm 0 0 !important;
+        letter-spacing: 0.1pt !important;
+    }
+    .card-header-bar i.fa-shield-alt {
+        font-size: 6pt !important;
+        line-height: 1 !important;
+    }
+
+    /* Card Body Section (39.5mm) */
+    .card-body-section {
+        height: 39.5mm !important;
+        max-height: 39.5mm !important;
+        padding: 1.2mm 2.2mm !important;
+        box-sizing: border-box !important;
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 1.5mm !important;
+        flex: 1 !important;
+        overflow: hidden !important;
+    }
+
+    /* Photo Column (Left) */
+    .card-photo-col {
+        width: 17mm !important;
+        min-width: 17mm !important;
+        max-width: 17mm !important;
+        flex: 0 0 17mm !important;
+        text-align: center !important;
+    }
+    .card-photo-col img {
+        width: 16.5mm !important;
+        height: 20.5mm !important;
+        object-fit: cover !important;
+        border: 0.3pt solid #0b3c5d !important;
+        border-radius: 0.8mm !important;
+        box-shadow: none !important;
+        display: block !important;
+        margin: 0 auto !important;
+    }
+    .card-verified-badge {
+        font-size: 3.4pt !important;
+        font-weight: 700 !important;
+        padding: 0.3mm 0.6mm !important;
+        margin-top: 0.6mm !important;
+        border-radius: 0.5mm !important;
+        border: 0.3pt solid #10b981 !important;
+        line-height: 1.1 !important;
+        white-space: nowrap !important;
+        display: block !important;
+    }
+
+    /* Citizen Details Column (Center) */
+    .card-details-col {
+        flex: 1 !important;
+        min-width: 0 !important;
+        padding: 0 0.8mm !important;
+        overflow: hidden !important;
+    }
+    .card-name-title {
+        font-size: 7.2pt !important;
+        font-weight: 800 !important;
+        margin: 0 0 0.6mm !important;
+        line-height: 1.1 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        color: #0b3c5d !important;
+    }
+    .card-meta-line {
+        font-size: 4.8pt !important;
+        line-height: 1.25 !important;
+        margin-bottom: 0.4mm !important;
+        color: #334155 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+    .card-meta-line strong {
+        color: #0f172a !important;
+    }
+    .card-abha-pill {
+        background: #f0f9ff !important;
+        border: 0.4pt solid #0284c7 !important;
+        border-radius: 0.8mm !important;
+        padding: 0.5mm 1.2mm !important;
+        margin: 0.6mm 0 !important;
+        display: inline-block !important;
+    }
+    .card-abha-pill .label-txt {
+        font-size: 3.6pt !important;
+        font-weight: 700 !important;
+        line-height: 1 !important;
+    }
+    .card-abha-pill .val-txt {
+        font-size: 5.8pt !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.2pt !important;
+        line-height: 1.1 !important;
+    }
+
+    /* QR Code Column (Right) */
+    .card-qr-col {
+        width: 16mm !important;
+        min-width: 16mm !important;
+        max-width: 16mm !important;
+        flex: 0 0 16mm !important;
+        text-align: center !important;
+    }
+    .card-qr-box {
+        width: 15mm !important;
+        height: 15mm !important;
+        min-width: 15mm !important;
+        min-height: 15mm !important;
+        padding: 0.4mm !important;
+        border: 0.4pt solid #0b3c5d !important;
+        border-radius: 0.8mm !important;
+        box-shadow: none !important;
+        margin: 0 auto 0.5mm !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background: #ffffff !important;
+    }
+    .card-qr-box img, .card-qr-box canvas {
+        width: 14mm !important;
+        height: 14mm !important;
+        max-width: 100% !important;
+        max-height: 100% !important;
+        object-fit: contain !important;
+        display: block !important;
+    }
+    .card-qr-label {
+        font-size: 3.2pt !important;
+        font-weight: 800 !important;
+        line-height: 1.05 !important;
+        color: #dc2626 !important;
+        margin-top: 0.4mm !important;
+    }
+
+    /* Card Footer Strip (5.5mm) */
+    .card-footer-strip {
+        height: 5.5mm !important;
+        min-height: 5.5mm !important;
+        max-height: 5.5mm !important;
+        padding: 0.6mm 2.2mm !important;
+        box-sizing: border-box !important;
+        font-size: 4.4pt !important;
+        font-weight: 700 !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        border-top: 0.3pt solid #e2e8f0 !important;
+        line-height: 1 !important;
+    }
+
+    /* Back Card Specifics */
+    .card-back-body {
+        height: 39.5mm !important;
+        max-height: 39.5mm !important;
+        padding: 1.2mm 2.2mm !important;
+        box-sizing: border-box !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: space-between !important;
+        overflow: hidden !important;
+    }
+    .card-back-address {
+        padding: 0.8mm 1.5mm !important;
+        font-size: 4.8pt !important;
+        font-weight: 600 !important;
+        color: #1e293b !important;
+        line-height: 1.25 !important;
+        border: 0.3pt solid #cbd5e1 !important;
+        border-radius: 0.8mm !important;
+        background: #ffffff !important;
+        margin-bottom: 0.6mm !important;
+    }
+    .card-back-rules {
+        font-size: 4.1pt !important;
+        color: #334155 !important;
+        line-height: 1.2 !important;
+        margin: 0.6mm 0 !important;
+    }
+    .card-back-rules ul {
+        padding-left: 3mm !important;
+        margin: 0 !important;
+    }
+    .card-back-rules li {
+        margin-bottom: 0.3mm !important;
+    }
+    .card-back-bottom {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: flex-end !important;
+        border-top: 0.3pt dashed #cbd5e1 !important;
+        padding-top: 0.6mm !important;
+    }
+    .card-back-bottom div {
+        font-size: 4pt !important;
+        color: #1e293b !important;
+        line-height: 1.1 !important;
+    }
+    .card-back-bottom .badge {
+        font-size: 3.8pt !important;
+        padding: 0.4mm 1mm !important;
+        border-radius: 0.4mm !important;
+    }
+
+    /* Printable Sheet Official Footer */
+    .print-sheet-footer {
+        display: block !important;
+        margin-top: 6mm;
+        padding-top: 2.5mm;
+        border-top: 0.8pt dashed #94a3b8;
+        text-align: center;
+        font-size: 6pt !important;
+        color: #64748b !important;
+    }
+    .print-sheet-footer p {
+        margin: 0.5mm 0 !important;
     }
 }
 </style>
@@ -511,6 +917,34 @@ include __DIR__ . '/includes/header.php';
             <i class="fas fa-id-card text-warning"></i> राष्ट्रीय डिजिटल स्वास्थ्य स्मार्ट पहचान पत्र (PVC Card Preview)
           </h4>
 
+          <!-- Official Printable Sheet Header (A4 Print Only) -->
+          <div class="print-sheet-header">
+            <div class="print-gov-row">
+              <svg viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="44" stroke="#0b3c5d" stroke-width="4" fill="none" />
+                <circle cx="50" cy="50" r="10" fill="#0b3c5d" />
+                <?php for ($i = 0; $i < 24; $i++): $ang = $i * 15; ?>
+                  <line x1="50" y1="50" x2="<?php echo 50 + 38 * cos(deg2rad($ang)); ?>" y2="<?php echo 50 + 38 * sin(deg2rad($ang)); ?>" stroke="#0b3c5d" stroke-width="2" />
+                <?php endfor; ?>
+              </svg>
+              <div class="print-gov-title">
+                <h2>NATIONAL HEALTH AUTHORITY &bull; राष्ट्रीय स्वास्थ्य प्राधिकरण</h2>
+                <p>आयुष्मान भारत डिजिटल मिशन (ABDM) &bull; National Digital Health Smart ID Card</p>
+              </div>
+            </div>
+            <div class="print-meta-strip">
+              <div><strong>कार्ड धारक / Name:</strong> <?php echo htmlspecialchars($record['full_name']); ?></div>
+              <div><strong>आवेदन क्रमांक / App No:</strong> <?php echo htmlspecialchars($record['application_no']); ?></div>
+              <div><strong>कार्ड आईडी / Card ID:</strong> <?php echo htmlspecialchars($record['card_id']); ?></div>
+              <div><strong>प्रिंट दिनांक / Date:</strong> <?php echo date('d-m-Y h:i A'); ?></div>
+            </div>
+          </div>
+
+          <div class="print-cut-guide">
+            <span><i class="fas fa-cut"></i> <strong>कटिंग व लैमिनेशन निर्देश (CR80 Cutting Guide):</strong> प्रिंट को 100% (Actual Size) पर प्रिंट करें। बिंदीदार रेखा (Dashed border) से काटकर 86mm &times; 54mm के स्टैंडर्ड PVC पाउच में लैमिनेट करें या बीच से मोड़कर डबल-साइड कार्ड बनाएं।</span>
+          </div>
+
+          <div class="print-cards-layout">
           <!-- 1. CARD FRONT -->
           <div id="pvc-card-front" class="pvc-smart-card">
             <!-- Header -->
@@ -594,6 +1028,13 @@ include __DIR__ . '/includes/header.php';
             </div>
           </div>
 
+          <!-- Vertical Fold/Cut Separator (A4 Print Only) -->
+          <div class="print-fold-separator">
+            <span class="fold-line"></span>
+            <span class="fold-text">&#9986; मोड़ें / काटें (Fold or Cut)</span>
+            <span class="fold-line"></span>
+          </div>
+
           <!-- 2. CARD BACK -->
           <div id="pvc-card-back" class="pvc-smart-card pvc-smart-card-back">
             <div class="card-header-bar" style="background: #1e293b; border-bottom: 2px solid #059669;">
@@ -648,6 +1089,13 @@ include __DIR__ . '/includes/header.php';
               <span>Emergency Helpline: 14555 / 1800-11-2026</span>
               <span>www.nha.gov.in</span>
             </div>
+          </div>
+          </div> <!-- /.print-cards-layout -->
+
+          <!-- Official Printable Sheet Footer -->
+          <div class="print-sheet-footer">
+            <p><strong>Official Digital Health Pass</strong> &bull; Ministry of Health &amp; Family Welfare, Government of India</p>
+            <p>कार्ड पर मौजूद QR कोड AES-256 एन्क्रिप्टेड है एवं केवल अधिकृत एडमिन स्कैनर द्वारा सत्यापन योग्य है &bull; आपातकालीन हेल्पलाइन: <strong>14555</strong> / <strong>108</strong></p>
           </div>
 
         </div>
