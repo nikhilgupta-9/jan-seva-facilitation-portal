@@ -1,758 +1,29 @@
 <?php
-// ayushman-helpdesk.php - Official Ayushman Bharat Help Desk & Digital Health Smart ID Submission
+/**
+ * ayushman-helpdesk.php
+ * Ayushman Bharat Help Desk & Digital Health Smart ID Application Form
+ * Modular Architecture: Pure Semantic View, Externalized CSS & Fast AJAX Form Flow
+ */
+
 require_once __DIR__ . '/config/config.php';
-require_once __DIR__ . '/utils/mailer.php';
 
-$page_title = 'आयुष्मान हेल्प डेस्क (Ayushman Help Desk) - Digital Health Smart ID';
-
+// Generate CSRF token if missing
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
-$errors = [];
-$success = false;
-
-// Handle Form Submission
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_ayushman'])) {
-    // 1. Verify CSRF
-    $token = $_POST['csrf_token'] ?? '';
-    if (!hash_equals($_SESSION['csrf_token'], $token)) {
-        $errors[] = 'सुरक्षा टोकन अमान्य है। कृपया पुनः प्रयास करें (Invalid CSRF Token).';
-    }
-
-    // 1b. Basic flood/abuse throttle: block automated mass-submission from
-    // one browser session (max 5 submissions per 10 minutes).
-    $now = time();
-    if (!isset($_SESSION['ayushman_submit_attempts'])) {
-        $_SESSION['ayushman_submit_attempts'] = [];
-    }
-    $_SESSION['ayushman_submit_attempts'] = array_filter($_SESSION['ayushman_submit_attempts'], function ($t) use ($now) {
-        return ($now - $t) < 600;
-    });
-    if (count($_SESSION['ayushman_submit_attempts']) >= 5) {
-        $errors[] = 'बहुत अधिक प्रयास किए गए हैं। कृपया कुछ मिनट बाद पुनः प्रयास करें (Too many submissions — please try again later).';
-    } else {
-        $_SESSION['ayushman_submit_attempts'][] = $now;
-    }
-
-    // 2. Validate Inputs
-    $fullName = trim($_POST['full_name'] ?? '');
-    $dob = trim($_POST['dob'] ?? '');
-    $gender = trim($_POST['gender'] ?? 'Male');
-    $mobile = preg_replace('/\D/', '', $_POST['mobile'] ?? '');
-    $email = trim($_POST['email'] ?? '');
-    $address = trim($_POST['address'] ?? '');
-    $state = trim($_POST['state'] ?? '');
-    $district = trim($_POST['district'] ?? '');
-    $pincode = trim($_POST['pincode'] ?? '');
-
-    $abhaNumber = trim($_POST['abha_number'] ?? '');
-    $rationCardNo = trim($_POST['ration_card_no'] ?? '');
-    $bocwRegNo = trim($_POST['bocw_reg_no'] ?? '');
-    $pmjayLetterNo = trim($_POST['pmjay_letter_no'] ?? '');
-    $consent = isset($_POST['consent_accepted']) ? 1 : 0;
-
-    if (empty($fullName)) {
-        $errors[] = 'कृपया मरीज/नागरिक का पूरा नाम दर्ज करें (Full Name is required).';
-    }
-    if (strlen($mobile) !== 10) {
-        $errors[] = 'कृपया 10 अंकों का वैध मोबाइल नंबर दर्ज करें (Valid 10-digit Mobile is required).';
-    }
-    if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $errors[] = 'कृपया वैध ईमेल आईडी दर्ज करें (Valid Email ID is required for sending card).';
-    }
-    if (!$consent) {
-        $errors[] = 'कृपया नियम, शर्तें एवं स्व-घोषणा सहमति स्वीकार करें (Consent is required).';
-    }
-
-    // 3. Aadhaar Number — plain mandatory field, no OTP verification.
-    $aadhaarNumber = preg_replace('/\D/', '', $_POST['aadhaar_number'] ?? '');
-    $aadhaarLast4 = null;
-    if (strlen($aadhaarNumber) !== 12 || in_array($aadhaarNumber[0] ?? '', ['0', '1'])) {
-        $errors[] = 'कृपया 12 अंकों का वैध आधार नंबर दर्ज करें (A valid 12-digit Aadhaar number is required).';
-    } else {
-        $aadhaarLast4 = substr($aadhaarNumber, -4);
-    }
-
-    // 3b. One card per mobile number: if this mobile already has a Digital
-    // Health Smart ID on record, send the citizen to their existing card
-    // instead of minting a duplicate.
-    if (empty($errors) && strlen($mobile) === 10) {
-        $dupStmt = $pdo->prepare("SELECT application_no FROM ayushman_applications WHERE mobile = ? ORDER BY id DESC LIMIT 1");
-        $dupStmt->execute([$mobile]);
-        $existingAppNo = $dupStmt->fetchColumn();
-        if ($existingAppNo) {
-            header('Location: ' . BASE_URL . '/ayushman-card.php?app_no=' . urlencode($existingAppNo) . '&status=existing');
-            exit;
-        }
-    }
-
-    // 4. File Upload Helper
-    $uploadDir = __DIR__ . '/uploads/ayushman/';
-    if (!is_dir($uploadDir)) {
-        mkdir($uploadDir, 0755, true);
-    }
-
-    $uploadedFiles = [
-        'photo_url'        => null,
-        'abha_card_url'    => null,
-        'ayushman_card_url'=> null,
-        'ration_card_url'  => null,
-        'bocw_card_url'    => null,
-        'pmjay_letter_url' => null,
-    ];
-
-    $fileInputs = [
-        'photo'          => ['col' => 'photo_url', 'required' => false, 'mimes' => ['image/jpeg', 'image/png', 'image/webp']],
-        'abha_card'      => ['col' => 'abha_card_url', 'required' => false, 'mimes' => ['image/jpeg', 'image/png', 'image/webp', 'application/pdf']],
-        'ayushman_card'  => ['col' => 'ayushman_card_url', 'required' => false, 'mimes' => ['image/jpeg', 'image/png', 'image/webp', 'application/pdf']],
-        'ration_card'    => ['col' => 'ration_card_url', 'required' => false, 'mimes' => ['image/jpeg', 'image/png', 'image/webp', 'application/pdf']],
-        'bocw_card'      => ['col' => 'bocw_card_url', 'required' => false, 'mimes' => ['image/jpeg', 'image/png', 'image/webp', 'application/pdf']],
-        'pmjay_letter'   => ['col' => 'pmjay_letter_url', 'required' => false, 'mimes' => ['image/jpeg', 'image/png', 'image/webp', 'application/pdf']],
-    ];
-
-    $maxBytes = 10 * 1024 * 1024; // 10MB limit
-
-    foreach ($fileInputs as $inputKey => $meta) {
-        if (!empty($_FILES[$inputKey]['name']) && $_FILES[$inputKey]['error'] === UPLOAD_ERR_OK) {
-            $tmpPath = $_FILES[$inputKey]['tmp_name'];
-            $fileSize = $_FILES[$inputKey]['size'];
-
-            if ($fileSize > $maxBytes) {
-                $errors[] = "दस्तावेज '{$inputKey}' का आकार 10MB से अधिक नहीं होना चाहिए (File exceeds 10MB).";
-                continue;
-            }
-
-            $finfo = finfo_open(FILEINFO_MIME_TYPE);
-            $mimeType = finfo_file($finfo, $tmpPath);
-            finfo_close($finfo);
-
-            if (!in_array($mimeType, $meta['mimes'])) {
-                $errors[] = "दस्तावेज '{$inputKey}' का प्रारूप मान्य नहीं है। केवल JPG, PNG, WEBP या PDF ही स्वीकार्य हैं।";
-                continue;
-            }
-
-            $extMap = [
-                'image/jpeg' => 'jpg',
-                'image/png'  => 'png',
-                'image/webp' => 'webp',
-                'application/pdf' => 'pdf',
-            ];
-            $ext = $extMap[$mimeType] ?? 'bin';
-            $safeFileName = 'ayush_' . $inputKey . '_' . bin2hex(random_bytes(12)) . '.' . $ext;
-            $destination = $uploadDir . $safeFileName;
-
-            if (move_uploaded_file($tmpPath, $destination)) {
-                $uploadedFiles[$meta['col']] = 'uploads/ayushman/' . $safeFileName;
-            } else {
-                $errors[] = "दस्तावेज '{$inputKey}' अपलोड करने में त्रुटि हुई।";
-            }
-        }
-    }
-
-    // 5. If No Errors, Generate Identifiers, Encrypt QR, Save to DB, and Send Email
-    if (empty($errors)) {
-        try {
-            $appNo = ayushman_generate_application_no();
-            $cardId = ayushman_generate_card_id();
-
-            // Prepare cryptographic payload — kept deliberately minimal.
-            // The QR only needs to carry a tamper-proof POINTER + the few
-            // fields needed before the DB lookup completes; everything else
-            // (name, DOB, address, documents, etc.) is fetched live from the
-            // ayushman_applications table by app_no on every scan anyway
-            // (see admin/api/decrypt_scanner.php and verify-id.php), so
-            // cramming the full record into the QR was pure dead weight.
-            // That dead weight was the actual bug: ~800 characters of payload
-            // pushed the QR to a very high version/module-density, which at
-            // the card's small on-screen render size (90-180px) is below
-            // what most phone cameras can physically resolve — scans would
-            // "never" produce a result even though the code looked fine.
-            $qrData = [
-                'v'                    => 1,
-                'app_no'               => $appNo,
-                'card_id'              => $cardId,
-                'aadhaar_last4'        => $aadhaarLast4,
-            ];
-
-            $encryptedQrToken = ayushman_encrypt_payload($qrData);
-            $ipAddress = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
-
-            $stmt = $pdo->prepare("INSERT INTO ayushman_applications 
-                (application_no, card_id, full_name, dob, gender, mobile, email, address, state, district, pincode, 
-                 aadhaar_last4, aadhaar_verified, aadhaar_verified_at, abha_number, ration_card_no, bocw_reg_no, 
-                 pmjay_letter_no, photo_url, abha_card_url, ayushman_card_url, ration_card_url, bocw_card_url, 
-                 pmjay_letter_url, consent_accepted, email_sent, encrypted_qr_token, status, ip_address) 
-                VALUES 
-                (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, 'submitted', ?)");
-
-            $stmt->execute([
-                $appNo,
-                $cardId,
-                $fullName,
-                !empty($dob) ? $dob : null,
-                $gender,
-                $mobile,
-                $email,
-                $address,
-                $state,
-                $district,
-                $pincode,
-                $aadhaarLast4,
-                0,
-                $abhaNumber,
-                $rationCardNo,
-                $bocwRegNo,
-                $pmjayLetterNo,
-                $uploadedFiles['photo_url'],
-                $uploadedFiles['abha_card_url'],
-                $uploadedFiles['ayushman_card_url'],
-                $uploadedFiles['ration_card_url'],
-                $uploadedFiles['bocw_card_url'],
-                $uploadedFiles['pmjay_letter_url'],
-                $consent,
-                $encryptedQrToken,
-                $ipAddress
-            ]);
-
-            // Form submission responds INSTANTLY (< 1 second) to the citizen.
-            // Email is queued in the database (email_sent = 0) and processed via
-            // cron/send_ayushman_emails.php. We also trigger a non-blocking detached
-            // CLI run in the background without waiting for SMTP.
-            if (function_exists('exec')) {
-                $cronScript = __DIR__ . '/cron/send_ayushman_emails.php';
-                $phpBin = is_file('/Applications/XAMPP/xamppfiles/bin/php') ? '/Applications/XAMPP/xamppfiles/bin/php' : 'php';
-                @exec(escapeshellcmd($phpBin) . ' ' . escapeshellarg($cronScript) . ' > /dev/null 2>&1 &');
-            }
-
-            session_write_close();
-            header("Location: " . BASE_URL . "/ayushman-card.php?app_no=" . urlencode($appNo) . "&status=success");
-            exit;
-
-        } catch (Exception $e) {
-            $errors[] = 'डेटाबेस प्रविष्टि में त्रुटि: ' . $e->getMessage();
-        }
-    }
-}
+// SEO & Breadcrumb Meta
+$pageTitle = 'आयुष्मान हेल्प डेस्क एवं डिजिटल हेल्थ स्मार्ट आईडी कार्ड | ' . APP_NAME;
+$metaDescription = 'PM-JAY आयुष्मान भारत डिजिटल हेल्थ स्मार्ट आईडी कार्ड आवेदन फॉर्म। 256-बिट एन्क्रिप्टेड क्यूआर एवं त्वरित डिजिटल हेल्थ पहचान पत्र प्राप्त करें।';
+$metaKeywords = 'ayushman help desk, ayushman smart id, abha health card, pmjay registration, digital health card, ayushman form online';
+$canonicalUrl = BASE_URL . '/ayushman-helpdesk.php';
+$activeNav = 'ayushman';
 
 include __DIR__ . '/includes/header.php';
 ?>
 
-<style>
-/* Ayushman Help Desk — aligned to site light theme (css/gigw-theme.css tokens) */
-.ayush-hero-banner {
-    background: linear-gradient(135deg, rgb(30 58 138 / 74%) 0%, rgb(30 90 135 / 30%) 60%, rgb(8 145 178 / 0%) 100%), url(/gp/image/barr.png);
-    background-position: center;
-    background-size: cover;
-    color: #ffffff;
-    padding: 26px 0 20px;
-    border-bottom: 4px solid #f59e0b;
-    position: relative;
-    overflow: hidden;
-}
-.ayush-lang-switch {
-    display: flex;
-    justify-content: flex-end;
-    gap: 6px;
-    margin-bottom: 14px;
-    position: relative;
-    z-index: 2;
-}
-.lang-toggle-btn {
-    background: rgba(255,255,255,0.12);
-    border: 1px solid rgba(255,255,255,0.35);
-    color: #ffffff;
-    font-weight: 700;
-    font-size: 0.8rem;
-    padding: 5px 14px;
-    border-radius: 20px;
-    cursor: pointer;
-    transition: all 0.15s;
-}
-.lang-toggle-btn:hover {
-    background: rgba(255,255,255,0.22);
-}
-.lang-toggle-btn.active {
-    background: #f59e0b;
-    border-color: #f59e0b;
-    color: #1e293b;
-}
-.ayush-hero-banner::after {
-    content: '';
-    position: absolute;
-    right: -40px;
-    bottom: -40px;
-    width: 220px;
-    height: 220px;
-    background: radial-gradient(circle, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0) 70%);
-    border-radius: 50%;
-    pointer-events: none;
-}
-.ayush-hero-banner .breadcrumb {
-    background: transparent;
-    margin: 0 0 12px;
-    padding: 0;
-    font-size: 0.85rem;
-}
-.ayush-hero-banner .breadcrumb a {
-    color: #cbd5e1;
-}
-.ayush-hero-banner .breadcrumb a i {
-    margin-right: 4px;
-}
-.ayush-hero-banner .breadcrumb .active {
-    color: #f8fafc;
-}
-.ayush-hero-badges {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin-bottom: 10px;
-}
-.badge-gov-saffron {
-    background: #f59e0b;
-    color: #ffffff;
-    font-weight: 700;
-    font-size: 0.78rem;
-    padding: 4px 10px;
-    border-radius: 20px;
-}
-.badge-gov-saffron i {
-    margin-right: 4px;
-}
-.ayush-hero-banner h1 {
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin: 0 0 6px;
-    line-height: 1.3;
-    color: #ffffff;
-}
-.ayush-hero-banner .hero-subtext {
-    margin: 0;
-    font-size: 0.86rem;
-    opacity: 0.92;
-    max-width: 680px;
-}
-.ayush-hero-side-card {
-    background: rgba(255,255,255,0.12);
-    backdrop-filter: blur(4px);
-    border: 1px solid rgba(255,255,255,0.22);
-    border-radius: 12px;
-    padding: 18px;
-    text-align: center;
-    color: #ffffff;
-}
-.ayush-hero-side-card i {
-    color: #f59e0b;
-    margin-bottom: 8px;
-}
-
-.ayush-card-box {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    box-shadow: 0 4px 18px rgba(11,60,93,0.06);
-    margin-bottom: 24px;
-    overflow: hidden;
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-.ayush-card-header {
-    background: #f8fafc;
-    border-bottom: 2px solid #e2e8f0;
-    padding: 11px 16px;
-    font-weight: 700;
-    font-size: 0.9rem;
-    color: #1e3a8a;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-.ayush-card-header i {
-    width: 20px;
-    text-align: center;
-    flex-shrink: 0;
-    color: #1e3a8a;
-}
-.ayush-card-header.header-success { background: #f0fdf4; border-bottom-color: #bbf7d0; }
-.ayush-card-header.header-success i,
-.ayush-card-header.header-success span { color: #047857; }
-.ayush-card-header.header-warning { background: #fffbeb; }
-.ayush-card-header.header-warning i { color: #f59e0b; }
-.ayush-card-header.header-warning span { color: #92400e; }
-.ayush-card-body {
-    padding: 16px;
-}
-.form-label-gov {
-    font-weight: 600;
-    color: #334155;
-    font-size: 0.82rem;
-    margin-bottom: 5px;
-    display: block;
-}
-.form-label-gov span.req {
-    color: #dc2626;
-    font-weight: 800;
-}
-.form-control-gov {
-    height: 38px;
-    border-radius: 6px;
-    border: 1.5px solid #cbd5e1;
-    font-size: 0.86rem;
-    box-shadow: none !important;
-    transition: all 0.2s;
-}
-.form-control-gov:focus {
-    border-color: #1e3a8a;
-    box-shadow: 0 0 0 3px rgba(11, 60, 93, 0.12) !important;
-}
-textarea.form-control-gov-area {
-    border-radius: 6px;
-    border: 1.5px solid #cbd5e1;
-}
-textarea.form-control-gov-area:focus {
-    border-color: #1e3a8a;
-    box-shadow: 0 0 0 3px rgba(11, 60, 93, 0.12) !important;
-    outline: none;
-}
-.file-upload-tile {
-    border: 2px dashed #cbd5e1;
-    background: #f8fafc;
-    border-radius: 8px;
-    padding: 12px 10px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 86px;
-}
-.file-upload-tile:hover {
-    border-color: #1e3a8a;
-    background: #f0fdf4;
-}
-.file-upload-tile input[type="file"] {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    opacity: 0;
-    cursor: pointer;
-}
-.file-upload-tile i {
-    font-size: 1.15rem;
-    color: #1e3a8a;
-}
-.file-upload-tile .tile-title {
-    font-weight: 600;
-    font-size: 0.76rem;
-    color: #334155;
-    margin-top: 6px;
-}
-.file-upload-tile .tile-hint {
-    font-size: 0.68rem;
-    color: #64748b;
-    margin-top: 2px;
-}
-.file-upload-tile .file-selected-name {
-    font-size: 0.74rem;
-    color: #047857;
-    font-weight: 600;
-    margin-top: 6px;
-    word-break: break-all;
-}
-.ayush-field-group {
-    margin-bottom: 18px;
-    padding-bottom: 14px;
-    border-bottom: 1px solid #f1f5f9;
-}
-.ayush-field-group:last-child {
-    margin-bottom: 0;
-    padding-bottom: 0;
-    border-bottom: none;
-}
-.aadhaar-verify-box {
-    background: #f0f9ff;
-    border: 1.5px solid #bae6fd;
-    border-radius: 10px;
-    padding: 18px;
-    margin-bottom: 20px;
-}
-.input-group-addon-gov {
-    background: #ffffff;
-    border: 1.5px solid #cbd5e1;
-    border-right: none;
-    color: #64748b;
-    display: flex;
-    align-items: center;
-    padding: 0 12px;
-    border-radius: 6px 0 0 6px;
-}
-.security-encrypted-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: #ecfdf5;
-    color: #065f46;
-    border: 1px solid #a7f3d0;
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-size: 0.78rem;
-    font-weight: 700;
-}
-.btn-gov-outline {
-    background: #ffffff;
-    color: #1e3a8a;
-    border: 1.5px solid #1e3a8a;
-    font-weight: 600;
-    font-size: 0.82rem;
-    padding: 7px 14px;
-    border-radius: 6px;
-    transition: all 0.2s;
-}
-.btn-gov-outline:hover {
-    background: #1e3a8a;
-    color: #ffffff;
-}
-.verify-method-tab.active {
-    background: #1e3a8a;
-    color: #ffffff;
-}
-.btn-gov-outline i,
-.btn-gov-verify i {
-    margin-right: 6px;
-}
-.btn-gov-verify {
-    font-weight: 600;
-    font-size: 0.82rem;
-    padding: 7px 16px;
-    border-radius: 6px;
-    background: #10b981;
-    border-color: #10b981;
-    color: #ffffff;
-}
-.btn-gov-verify:hover {
-    background: #047857;
-    border-color: #047857;
-    color: #ffffff;
-}
-.btn-gov-submit {
-    background: linear-gradient(135deg, #047857 0%, #10b981 100%);
-    color: #ffffff;
-    font-size: 0.92rem;
-    font-weight: 700;
-    padding: 11px 26px;
-    border: none;
-    border-radius: 8px;
-    box-shadow: 0 4px 14px rgba(22, 163, 74, 0.35);
-    transition: all 0.2s;
-    letter-spacing: 0.2px;
-}
-.btn-gov-submit i {
-    margin-right: 8px;
-}
-.btn-gov-submit:hover {
-    background: linear-gradient(135deg, #047857 0%, #047857 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 18px rgba(22, 163, 74, 0.45);
-    color: #ffffff;
-}
-.ayush-sidebar-sticky {
-    position: sticky;
-    top: 20px;
-}
-.ayush-side-icon {
-    color: #10b981;
-}
-.ayush-side-title {
-    font-weight: 800;
-    color: #047857;
-    margin-top: 8px;
-    margin-bottom: 4px;
-}
-.ayush-side-note {
-    background: #f8fafc;
-    border-radius: 6px;
-    padding: 12px;
-    font-size: 0.82rem;
-    color: #475569;
-    margin-bottom: 12px;
-}
-.ayush-side-note i {
-    color: #1e3a8a;
-    margin-right: 4px;
-}
-.ayush-helpline-card .helpline-title i {
-    color: #f59e0b;
-    margin-right: 6px;
-}
-.ayush-helpline-card .helpline-number i,
-.ayush-helpline-card .helpline-email i {
-    margin-right: 6px;
-}
-.ayush-helpline-card .helpline-number i { color: #10b981; }
-.ayush-helpline-card .helpline-email i { color: #0891b2; }
-.ayush-alert-errors {
-    border-radius: 8px;
-    border-left: 5px solid #dc2626;
-    box-shadow: 0 2px 8px rgba(220,38,38,0.1);
-}
-.ayushman-submit-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(15, 23, 42, 0.78);
-    z-index: 99999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-}
-.ayushman-submit-box {
-    background: #ffffff;
-    border-radius: 14px;
-    padding: 28px 24px;
-    max-width: 360px;
-    text-align: center;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-}
-.ayushman-submit-spinner {
-    width: 44px;
-    height: 44px;
-    border: 4px solid #e2e8f0;
-    border-top-color: #1e3a8a;
-    border-radius: 50%;
-    margin: 0 auto 16px;
-    animation: ayushman-spin 0.8s linear infinite;
-}
-@keyframes ayushman-spin {
-    to { transform: rotate(360deg); }
-}
-.ayushman-submit-box h4 {
-    margin: 0 0 8px;
-    font-weight: 800;
-    color: #1e293b;
-    font-size: 1rem;
-}
-.ayushman-submit-box p {
-    margin: 0;
-    font-size: 0.82rem;
-    color: #b91c1c;
-    font-weight: 600;
-    line-height: 1.5;
-}
-.ayushman-submit-status {
-    margin: 12px 0 10px;
-    font-size: 0.86rem;
-    color: #1e3a8a;
-    font-weight: 700;
-    min-height: 20px;
-}
-.ayushman-submit-progress-track {
-    width: 100%;
-    height: 6px;
-    background: #e2e8f0;
-    border-radius: 10px;
-    overflow: hidden;
-    margin-bottom: 10px;
-}
-.ayushman-submit-progress-bar {
-    height: 100%;
-    width: 8%;
-    background: linear-gradient(90deg, #1e3a8a, #0891b2);
-    border-radius: 10px;
-    transition: width 0.6s ease;
-}
-.ayushman-submit-elapsed {
-    font-size: 0.72rem;
-    color: #64748b;
-    font-weight: 600;
-    margin-bottom: 10px;
-}
-.ayush-about-card {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    box-shadow: 0 4px 18px rgba(11,60,93,0.06);
-    padding: 18px 16px;
-    margin-bottom: 20px;
-}
-.ayush-about-steps {
-    list-style: none;
-    padding: 0;
-    margin: 10px 0 0;
-    counter-reset: ayush-step;
-}
-.ayush-about-steps li {
-    counter-increment: ayush-step;
-    position: relative;
-    padding-left: 30px;
-    font-size: 0.82rem;
-    color: #475569;
-    margin-bottom: 8px;
-    line-height: 1.45;
-}
-.ayush-about-steps li::before {
-    content: counter(ayush-step);
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: #1e3a8a;
-    color: #ffffff;
-    font-size: 0.7rem;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-#btn-goto-form {
-    width: 100%;
-    margin-top: 14px;
-}
-#ayushman-main-content { display: block; }
-
-/* Responsive Styling for Mobile (< 768px) & Tablet (768px - 991px) */
-@media (max-width: 991.98px) {
-    .ayush-hero-banner { padding: 22px 0 18px; }
-    .ayush-hero-banner h1 { font-size: 1.35rem; }
-    .ayush-card-body { padding: 16px; }
-}
-
-@media (max-width: 767.98px) {
-    .ayush-hero-banner { padding: 18px 0 14px; text-align: left; }
-    .ayush-hero-banner h1 { font-size: 1.2rem; line-height: 1.35; margin: 8px 0 6px; }
-    .ayush-hero-banner .hero-subtext { font-size: 0.8rem; line-height: 1.45; }
-    .ayush-hero-badges { display: flex; flex-wrap: wrap; gap: 6px; }
-    .ayush-card-box { margin-bottom: 16px; border-radius: 10px; }
-    .ayush-card-header { padding: 10px 14px; font-size: 0.92rem; }
-    .ayush-card-body { padding: 14px 12px; }
-    
-    /* Input touch targets & font size >= 16px to prevent iOS Safari auto-zoom */
-    .form-control-gov,
-    .form-control-gov-area,
-    .input-group-addon-gov {
-        font-size: 16px !important;
-        min-height: 44px !important;
-    }
-    .form-label-gov { font-size: 0.86rem; margin-bottom: 5px; }
-    .file-upload-tile { padding: 12px 10px; min-height: 95px; }
-    
-    /* Submit button: full width, prominent height */
-    .btn-gov-submit { 
-        width: 100% !important; 
-        min-height: 48px;
-        font-size: 0.92rem !important;
-        padding: 12px 16px !important;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-}
-</style>
+<!-- Dedicated Modular Stylesheet -->
+<link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/ayushman-helpdesk.css?v=<?php echo @filemtime(__DIR__ . '/css/ayushman-helpdesk.css') ?: time(); ?>">
 
 <!-- Hero / Breadcrumb Section -->
 <section class="ayush-hero-banner">
@@ -783,7 +54,7 @@ textarea.form-control-gov-area:focus {
       <div class="col-md-4 col-sm-12 text-md-end d-none d-md-block">
         <div class="ayush-hero-side-card">
           <i class="fas fa-id-card-alt fa-3x"></i>
-          <div style="font-weight: 700; font-size: 1.05rem;">Digital Health Smart ID</div>
+          <div style="font-weight: 700; font-size: 1.05rem; margin-top: 6px;">Digital Health Smart ID</div>
           <div style="font-size: 0.8rem; opacity: 0.88;">Aadhaar Verified • Encrypted QR</div>
         </div>
       </div>
@@ -795,7 +66,7 @@ textarea.form-control-gov-area:focus {
 <div class="container" id="ayushman-main-content" style="padding-top: 24px; padding-bottom: 50px;">
 
   <!-- Quick Info & Instructions Guide Card (Collapsible, visible on all viewports) -->
-  <div class="ayush-about-card" style="border-left: 4px solid #1e3a8a; margin-bottom: 24px;">
+  <div class="ayush-about-card" style="border-left: 4px solid #1e3a8a; margin-bottom: 22px;">
     <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="toggleAyushGuide()" id="ayush-guide-header">
       <div style="display: flex; align-items: center; gap: 8px;">
         <i class="fas fa-circle-info fa-lg" style="color: #1e3a8a;"></i>
@@ -808,33 +79,25 @@ textarea.form-control-gov-area:focus {
       </button>
     </div>
     <div id="ayush-guide-body" style="display: none; margin-top: 14px; padding-top: 12px; border-top: 1px dashed #cbd5e1;">
-      <p style="font-size: 0.84rem; color: #475569; line-height: 1.55; margin: 0 0 10px;" data-hi="आयुष्मान भारत प्रधानमंत्री जन आरोग्य योजना (PM-JAY) केंद्र सरकार की विश्व की सबसे बड़ी स्वास्थ्य बीमा योजना है, जो पात्र परिवारों को प्रति वर्ष ₹5 लाख तक का कैशलेस अस्पताल उपचार कवर प्रदान करती है। यह हेल्प डेस्क नागरिकों को अपनी पहचान व दस्तावेज डिजिटल रूप से सत्यापित करने और एक सत्यापित डिजिटल हेल्थ स्मार्ट आईडी कार्ड बनाने में सहायता करता है। यह प्लेटफॉर्म आयुष्मान भारत डिजिटल मिशन (ABDM) — भारत के डिजिटल हेल्थ इकोसिस्टम — के अंतर्गत कार्य करता है।" data-en="Ayushman Bharat Pradhan Mantri Jan Arogya Yojana (PM-JAY) is the Central Government's flagship health insurance scheme — the world's largest — providing eligible families cashless hospitalization cover of up to ₹5 lakh per year. This Help Desk assists citizens in digitally verifying their identity and documents and generating a verified Digital Health Smart ID card, so they can more easily claim their health insurance benefits under this scheme. The platform operates under the Ayushman Bharat Digital Mission (ABDM) — India's digital health ecosystem.">
-        Ayushman Bharat Pradhan Mantri Jan Arogya Yojana (PM-JAY) is the Central Government's flagship health insurance scheme — the world's largest — providing eligible families cashless hospitalization cover of up to ₹5 lakh per year. This Help Desk assists citizens in digitally verifying their identity and documents and generating a verified Digital Health Smart ID card, so they can more easily claim their health insurance benefits under this scheme. The platform operates under the Ayushman Bharat Digital Mission (ABDM) — India's digital health ecosystem.
+      <p style="font-size: 0.84rem; color: #475569; line-height: 1.55; margin: 0 0 10px;" data-hi="आयुष्मान भारत प्रधानमंत्री जन आरोग्य योजना (PM-JAY) केंद्र सरकार की विश्व की सबसे बड़ी स्वास्थ्य बीमा योजना है, जो पात्र परिवारों को प्रति वर्ष ₹5 लाख तक का कैशलेस अस्पताल उपचार कवर प्रदान करती है। यह हेल्प डेस्क नागरिकों को अपनी पहचान व दस्तावेज डिजिटल रूप से सत्यापित करने और एक सत्यापित डिजिटल हेल्थ स्मार्ट आईडी कार्ड बनाने में सहायता करता है। यह प्लेटफॉर्म आयुष्मान भारत डिजिटल मिशन (ABDM) के अंतर्गत कार्य करता है।" data-en="Ayushman Bharat Pradhan Mantri Jan Arogya Yojana (PM-JAY) provides eligible families cashless hospitalization cover of up to ₹5 lakh per year. This Help Desk assists citizens in digitally verifying their identity and documents and generating an encrypted Digital Health Smart ID card under the ABDM digital health ecosystem.">
+        Ayushman Bharat Pradhan Mantri Jan Arogya Yojana (PM-JAY) provides eligible families cashless hospitalization cover of up to ₹5 lakh per year. This Help Desk assists citizens in digitally verifying their identity and documents and generating an encrypted Digital Health Smart ID card under the ABDM digital health ecosystem.
       </p>
       <h5 style="margin: 10px 0 6px; font-weight: 700; color: #1e293b; font-size: 0.86rem;" data-hi="सरल ४-चरणीय प्रक्रिया" data-en="Simple 4-Step Process">Simple 4-Step Process</h5>
       <ol class="ayush-about-steps" style="margin: 0;">
         <li data-hi="अपना १२ अंकों का आधार नंबर एवं मोबाइल नंबर दर्ज करें।" data-en="Enter your 12-digit Aadhaar number and mobile number.">Enter your 12-digit Aadhaar number and mobile number.</li>
         <li data-hi="अपना व्यक्तिगत विवरण, स्वास्थ्य आईडी एवं पता भरें।" data-en="Fill in your personal details, health IDs and address.">Fill in your personal details, health IDs and address.</li>
         <li data-hi="अपने उपलब्ध दस्तावेजों (आभा, आयुष्मान, राशन, BOCW) की स्पष्ट फोटो अपलोड करें।" data-en="Upload clear photos of your available documents (ABHA, Ayushman, Ration, BOCW).">Upload clear photos of your available documents (ABHA, Ayushman, Ration, BOCW).</li>
-        <li data-hi="सहमति स्वीकार करें और सबमिट करें — आपका एन्क्रिप्टेड स्मार्ट आईडी कार्ड १ सेकंड में तुरंत तैयार होगा।" data-en="Accept the consent and submit — your encrypted Smart ID card is generated instantly within 1 second.">Accept the consent and submit — your encrypted Smart ID card is generated instantly within 1 second.</li>
+        <li data-hi="सहमति स्वीकार करें और सबमिट करें — आपका एन्क्रिप्टेड स्मार्ट आईडी कार्ड तुरंत तैयार होकर खुलेगा।" data-en="Accept consent and submit — your encrypted Smart ID card is generated instantly within seconds.">Accept consent and submit — your encrypted Smart ID card is generated instantly within seconds.</li>
       </ol>
     </div>
   </div>
 
-  <?php if (!empty($errors)): ?>
-    <div class="alert alert-danger ayush-alert-errors">
-      <h4 style="margin: 0 0 8px; font-weight: 800;"><i class="fas fa-exclamation-triangle"></i> <span data-hi="कृपया निम्नलिखित त्रुटियों को सुधारें:" data-en="Please correct the following errors:">Please correct the following errors:</span></h4>
-      <ul style="margin: 0; padding-left: 20px;">
-        <?php foreach ($errors as $err): ?>
-          <li style="font-size: 0.92rem; margin-bottom: 4px;"><?php echo htmlspecialchars($err); ?></li>
-        <?php endforeach; ?>
-      </ul>
-    </div>
-  <?php endif; ?>
+  <!-- Dynamic Error & Alert Container (Handled by JS without reload) -->
+  <div id="ayush-alert-container" style="display: none;"></div>
 
-  <form method="POST" action="" enctype="multipart/form-data" id="ayushman-form" novalidate>
-    <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
-    <input type="hidden" name="submit_ayushman" value="1">
+  <!-- Main Application Form (AJAX target) -->
+  <form id="ayushman-form" action="<?php echo BASE_URL; ?>/api/submit_ayushman.php" method="POST" enctype="multipart/form-data" novalidate>
+    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
 
     <div class="row">
       <!-- Left Column: Form Inputs -->
@@ -849,52 +112,48 @@ textarea.form-control-gov-area:focus {
           <div class="ayush-card-body">
             <div class="row">
               <div class="col-md-7 col-sm-12">
-                <div class="form-group">
+                <div class="form-group mb-3">
                   <label class="form-label-gov" for="full_name">
                     <span data-hi="मरीज का पूरा नाम" data-en="Full Name">Full Name</span> <span class="req">*</span>
                   </label>
                   <input type="text" name="full_name" id="full_name" class="form-control form-control-gov"
-                         placeholder="e.g. Ramesh Kumar" data-hi-placeholder="जैसे: रमेश कुमार" data-en-placeholder="e.g. Ramesh Kumar"
-                         value="<?php echo htmlspecialchars($_POST['full_name'] ?? ''); ?>" required>
+                         placeholder="e.g. Ramesh Kumar" data-hi-placeholder="जैसे: रमेश कुमार" data-en-placeholder="e.g. Ramesh Kumar" required>
                   <small class="text-muted" data-hi="मरीज/नागरिक का पूरा नाम दर्ज करें।" data-en="Enter the full name of the patient/citizen.">Enter the full name of the patient/citizen.</small>
                 </div>
 
                 <div class="row">
                   <div class="col-md-6 col-sm-6">
-                    <div class="form-group">
+                    <div class="form-group mb-3">
                       <label class="form-label-gov" for="dob" data-hi="जन्म तिथि" data-en="Date of Birth">Date of Birth</label>
-                      <input type="date" name="dob" id="dob" class="form-control form-control-gov"
-                             value="<?php echo htmlspecialchars($_POST['dob'] ?? ''); ?>">
+                      <input type="date" name="dob" id="dob" class="form-control form-control-gov">
                     </div>
                   </div>
                   <div class="col-md-6 col-sm-6">
-                    <div class="form-group">
+                    <div class="form-group mb-3">
                       <label class="form-label-gov" for="gender" data-hi="लिंग" data-en="Gender">Gender</label>
                       <select name="gender" id="gender" class="form-control form-control-gov">
-                        <option value="Male" data-hi="पुरुष" data-en="Male" <?php echo (($_POST['gender'] ?? '') === 'Male') ? 'selected' : ''; ?>>Male</option>
-                        <option value="Female" data-hi="महिला" data-en="Female" <?php echo (($_POST['gender'] ?? '') === 'Female') ? 'selected' : ''; ?>>Female</option>
-                        <option value="Other" data-hi="अन्य" data-en="Other" <?php echo (($_POST['gender'] ?? '') === 'Other') ? 'selected' : ''; ?>>Other</option>
+                        <option value="Male" data-hi="पुरुष" data-en="Male">Male</option>
+                        <option value="Female" data-hi="महिला" data-en="Female">Female</option>
+                        <option value="Other" data-hi="अन्य" data-en="Other">Other</option>
                       </select>
                     </div>
                   </div>
                 </div>
 
-                <div class="form-group">
+                <div class="form-group mb-3">
                   <label class="form-label-gov" for="email">
                     <span data-hi="ईमेल आईडी" data-en="Email ID">Email ID</span> <span class="req">*</span>
                   </label>
-                  <input type="text" name="email" id="email" class="form-control form-control-gov"
-                         inputmode="email" 
-                         pattern="[^\s@]+@[^\s@]+\.[^\s@]+"
-                         placeholder="yourname@gmail.com"
-                         value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>" required>
+                  <input type="email" name="email" id="email" class="form-control form-control-gov"
+                         inputmode="email"
+                         placeholder="yourname@gmail.com" required>
                   <small class="text-muted" data-hi="सबमिशन के बाद आपका डिजिटल स्मार्ट कार्ड इसी ईमेल पर भेजा जाएगा।" data-en="Your Digital Smart Card will be sent to this email after submission.">Your Digital Smart Card will be sent to this email after submission.</small>
                 </div>
               </div>
 
-              <!-- Photo Upload Box -->
+              <!-- Photo Upload & Camera Box -->
               <div class="col-md-5 col-sm-12">
-                <div class="form-group">
+                <div class="form-group mb-3">
                   <label class="form-label-gov" data-hi="फोटो अपलोड करें" data-en="Upload Your Photo">Upload Your Photo</label>
                   <div class="file-upload-tile" id="photo-tile">
                     <input type="file" name="photo" id="photo_input" accept="image/jpeg,image/png,image/webp" onchange="previewCitizenPhoto(this)">
@@ -903,20 +162,20 @@ textarea.form-control-gov-area:focus {
                       <div class="tile-title" data-hi="पासपोर्ट फोटो चुनें या यहाँ खींचें" data-en="Choose a passport photo or drag it here">Choose a passport photo or drag it here</div>
                       <div class="tile-hint" data-hi="JPG, PNG या WEBP (अधिकतम 10MB)" data-en="JPG, PNG or WEBP (max 10MB)">JPG, PNG or WEBP (max 10MB)</div>
                     </div>
-                    <img id="photo-img-preview" src="" alt="Photo Preview" style="display:none; max-width: 110px; max-height: 120px; border-radius: 6px; border: 2px solid #0b3c5d; margin: 8px auto 4px;">
+                    <img id="photo-img-preview" src="" alt="Photo Preview" style="display:none; max-width: 110px; max-height: 120px; border-radius: 6px; border: 2px solid #0b3c5d; margin: 8px auto 4px; object-fit: cover;">
                     <div id="photo-file-name" class="file-selected-name" style="display:none;"></div>
                   </div>
 
-                  <!-- Explicit Upload / Live Camera Capture choice -->
+                  <!-- Explicit Upload / Live Camera Buttons -->
                   <div style="display: flex; gap: 8px; margin-top: 8px;">
                     <button type="button" class="btn btn-gov-outline" style="flex: 1; padding: 7px 10px; font-size: 0.82rem;" onclick="document.getElementById('photo_input').click()">
-                      <i class="fas fa-upload"></i> <span data-hi="अपलोड करें" data-en="Upload">Upload</span>
+                      <i class="fas fa-upload me-1"></i> <span data-hi="अपलोड करें" data-en="Upload">Upload</span>
                     </button>
                     <button type="button" class="btn btn-gov-outline" style="flex: 1; padding: 7px 10px; font-size: 0.82rem;" onclick="document.getElementById('photo_camera_input').click()">
-                      <i class="fas fa-camera"></i> <span data-hi="कैमरा से खींचें" data-en="Capture with Camera">Capture with Camera</span>
+                      <i class="fas fa-camera me-1"></i> <span data-hi="कैमरा से खींचें" data-en="Camera">Camera</span>
                     </button>
                   </div>
-                  <!-- Hidden input that opens the device's live camera directly (mobile) -->
+                  <!-- Camera Input -->
                   <input type="file" id="photo_camera_input" accept="image/*" capture="user" style="display:none;" onchange="captureCitizenPhotoFromCamera(this)">
                 </div>
               </div>
@@ -933,30 +192,28 @@ textarea.form-control-gov-area:focus {
           <div class="ayush-card-body">
             <div class="row align-items-center">
               <div class="col-md-6 col-sm-12">
-                <div class="form-group" style="margin-bottom: 10px;">
+                <div class="form-group mb-3">
                   <label class="form-label-gov" for="aadhaar_input">
                     <span data-hi="१२ अंकों का आधार नंबर" data-en="12-Digit Aadhaar No">12-Digit Aadhaar No</span> <span class="req">*</span>
                   </label>
                   <div class="input-group">
                     <span class="input-group-text input-group-addon-gov"><i class="fas fa-id-card"></i></span>
                     <input type="text" name="aadhaar_number" id="aadhaar_input" class="form-control form-control-gov"
-                           placeholder="XXXX XXXX XXXX" maxlength="14" autocomplete="off"
-                           pattern="[2-9][0-9]{3}\s?[0-9]{4}\s?[0-9]{4}" required>
+                           placeholder="XXXX XXXX XXXX" maxlength="14" autocomplete="off" required>
                   </div>
                   <small class="text-muted" data-hi="वैध 12 अंकों का आधार नंबर दर्ज करें।" data-en="Enter a valid 12-digit Aadhaar number.">Enter a valid 12-digit Aadhaar number.</small>
                 </div>
               </div>
 
               <div class="col-md-6 col-sm-12">
-                <div class="form-group" style="margin-bottom: 10px;">
+                <div class="form-group mb-3">
                   <label class="form-label-gov" for="mobile">
                     <span data-hi="मोबाइल नंबर" data-en="Mobile Number">Mobile Number</span> <span class="req">*</span>
                   </label>
                   <div class="input-group">
                     <span class="input-group-text input-group-addon-gov">+91</span>
                     <input type="tel" name="mobile" id="mobile" class="form-control form-control-gov"
-                           placeholder="9876543210" maxlength="10" pattern="[6-9][0-9]{9}"
-                           value="<?php echo htmlspecialchars($_POST['mobile'] ?? ''); ?>" required>
+                           placeholder="9876543210" maxlength="10" required>
                   </div>
                   <small class="text-muted" data-hi="10 अंकों का वैध मोबाइल नंबर दर्ज करें।" data-en="Enter a valid 10-digit mobile number.">Enter a valid 10-digit mobile number.</small>
                 </div>
@@ -972,107 +229,89 @@ textarea.form-control-gov-area:focus {
             <span data-hi="३. स्वास्थ्य आईडी एवं सरकारी दस्तावेज" data-en="3. Health IDs &amp; Document Uploads">3. Health IDs &amp; Document Uploads</span>
           </div>
           <div class="ayush-card-body">
-
-            <!-- Row A: ABHA Number & ABHA Card Upload -->
-            <div class="row ayush-field-group">
-              <div class="col-md-6 col-sm-12">
-                <div class="form-group">
-                  <label class="form-label-gov" for="abha_number" data-hi="१४ अंकों का आभा नंबर" data-en="14-Digit ABHA Number">14-Digit ABHA Number</label>
-                  <input type="text" name="abha_number" id="abha_number" class="form-control form-control-gov"
-                         placeholder="12-3456-7890-1234" maxlength="17"
-                         value="<?php echo htmlspecialchars($_POST['abha_number'] ?? ''); ?>">
-                  <small class="text-muted" data-hi="Ayushman Bharat Health Account (ABHA) संख्या।" data-en="Ayushman Bharat Health Account (ABHA) number.">Ayushman Bharat Health Account (ABHA) number.</small>
-                </div>
+            <!-- Row A: ABHA Number & ABHA Card -->
+            <div class="row align-items-center mb-3">
+              <div class="col-md-7 col-sm-12">
+                <label class="form-label-gov" for="abha_number" data-hi="आभा नंबर (ABHA ID)" data-en="ABHA Number (ABHA ID)">ABHA Number (ABHA ID)</label>
+                <input type="text" name="abha_number" id="abha_number" class="form-control form-control-gov" placeholder="XX-XXXX-XXXX-XXXX">
+                <small class="text-muted" data-hi="१४ अंकों का राष्ट्रीय स्वास्थ्य खाता संख्या (यदि उपलब्ध हो)।" data-en="14-digit National Health Account number (if available).">14-digit National Health Account number (if available).</small>
               </div>
-              <div class="col-md-6 col-sm-12">
-                <label class="form-label-gov" data-hi="आभा कार्ड अपलोड करें" data-en="Upload ABHA Card">Upload ABHA Card</label>
-                <div class="file-upload-tile">
-                  <input type="file" name="abha_card" accept="image/jpeg,image/png,image/webp,application/pdf" onchange="showFileName(this, 'abha-file-name')">
-                  <i class="fas fa-id-card"></i>
-                  <div class="tile-title" data-hi="आभा कार्ड चुनें (Image / PDF)" data-en="Choose ABHA Card (Image / PDF)">Choose ABHA Card (Image / PDF)</div>
+              <div class="col-md-5 col-sm-12 mt-2 mt-md-0">
+                <div class="file-upload-tile" id="abha-tile">
+                  <input type="file" name="abha_card" id="abha_input" accept="image/jpeg,image/png,image/webp,application/pdf">
+                  <i class="fas fa-id-badge fa-lg" style="color: #0b3c5d;"></i>
+                  <div class="tile-title" data-hi="आभा कार्ड अपलोड करें" data-en="Upload ABHA Card">Upload ABHA Card</div>
                   <div class="tile-hint" data-hi="अधिकतम 10MB" data-en="Max 10MB">Max 10MB</div>
                   <div id="abha-file-name" class="file-selected-name" style="display:none;"></div>
                 </div>
               </div>
             </div>
 
-            <!-- Row B: Ayushman Bharat Card Upload -->
-            <div class="row ayush-field-group">
-              <div class="col-md-12">
-                <label class="form-label-gov" data-hi="आयुष्मान भारत कार्ड अपलोड करें" data-en="Upload Ayushman Bharat Card">Upload Ayushman Bharat Card</label>
-                <div class="file-upload-tile">
-                  <input type="file" name="ayushman_card" accept="image/jpeg,image/png,image/webp,application/pdf" onchange="showFileName(this, 'ayush-card-file-name')">
-                  <i class="fas fa-heartbeat"></i>
-                  <div class="tile-title" data-hi="आयुष्मान कार्ड (PMJAY Golden Card) अपलोड करें" data-en="Upload Ayushman Card (PMJAY Golden Card)">Upload Ayushman Card (PMJAY Golden Card)</div>
-                  <div class="tile-hint" data-hi="JPG, PNG या PDF (अधिकतम 10MB)" data-en="JPG, PNG or PDF (max 10MB)">JPG, PNG or PDF (max 10MB)</div>
-                  <div id="ayush-card-file-name" class="file-selected-name" style="display:none;"></div>
+            <!-- Row B: Ayushman Card No & Card -->
+            <div class="row align-items-center mb-3">
+              <div class="col-md-7 col-sm-12">
+                <label class="form-label-gov" for="pmjay_letter_no" data-hi="आयुष्मान कार्ड संख्या / PM-JAY आईडी" data-en="Ayushman Card No / PM-JAY ID">Ayushman Card No / PM-JAY ID</label>
+                <input type="text" name="pmjay_letter_no" id="pmjay_letter_no" class="form-control form-control-gov" placeholder="e.g. PMJAY-XXXX-XXXX">
+                <small class="text-muted" data-hi="आयुष्मान भारत कार्ड नंबर या परिवार पहचान पत्र आईडी।" data-en="Ayushman Bharat card number or Family ID.">Ayushman Bharat card number or Family ID.</small>
+              </div>
+              <div class="col-md-5 col-sm-12 mt-2 mt-md-0">
+                <div class="file-upload-tile" id="ayush-tile">
+                  <input type="file" name="ayushman_card" id="ayush_card_input" accept="image/jpeg,image/png,image/webp,application/pdf">
+                  <i class="fas fa-heartbeat fa-lg" style="color: #047857;"></i>
+                  <div class="tile-title" data-hi="आयुष्मान कार्ड अपलोड करें" data-en="Upload Ayushman Card">Upload Ayushman Card</div>
+                  <div class="tile-hint" data-hi="अधिकतम 10MB" data-en="Max 10MB">Max 10MB</div>
+                  <div id="ayush-file-name" class="file-selected-name" style="display:none;"></div>
                 </div>
               </div>
             </div>
 
-            <!-- Row C: Ration Card Number & Ration Card Upload -->
-            <div class="row ayush-field-group">
-              <div class="col-md-6 col-sm-12">
-                <div class="form-group">
-                  <label class="form-label-gov" for="ration_card_no" data-hi="राशन कार्ड नंबर" data-en="Ration Card Number">Ration Card Number</label>
-                  <input type="text" name="ration_card_no" id="ration_card_no" class="form-control form-control-gov"
-                         placeholder="e.g. 072001839210" data-hi-placeholder="जैसे: 072001839210" data-en-placeholder="e.g. 072001839210"
-                         value="<?php echo htmlspecialchars($_POST['ration_card_no'] ?? ''); ?>">
-                  <small class="text-muted" data-hi="NFSA / राज्य खाद्य एवं आपूर्ति राशन कार्ड संख्या।" data-en="NFSA / State Food &amp; Supplies Ration Card number.">NFSA / State Food &amp; Supplies Ration Card number.</small>
-                </div>
+            <!-- Row C: Ration Card -->
+            <div class="row align-items-center mb-3">
+              <div class="col-md-7 col-sm-12">
+                <label class="form-label-gov" for="ration_card_no" data-hi="राशन कार्ड संख्या" data-en="Ration Card Number">Ration Card Number</label>
+                <input type="text" name="ration_card_no" id="ration_card_no" class="form-control form-control-gov" placeholder="e.g. 07100XXXXXXX">
+                <small class="text-muted" data-hi="NFSA या राज्य खाद्य सुरक्षा राशन कार्ड संख्या।" data-en="NFSA or State Food Security ration card number.">NFSA or State Food Security ration card number.</small>
               </div>
-              <div class="col-md-6 col-sm-12">
-                <label class="form-label-gov" data-hi="राशन कार्ड अपलोड करें" data-en="Upload Ration Card">Upload Ration Card</label>
-                <div class="file-upload-tile">
-                  <input type="file" name="ration_card" accept="image/jpeg,image/png,image/webp,application/pdf" onchange="showFileName(this, 'ration-file-name')">
-                  <i class="fas fa-wheat-awn"></i>
-                  <div class="tile-title" data-hi="राशन कार्ड चुनें (Image / PDF)" data-en="Choose Ration Card (Image / PDF)">Choose Ration Card (Image / PDF)</div>
+              <div class="col-md-5 col-sm-12 mt-2 mt-md-0">
+                <div class="file-upload-tile" id="ration-tile">
+                  <input type="file" name="ration_card" id="ration_input" accept="image/jpeg,image/png,image/webp,application/pdf">
+                  <i class="fas fa-utensils fa-lg" style="color: #b45309;"></i>
+                  <div class="tile-title" data-hi="राशन कार्ड अपलोड करें" data-en="Upload Ration Card">Upload Ration Card</div>
                   <div class="tile-hint" data-hi="अधिकतम 10MB" data-en="Max 10MB">Max 10MB</div>
                   <div id="ration-file-name" class="file-selected-name" style="display:none;"></div>
                 </div>
               </div>
             </div>
 
-            <!-- Row D: BOCW Registration Number & BOCW Card Upload -->
-            <div class="row ayush-field-group">
-              <div class="col-md-6 col-sm-12">
-                <div class="form-group">
-                  <label class="form-label-gov" for="bocw_reg_no" data-hi="BOCW पंजीकरण संख्या" data-en="BOCW Registration Number">BOCW Registration Number</label>
-                  <input type="text" name="bocw_reg_no" id="bocw_reg_no" class="form-control form-control-gov"
-                         placeholder="e.g. BOCW/DL/2024/91823" data-hi-placeholder="जैसे: BOCW/DL/2024/91823" data-en-placeholder="e.g. BOCW/DL/2024/91823"
-                         value="<?php echo htmlspecialchars($_POST['bocw_reg_no'] ?? ''); ?>">
-                  <small class="text-muted" data-hi="भवन एवं अन्य सन्निर्माण कर्मकार कल्याण बोर्ड / श्रमिक कार्ड संख्या।" data-en="Building &amp; Other Construction Workers Welfare Board / Labour Card number.">Building &amp; Other Construction Workers Welfare Board / Labour Card number.</small>
-                </div>
+            <!-- Row D: BOCW Card -->
+            <div class="row align-items-center mb-3">
+              <div class="col-md-7 col-sm-12">
+                <label class="form-label-gov" for="bocw_reg_no" data-hi="BOCW श्रमिक पंजीकरण संख्या" data-en="BOCW Worker Registration No">BOCW Worker Registration No</label>
+                <input type="text" name="bocw_reg_no" id="bocw_reg_no" class="form-control form-control-gov" placeholder="e.g. BOCW-DL-2024-XXXX">
+                <small class="text-muted" data-hi="भवन एवं सन्निर्माण कर्मकार कल्याण बोर्ड पंजीकरण नंबर।" data-en="Building &amp; Other Construction Workers Board number.">Building &amp; Other Construction Workers Board number.</small>
               </div>
-              <div class="col-md-6 col-sm-12">
-                <label class="form-label-gov" data-hi="BOCW / श्रमिक कार्ड अपलोड करें" data-en="Upload Labour Card">Upload Labour Card</label>
-                <div class="file-upload-tile">
-                  <input type="file" name="bocw_card" accept="image/jpeg,image/png,image/webp,application/pdf" onchange="showFileName(this, 'bocw-file-name')">
-                  <i class="fas fa-hard-hat"></i>
-                  <div class="tile-title" data-hi="BOCW / श्रमिक कार्ड चुनें (Image / PDF)" data-en="Choose BOCW / Labour Card (Image / PDF)">Choose BOCW / Labour Card (Image / PDF)</div>
+              <div class="col-md-5 col-sm-12 mt-2 mt-md-0">
+                <div class="file-upload-tile" id="bocw-tile">
+                  <input type="file" name="bocw_card" id="bocw_input" accept="image/jpeg,image/png,image/webp,application/pdf">
+                  <i class="fas fa-hard-hat fa-lg" style="color: #6d28d9;"></i>
+                  <div class="tile-title" data-hi="BOCW कार्ड अपलोड करें" data-en="Upload BOCW Card">Upload BOCW Card</div>
                   <div class="tile-hint" data-hi="अधिकतम 10MB" data-en="Max 10MB">Max 10MB</div>
                   <div id="bocw-file-name" class="file-selected-name" style="display:none;"></div>
                 </div>
               </div>
             </div>
 
-            <!-- Row E: PMJAY Letter Number & PMJAY Letter Upload -->
-            <div class="row ayush-field-group">
-              <div class="col-md-6 col-sm-12">
-                <div class="form-group">
-                  <label class="form-label-gov" for="pmjay_letter_no" data-hi="PMJAY / आयुष्मान भारत पत्र संख्या" data-en="PMJAY Letter Number">PMJAY Letter Number</label>
-                  <input type="text" name="pmjay_letter_no" id="pmjay_letter_no" class="form-control form-control-gov"
-                         placeholder="e.g. PMJAY-LTR-2024-8841" data-hi-placeholder="जैसे: PMJAY-LTR-2024-8841" data-en-placeholder="e.g. PMJAY-LTR-2024-8841"
-                         value="<?php echo htmlspecialchars($_POST['pmjay_letter_no'] ?? ''); ?>">
-                  <small class="text-muted" data-hi="प्रधानमंत्री जन आरोग्य योजना पत्र / संदर्भ संख्या।" data-en="Pradhan Mantri Jan Arogya Yojana letter / reference number.">Pradhan Mantri Jan Arogya Yojana letter / reference number.</small>
-                </div>
+            <!-- Row E: PM-JAY Family Letter -->
+            <div class="row align-items-center">
+              <div class="col-md-7 col-sm-12">
+                <label class="form-label-gov" data-hi="PM-JAY सरकारी पत्र / HH ID" data-en="PM-JAY Family Letter / HH ID">PM-JAY Family Letter / HH ID</label>
+                <p class="text-muted small mb-0" data-hi="प्रधानमंत्री का पत्र या परिवार पहचान पत्र संलग्न करें।" data-en="Attach Prime Minister letter or Ayushman identification letter.">Attach Prime Minister letter or Ayushman identification letter.</p>
               </div>
-              <div class="col-md-6 col-sm-12">
-                <label class="form-label-gov" data-hi="PMJAY पत्र अपलोड करें" data-en="Upload Ayushman Bharat Letter">Upload Ayushman Bharat Letter</label>
-                <div class="file-upload-tile">
-                  <input type="file" name="pmjay_letter" accept="image/jpeg,image/png,image/webp,application/pdf" onchange="showFileName(this, 'pmjay-file-name')">
-                  <i class="fas fa-envelope-open-text"></i>
-                  <div class="tile-title" data-hi="PMJAY पत्र चुनें (Image / PDF)" data-en="Choose PMJAY Letter (Image / PDF)">Choose PMJAY Letter (Image / PDF)</div>
+              <div class="col-md-5 col-sm-12 mt-2 mt-md-0">
+                <div class="file-upload-tile" id="pmjay-tile">
+                  <input type="file" name="pmjay_letter" id="pmjay_input" accept="image/jpeg,image/png,image/webp,application/pdf">
+                  <i class="fas fa-envelope-open-text fa-lg" style="color: #0369a1;"></i>
+                  <div class="tile-title" data-hi="सरकारी पत्र अपलोड करें" data-en="Upload PMJAY Letter">Upload PMJAY Letter</div>
                   <div class="tile-hint" data-hi="अधिकतम 10MB" data-en="Max 10MB">Max 10MB</div>
                   <div id="pmjay-file-name" class="file-selected-name" style="display:none;"></div>
                 </div>
@@ -1089,27 +328,27 @@ textarea.form-control-gov-area:focus {
             <span data-hi="४. नागरिक का स्थायी / वर्तमान पता" data-en="4. Residential Address">4. Residential Address</span>
           </div>
           <div class="ayush-card-body">
-            <div class="form-group">
+            <div class="form-group mb-3">
               <label class="form-label-gov" for="address" data-hi="मकान / ग्राम / गली का पूरा पता" data-en="Full Address">Full Address</label>
-              <textarea name="address" id="address" rows="2" class="form-control form-control-gov-area" placeholder="House No, Street / Mohalla, Ward / Gram Panchayat..." data-hi-placeholder="मकान नं, गली / मोहल्ला, वार्ड / ग्राम पंचायत..." data-en-placeholder="House No, Street / Mohalla, Ward / Gram Panchayat..."><?php echo htmlspecialchars($_POST['address'] ?? ''); ?></textarea>
+              <textarea name="address" id="address" rows="2" class="form-control form-control-gov-area" placeholder="House No, Street / Mohalla, Ward / Gram Panchayat..." data-hi-placeholder="मकान नं, गली / मोहल्ला, वार्ड / ग्राम पंचायत..." data-en-placeholder="House No, Street / Mohalla, Ward / Gram Panchayat..."></textarea>
             </div>
             <div class="row">
               <div class="col-md-4 col-sm-4">
-                <div class="form-group">
+                <div class="form-group mb-2">
                   <label class="form-label-gov" for="state" data-hi="राज्य" data-en="State">State</label>
-                  <input type="text" name="state" id="state" class="form-control form-control-gov" placeholder="e.g. Delhi / Uttar Pradesh" value="<?php echo htmlspecialchars($_POST['state'] ?? ''); ?>">
+                  <input type="text" name="state" id="state" class="form-control form-control-gov" placeholder="e.g. Delhi / Uttar Pradesh">
                 </div>
               </div>
               <div class="col-md-4 col-sm-4">
-                <div class="form-group">
+                <div class="form-group mb-2">
                   <label class="form-label-gov" for="district" data-hi="जिला" data-en="District">District</label>
-                  <input type="text" name="district" id="district" class="form-control form-control-gov" placeholder="e.g. Central Delhi" value="<?php echo htmlspecialchars($_POST['district'] ?? ''); ?>">
+                  <input type="text" name="district" id="district" class="form-control form-control-gov" placeholder="e.g. Central Delhi">
                 </div>
               </div>
               <div class="col-md-4 col-sm-4">
-                <div class="form-group">
+                <div class="form-group mb-2">
                   <label class="form-label-gov" for="pincode" data-hi="पिनकोड" data-en="Pincode">Pincode</label>
-                  <input type="text" name="pincode" id="pincode" maxlength="6" class="form-control form-control-gov" placeholder="110001" value="<?php echo htmlspecialchars($_POST['pincode'] ?? ''); ?>">
+                  <input type="text" name="pincode" id="pincode" maxlength="6" class="form-control form-control-gov" placeholder="110001">
                 </div>
               </div>
             </div>
@@ -1124,20 +363,20 @@ textarea.form-control-gov-area:focus {
           </div>
           <div class="ayush-card-body">
             <div class="form-check" style="margin-top: 0; padding-left: 1.6em;">
-              <input type="checkbox" class="form-check-input" name="consent_accepted" id="consent_accepted" value="1" <?php echo (!empty($_POST['consent_accepted']) || !isset($_POST['submit_ayushman'])) ? 'checked' : ''; ?> required>
-              <label class="form-check-label" for="consent_accepted" style="font-weight: 600; color: #1e293b; font-size: 0.94rem; line-height: 1.6;" data-hi="मैं स्वेच्छा से अपनी दी गई जानकारी और अपलोड किए गए दस्तावेज़—आभा कार्ड, आयुष्मान भारत कार्ड, राशन कार्ड, BOCW कार्ड और PMJAY / आयुष्मान भारत पत्र—की प्रतियों को विवरण मिलान और Digital Health Smart ID तैयार करने के लिए उपयोग करने की सहमति देता/देती हूँ। मुझे ज्ञात है कि यह एक निजी डेटा फॉर्मेटिंग सेवा है। मेरे द्वारा दी गई जानकारी की सत्यता की जिम्मेदारी मेरी है।" data-en="I voluntarily consent to the use of my submitted information and uploaded documents—ABHA Card, Ayushman Bharat Card, Ration Card, BOCW Card and PMJAY / Ayushman Bharat Letter—for checking the submitted details and preparing my Digital Health Smart ID. I understand that this is a private data formatting service. I am responsible for the accuracy of the information I provide.">
-                I voluntarily consent to the use of my submitted information and uploaded documents—ABHA Card, Ayushman Bharat Card, Ration Card, BOCW Card and PMJAY / Ayushman Bharat Letter—for checking the submitted details and preparing my Digital Health Smart ID. I understand that this is a private data formatting service. I am responsible for the accuracy of the information I provide.
+              <input type="checkbox" class="form-check-input" name="consent_accepted" id="consent_accepted" value="1" checked required>
+              <label class="form-check-label" for="consent_accepted" style="font-weight: 600; color: #1e293b; font-size: 0.92rem; line-height: 1.6;" data-hi="मैं स्वेच्छा से अपनी दी गई जानकारी और अपलोड किए गए दस्तावेज़—आभा कार्ड, आयुष्मान भारत कार्ड, राशन कार्ड, BOCW कार्ड और PMJAY पत्र—की प्रतियों को विवरण मिलान और Digital Health Smart ID तैयार करने के लिए उपयोग करने की सहमति देता/देती हूँ। मुझे ज्ञात है कि यह एक निजी डेटा फॉर्मेटिंग सेवा है। मेरे द्वारा दी गई जानकारी की सत्यता की जिम्मेदारी मेरी है।" data-en="I voluntarily consent to the use of my submitted information and uploaded documents—ABHA Card, Ayushman Bharat Card, Ration Card, BOCW Card and PMJAY Letter—for checking the submitted details and preparing my Digital Health Smart ID. I understand that this is a private data formatting service. I am responsible for the accuracy of the information I provide.">
+                I voluntarily consent to the use of my submitted information and uploaded documents—ABHA Card, Ayushman Bharat Card, Ration Card, BOCW Card and PMJAY Letter—for checking the submitted details and preparing my Digital Health Smart ID. I understand that this is a private data formatting service. I am responsible for the accuracy of the information I provide.
               </label>
             </div>
           </div>
         </div>
 
         <!-- Submit Button -->
-        <div class="text-center" style="margin-top: 28px; margin-bottom: 20px;">
+        <div class="text-center" style="margin-top: 24px; margin-bottom: 20px;">
           <button type="submit" id="btn-submit-main" class="btn btn-gov-submit">
-            <i class="fas fa-check-double"></i> <span data-hi="सबमिट करें एवं डिजिटल हेल्थ स्मार्ट आईडी कार्ड जनरेट करें" data-en="Submit &amp; Generate Digital Health Smart ID Card">Submit &amp; Generate Digital Health Smart ID Card</span>
+            <i class="fas fa-check-double me-2"></i> <span data-hi="सबमिट करें एवं डिजिटल हेल्थ स्मार्ट आईडी कार्ड जनरेट करें" data-en="Submit &amp; Generate Digital Health Smart ID Card">Submit &amp; Generate Digital Health Smart ID Card</span>
           </button>
-          <div style="font-size: 0.82rem; color: #64748b; margin-top: 8px;">
+          <div style="font-size: 0.82rem; color: #64748b; margin-top: 10px;">
             <i class="fas fa-lock" style="color: #10b981;"></i> 256-Bit Military Grade Encrypted • UIDAI Aadhaar Verification • NHA Facilitation
           </div>
         </div>
@@ -1152,7 +391,7 @@ textarea.form-control-gov-area:focus {
           <div class="ayush-card-box" style="border-top: 4px solid #10b981;">
             <div class="ayush-card-body">
               <div style="text-align: center; margin-bottom: 10px;">
-                <i class="fas fa-circle-info fa-2x ayush-side-icon"></i>
+                <i class="fas fa-circle-info fa-2x" style="color: #10b981;"></i>
                 <h4 class="ayush-side-title" style="font-size: 0.95rem;" data-hi="आयुष्मान हेल्प डेस्क के बारे में" data-en="About Ayushman Help Desk">About Ayushman Help Desk</h4>
                 <span class="security-encrypted-badge">DPDP Act 2023 Compliant</span>
               </div>
@@ -1164,25 +403,25 @@ textarea.form-control-gov-area:focus {
                 <li data-hi="अपना १२ अंकों का आधार नंबर एवं मोबाइल नंबर दर्ज करें।" data-en="Enter your 12-digit Aadhaar number and mobile number.">Enter your 12-digit Aadhaar number and mobile number.</li>
                 <li data-hi="अपना व्यक्तिगत विवरण, स्वास्थ्य आईडी एवं पता भरें।" data-en="Fill in your personal details, health IDs and address.">Fill in your personal details, health IDs and address.</li>
                 <li data-hi="अपने उपलब्ध दस्तावेजों की स्पष्ट फोटो अपलोड करें (अधिकतम 10MB)।" data-en="Upload clear photos of your available documents (max 10MB).">Upload clear photos of your available documents (max 10MB).</li>
-                <li data-hi="सहमति स्वीकार करें और सबमिट करें — कार्ड तुरंत ईमेल पर भेजा जाएगा।" data-en="Accept the consent and submit — the card is emailed to you instantly.">Accept the consent and submit — the card is emailed to you instantly.</li>
+                <li data-hi="सहमति स्वीकार करें और सबमिट करें — कार्ड तुरंत तैयार होकर ईमेल पर भेजा जाएगा।" data-en="Accept the consent and submit — the card is generated instantly and emailed.">Accept the consent and submit — the card is generated instantly and emailed.</li>
               </ol>
             </div>
           </div>
 
           <!-- Helpline Card -->
-          <div class="ayush-card-box ayush-helpline-card" style="background: #f8fafc;">
+          <div class="ayush-card-box ayush-helpline-card">
             <div class="ayush-card-body">
               <h5 class="helpline-title" style="font-weight: 700; color: #1e3a8a; margin-top: 0;">
-                <i class="fas fa-headset"></i> <span data-hi="सहायता एवं संपर्क केंद्र" data-en="Help &amp; Contact Centre">Help &amp; Contact Centre</span>
+                <i class="fas fa-headset me-2 text-warning"></i><span data-hi="सहायता एवं संपर्क केंद्र" data-en="Help &amp; Contact Centre">Help &amp; Contact Centre</span>
               </h5>
               <p style="font-size: 0.84rem; color: #64748b; margin-bottom: 10px;" data-hi="किसी भी तकनीकी सहायता या जानकारी के लिए हमारे आधिकारिक हेल्पलाइन पर संपर्क करें:" data-en="For any technical assistance or information, contact our official helpline:">
                 For any technical assistance or information, contact our official helpline:
               </p>
-              <div class="helpline-number" style="font-size: 1rem; font-weight: 800; color: #1e3a8a;">
-                <i class="fas fa-phone-alt"></i> <?php echo defined('HELPLINE_NUMBER') ? HELPLINE_NUMBER : '1800-11-2026'; ?>
+              <div class="helpline-number">
+                <i class="fas fa-phone-alt me-2 text-success"></i><?php echo defined('HELPLINE_NUMBER') ? HELPLINE_NUMBER : '1800-11-2026'; ?>
               </div>
-              <div class="helpline-email" style="font-size: 0.85rem; color: #475569; margin-top: 4px;">
-                <i class="fas fa-envelope"></i> <?php echo defined('SUPPORT_EMAIL') ? SUPPORT_EMAIL : 'support@citizenportal.facilitator.in'; ?>
+              <div class="helpline-email" style="font-size: 0.85rem; color: #475569; margin-top: 6px;">
+                <i class="fas fa-envelope me-2 text-info"></i><?php echo defined('SUPPORT_EMAIL') ? SUPPORT_EMAIL : 'support@citizenportal.facilitator.in'; ?>
               </div>
             </div>
           </div>
@@ -1193,8 +432,8 @@ textarea.form-control-gov-area:focus {
   </form>
 </div>
 
-<!-- Submission Loader Overlay: shown from form submit until the server redirects to the card page -->
-<div id="ayushman-submit-overlay" class="ayushman-submit-overlay" style="display:none;">
+<!-- Submission Progress Modal Overlay -->
+<div id="ayushman-submit-overlay" class="ayushman-submit-overlay">
   <div class="ayushman-submit-box">
     <div class="ayushman-submit-spinner"></div>
     <h4 data-hi="आवेदन सबमिट किया जा रहा है..." data-en="Submitting your application...">Submitting your application...</h4>
@@ -1203,187 +442,16 @@ textarea.form-control-gov-area:focus {
     </div>
     <div class="ayushman-submit-status" id="ayushman-submit-status">Uploading your details...</div>
     <div class="ayushman-submit-elapsed" id="ayushman-submit-elapsed">0s</div>
-    <p data-hi="कृपया प्रतीक्षा करें, इसमें कुछ समय लग सकता है। पेज को बंद न करें, रीफ्रेश न करें और 'वापस' बटन न दबाएं।" data-en="Please wait, this may take a moment. Do not close this page, refresh, or press the back button.">Please wait, this may take a moment. Do not close this page, refresh, or press the back button.</p>
+    <p data-hi="कृपया प्रतीक्षा करें, आपका स्मार्ट कार्ड तैयार हो रहा है। पेज को बंद न करें।" data-en="Please wait, your Smart ID Card is being generated. Do not close this page.">Please wait, your Smart ID Card is being generated. Do not close this page.</p>
   </div>
 </div>
 
-<!-- Scripts for Dynamic File Preview -->
+<!-- Global JS Variable for Base URL -->
 <script>
-// Show the submission loader as soon as the form is actually being sent to the
-// server, and keep it up (with a "don't go back" warning) until the server's
-// redirect replaces this page — covers the DB write + file uploads + email send.
-(function() {
-  const form = document.getElementById('ayushman-form');
-  const overlay = document.getElementById('ayushman-submit-overlay');
-  const submitBtn = document.getElementById('btn-submit-main');
-  const progressBar = document.getElementById('ayushman-submit-progress-bar');
-  const statusText = document.getElementById('ayushman-submit-status');
-  const elapsedText = document.getElementById('ayushman-submit-elapsed');
-
-  // Submitting responds in < 1 second. Fast visual progress indicator.
-  const steps = [
-    { at: 0, pct: 45, en: 'Uploading details & generating Smart ID...', hi: 'विवरण अपलोड एवं स्मार्ट आईडी कार्ड तैयार हो रहा है...' },
-    { at: 1, pct: 85, en: 'Encrypting QR & preparing smart card...', hi: 'एन्क्रिप्टेड क्यूआर एवं कार्ड तैयार किया जा रहा है...' },
-    { at: 3, pct: 95, en: 'Finalizing and redirecting to your card...', hi: 'अंतिम रूप दिया जा रहा है...' }
-  ];
-  let elapsedSeconds = 0;
-  let progressTimer = null;
-
-  function startProgressSimulation() {
-    const currentLang = (document.documentElement.getAttribute('lang') === 'hi') ? 'hi' : 'en';
-    if (progressBar) progressBar.style.width = '50%';
-    if (statusText) statusText.innerText = steps[0][currentLang] || steps[0].en;
-    progressTimer = setInterval(function() {
-      elapsedSeconds++;
-      if (elapsedText) elapsedText.innerText = elapsedSeconds + 's';
-      let active = steps[0];
-      for (const step of steps) {
-        if (elapsedSeconds >= step.at) active = step;
-      }
-      if (progressBar) progressBar.style.width = active.pct + '%';
-      if (statusText) statusText.innerText = active[currentLang] || active.en;
-    }, 1000);
-  }
-
-  if (form && overlay && submitBtn) {
-    form.addEventListener('submit', function() {
-      // Let the browser's own required-field validation run first
-      if (!form.checkValidity()) {
-        return;
-      }
-      overlay.style.display = 'flex';
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin me-2"></i> Generating Smart ID Card...';
-      startProgressSimulation();
-    });
-  }
-
-  // Warn if the citizen tries to leave/refresh while a submission is in flight
-  window.addEventListener('beforeunload', function(e) {
-    if (overlay && overlay.style.display === 'flex') {
-      e.preventDefault();
-      e.returnValue = '';
-    }
-  });
-})();
-
-// Toggle function for the collapsible Quick Guide at the top
-function toggleAyushGuide() {
-  const body = document.getElementById('ayush-guide-body');
-  const icon = document.getElementById('guide-toggle-icon');
-  const txt = document.getElementById('guide-toggle-txt');
-  if (!body) return;
-  const isHidden = (body.style.display === 'none' || !body.style.display);
-  body.style.display = isHidden ? 'block' : 'none';
-  if (icon) icon.className = isHidden ? 'fas fa-chevron-up ms-1' : 'fas fa-chevron-down ms-1';
-  if (txt) {
-    const isHi = (document.documentElement.getAttribute('lang') === 'hi');
-    txt.innerText = isHidden ? (isHi ? 'विवरण छिपाएं' : 'Hide Details') : (isHi ? 'विवरण देखें' : 'View Details');
-  }
-}
-
-// Live Image Preview for Citizen Photo
-function previewCitizenPhoto(input) {
-  if (input.files && input.files[0]) {
-    const file = input.files[0];
-    if (file.size > 10 * 1024 * 1024) {
-      alert("फोटो का आकार 10MB से अधिक नहीं होना चाहिए!");
-      input.value = "";
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      document.getElementById('photo-img-preview').src = e.target.result;
-      document.getElementById('photo-img-preview').style.display = 'block';
-      document.getElementById('photo-preview-wrap').style.display = 'none';
-      document.getElementById('photo-file-name').innerText = file.name + ' (' + (file.size / 1024).toFixed(1) + ' KB)';
-      document.getElementById('photo-file-name').style.display = 'block';
-    }
-    reader.readAsDataURL(file);
-  }
-}
-
-// Live Camera Capture: move the captured photo into the real #photo_input
-// (which is what actually submits with the form) and reuse the same preview logic.
-function captureCitizenPhotoFromCamera(cameraInput) {
-  if (!cameraInput.files || !cameraInput.files[0]) return;
-  const capturedFile = cameraInput.files[0];
-  const photoInput = document.getElementById('photo_input');
-
-  try {
-    const dataTransfer = new DataTransfer();
-    dataTransfer.items.add(capturedFile);
-    photoInput.files = dataTransfer.files;
-  } catch (e) {
-    alert("इस ब्राउज़र में लाइव कैमरा कैप्चर समर्थित नहीं है। कृपया 'Upload' बटन से फोटो चुनें। (Live camera capture isn't supported in this browser — please use 'Upload' instead.)");
-    return;
-  }
-
-  previewCitizenPhoto(photoInput);
-  cameraInput.value = ""; // reset so the same camera button can be used again
-}
-
-// Show selected file name for document inputs
-function showFileName(input, targetId) {
-  if (input.files && input.files[0]) {
-    const file = input.files[0];
-    if (file.size > 10 * 1024 * 1024) {
-      alert("दस्तावेज का आकार 10MB से अधिक नहीं होना चाहिए!");
-      input.value = "";
-      return;
-    }
-    const target = document.getElementById(targetId);
-    if (target) {
-      target.innerText = '✓ ' + file.name + ' (' + (file.size / 1024).toFixed(1) + ' KB)';
-      target.style.display = 'block';
-    }
-  }
-}
-
-// Format Aadhaar number input with spaces: XXXX XXXX XXXX
-(function() {
-  const aadhaarInput = document.getElementById('aadhaar_input');
-  if (aadhaarInput) {
-    aadhaarInput.addEventListener('input', function() {
-      let val = this.value.replace(/\D/g, '').substring(0, 12);
-      let formatted = val.match(/.{1,4}/g)?.join(' ') || val;
-      this.value = formatted;
-    });
-  }
-})();
+window.BASE_URL = <?php echo json_encode(BASE_URL); ?>;
 </script>
 
-<!-- Language Switcher (default: English) -->
-<script>
-(function () {
-  function applyLang(lang) {
-    document.querySelectorAll('[data-hi][data-en]').forEach(function (el) {
-      el.textContent = (lang === 'hi') ? el.getAttribute('data-hi') : el.getAttribute('data-en');
-    });
-    document.querySelectorAll('[data-hi-placeholder][data-en-placeholder]').forEach(function (el) {
-      el.setAttribute('placeholder', (lang === 'hi') ? el.getAttribute('data-hi-placeholder') : el.getAttribute('data-en-placeholder'));
-    });
-    document.querySelectorAll('.lang-toggle-btn').forEach(function (btn) {
-      btn.classList.toggle('active', btn.getAttribute('data-lang-val') === lang);
-    });
-    document.documentElement.setAttribute('lang', (lang === 'hi') ? 'hi' : 'en');
-    try { localStorage.setItem('ayush_lang', lang); } catch (e) {}
-  }
-
-  var savedLang = 'en';
-  try { savedLang = localStorage.getItem('ayush_lang') || 'en'; } catch (e) {}
-
-  document.addEventListener('DOMContentLoaded', function () {
-    if (savedLang === 'hi') {
-      applyLang('hi');
-    }
-    document.querySelectorAll('.lang-toggle-btn').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        applyLang(btn.getAttribute('data-lang-val'));
-      });
-    });
-  });
-})();
-</script>
+<!-- Dedicated Modular Client Script -->
+<script src="<?php echo BASE_URL; ?>/js/ayushman-helpdesk.js?v=<?php echo @filemtime(__DIR__ . '/js/ayushman-helpdesk.js') ?: time(); ?>"></script>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>

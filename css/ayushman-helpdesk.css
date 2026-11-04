@@ -1,0 +1,472 @@
+/**
+ * css/ayushman-helpdesk.css
+ * Ayushman Bharat Help Desk & Digital Health Smart ID
+ * Modular stylesheet: Clean Light Theme, Government Portal Aesthetic & Full Mobile Responsiveness
+ */
+
+/* Hero Banner */
+.ayush-hero-banner {
+    background: linear-gradient(135deg, #0b3c5d 0%, #1e3a8a 50%, #047857 100%);
+    color: #ffffff;
+    padding: 30px 0 24px;
+    position: relative;
+    border-bottom: 3px solid #f59e0b;
+}
+.ayush-hero-banner .breadcrumb {
+    background: transparent;
+    padding: 0;
+    margin-bottom: 12px;
+    font-size: 0.85rem;
+}
+.ayush-hero-banner .breadcrumb a {
+    color: #fde047;
+    text-decoration: none;
+    font-weight: 600;
+}
+.ayush-hero-banner .breadcrumb .active {
+    color: #e2e8f0;
+}
+.ayush-hero-badges {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+.badge-gov-saffron {
+    background: #ea580c;
+    color: #ffffff;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+.security-encrypted-badge {
+    background: #065f46;
+    color: #a7f3d0;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    border: 1px solid #10b981;
+}
+.ayush-hero-banner h1 {
+    font-size: 1.65rem;
+    font-weight: 800;
+    margin: 6px 0 8px;
+    color: #ffffff;
+    letter-spacing: -0.2px;
+}
+.ayush-hero-banner .hero-subtext {
+    font-size: 0.88rem;
+    color: #e2e8f0;
+    line-height: 1.5;
+    max-width: 780px;
+    margin: 0;
+}
+.ayush-hero-side-card {
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 12px;
+    padding: 16px 20px;
+    text-align: center;
+    color: #ffffff;
+}
+
+/* Bilingual Language Switcher */
+.ayush-lang-switch {
+    position: absolute;
+    top: 16px;
+    right: 20px;
+    z-index: 10;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 30px;
+    padding: 2px;
+    display: inline-flex;
+}
+.lang-toggle-btn {
+    border: none;
+    background: transparent;
+    color: #ffffff;
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 5px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.lang-toggle-btn.active {
+    background: #ffffff;
+    color: #0b3c5d;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* Main Cards */
+.ayush-card-box {
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 3px 12px rgba(11, 60, 93, 0.05);
+    margin-bottom: 22px;
+    overflow: hidden;
+    transition: box-shadow 0.2s;
+}
+.ayush-card-box:hover {
+    box-shadow: 0 6px 18px rgba(11, 60, 93, 0.08);
+}
+.ayush-card-header {
+    background: #f1f5f9;
+    border-bottom: 1.5px solid #e2e8f0;
+    padding: 12px 18px;
+    font-weight: 700;
+    font-size: 0.98rem;
+    color: #0b3c5d;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.ayush-card-header.header-success {
+    background: #ecfdf5;
+    border-bottom-color: #a7f3d0;
+    color: #065f46;
+}
+.ayush-card-header.header-warning {
+    background: #fffbeb;
+    border-bottom-color: #fde68a;
+    color: #92400e;
+}
+.ayush-card-body {
+    padding: 20px;
+}
+
+/* Form Controls */
+.form-label-gov {
+    font-weight: 700;
+    font-size: 0.88rem;
+    color: #1e293b;
+    margin-bottom: 6px;
+    display: block;
+}
+.form-label-gov .req {
+    color: #dc2626;
+    font-weight: 800;
+}
+.form-control-gov {
+    border: 1.5px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 9px 12px;
+    font-size: 0.9rem;
+    color: #0f172a;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    background: #ffffff;
+    height: auto;
+}
+.form-control-gov:focus {
+    border-color: #0284c7;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+}
+.form-control-gov-area {
+    border: 1.5px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    width: 100%;
+}
+.input-group-addon-gov {
+    background: #f8fafc;
+    border: 1.5px solid #cbd5e1;
+    color: #475569;
+    font-weight: 700;
+}
+
+/* File Upload Tiles */
+.file-upload-tile {
+    border: 2px dashed #94a3b8;
+    border-radius: 8px;
+    padding: 14px 10px;
+    text-align: center;
+    background: #f8fafc;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    min-height: 100px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+.file-upload-tile:hover, .file-upload-tile.drag-over {
+    border-color: #0284c7;
+    background: #f0f9ff;
+}
+.file-upload-tile.has-file {
+    border-color: #10b981;
+    background: #ecfdf5;
+}
+.file-upload-tile input[type="file"] {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 5;
+}
+.tile-title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #0b3c5d;
+    margin-top: 6px;
+}
+.tile-hint {
+    font-size: 0.72rem;
+    color: #64748b;
+    margin-top: 2px;
+}
+.file-selected-name {
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: #065f46;
+    background: #d1fae5;
+    padding: 3px 8px;
+    border-radius: 4px;
+    margin-top: 6px;
+    word-break: break-all;
+    border: 1px solid #10b981;
+}
+
+/* Action Buttons */
+.btn-gov-outline {
+    background: #ffffff;
+    color: #1e3a8a;
+    border: 1.5px solid #1e3a8a;
+    font-weight: 600;
+    font-size: 0.82rem;
+    padding: 7px 14px;
+    border-radius: 6px;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+.btn-gov-outline:hover {
+    background: #1e3a8a;
+    color: #ffffff;
+}
+.btn-gov-submit {
+    background: linear-gradient(135deg, #047857 0%, #10b981 100%);
+    color: #ffffff;
+    font-size: 1rem;
+    font-weight: 700;
+    padding: 13px 32px;
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 4px 14px rgba(22, 163, 74, 0.35);
+    transition: all 0.2s;
+    letter-spacing: 0.2px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.btn-gov-submit:hover:not(:disabled) {
+    background: linear-gradient(135deg, #047857 0%, #047857 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(22, 163, 74, 0.45);
+    color: #ffffff;
+}
+.btn-gov-submit:disabled {
+    opacity: 0.75;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* About / Instructions Guide Card */
+.ayush-about-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 4px 18px rgba(11, 60, 93, 0.06);
+    padding: 16px 18px;
+    margin-bottom: 22px;
+}
+.ayush-about-steps {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0 0;
+    counter-reset: ayush-step;
+}
+.ayush-about-steps li {
+    counter-increment: ayush-step;
+    position: relative;
+    padding-left: 32px;
+    font-size: 0.83rem;
+    color: #475569;
+    margin-bottom: 8px;
+    line-height: 1.45;
+}
+.ayush-about-steps li::before {
+    content: counter(ayush-step);
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #1e3a8a;
+    color: #ffffff;
+    font-size: 0.72rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Sidebar & Sticky Helpline */
+.ayush-sidebar-sticky {
+    position: sticky;
+    top: 20px;
+}
+.ayush-side-title {
+    font-weight: 800;
+    color: #047857;
+    margin-top: 8px;
+    margin-bottom: 4px;
+}
+.ayush-helpline-card {
+    background: #f8fafc;
+}
+.ayush-helpline-card .helpline-number {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #1e3a8a;
+}
+
+/* Submission Progress Modal Overlay */
+.ayushman-submit-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.82);
+    z-index: 99999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    backdrop-filter: blur(4px);
+}
+.ayushman-submit-box {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 30px 24px;
+    max-width: 380px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
+}
+.ayushman-submit-spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid #e2e8f0;
+    border-top-color: #047857;
+    border-radius: 50%;
+    margin: 0 auto 16px;
+    animation: ayushSpin 0.75s linear infinite;
+}
+@keyframes ayushSpin {
+    to { transform: rotate(360deg); }
+}
+.ayushman-submit-box h4 {
+    margin: 0 0 8px;
+    font-weight: 800;
+    color: #1e293b;
+    font-size: 1.05rem;
+}
+.ayushman-submit-progress-track {
+    width: 100%;
+    height: 8px;
+    background: #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 14px 0 10px;
+}
+.ayushman-submit-progress-bar {
+    height: 100%;
+    width: 10%;
+    background: linear-gradient(90deg, #1e3a8a, #10b981);
+    border-radius: 10px;
+    transition: width 0.3s ease;
+}
+.ayushman-submit-status {
+    margin: 8px 0 12px;
+    font-size: 0.86rem;
+    color: #0b3c5d;
+    font-weight: 700;
+    min-height: 20px;
+}
+.ayushman-submit-elapsed {
+    font-size: 0.75rem;
+    color: #64748b;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+.ayushman-submit-box p {
+    margin: 0;
+    font-size: 0.8rem;
+    color: #b91c1c;
+    font-weight: 600;
+    line-height: 1.45;
+}
+
+/* Alert Container */
+.ayush-alert-errors {
+    border-radius: 10px;
+    border-left: 5px solid #dc2626;
+    box-shadow: 0 4px 14px rgba(220, 38, 38, 0.12);
+    margin-bottom: 22px;
+    padding: 16px;
+}
+
+/* Mobile & Tablet Responsiveness */
+@media (max-width: 991.98px) {
+    .ayush-hero-banner { padding: 22px 0 18px; }
+    .ayush-hero-banner h1 { font-size: 1.35rem; }
+    .ayush-card-body { padding: 16px; }
+}
+
+@media (max-width: 767.98px) {
+    .ayush-hero-banner { padding: 18px 0 14px; text-align: left; }
+    .ayush-hero-banner h1 { font-size: 1.2rem; line-height: 1.35; margin: 8px 0 6px; }
+    .ayush-hero-banner .hero-subtext { font-size: 0.8rem; line-height: 1.45; }
+    .ayush-hero-badges { display: flex; flex-wrap: wrap; gap: 6px; }
+    .ayush-lang-switch { top: 12px; right: 12px; }
+    .ayush-card-box { margin-bottom: 16px; border-radius: 10px; }
+    .ayush-card-header { padding: 10px 14px; font-size: 0.92rem; }
+    .ayush-card-body { padding: 14px 12px; }
+    
+    /* 16px font-size prevents iOS Safari auto-zooming */
+    .form-control-gov,
+    .form-control-gov-area,
+    .input-group-addon-gov {
+        font-size: 16px !important;
+        min-height: 44px !important;
+    }
+    .form-label-gov { font-size: 0.86rem; margin-bottom: 5px; }
+    .file-upload-tile { padding: 12px 10px; min-height: 95px; }
+    
+    .btn-gov-submit { 
+        width: 100% !important; 
+        min-height: 48px;
+        font-size: 0.94rem !important;
+        padding: 12px 16px !important;
+    }
+}
