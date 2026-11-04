@@ -186,6 +186,26 @@ include __DIR__ . '/includes/header.php';
     font-family: monospace;
     letter-spacing: 1px;
 }
+.card-insurance-tag {
+    background: #ecfdf5;
+    border: 1px solid #10b981;
+    color: #065f46;
+    border-radius: 5px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    margin-top: 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    max-width: 100%;
+}
+.card-eligibility-badge {
+    font-size: 0.68rem;
+    color: #4ade80;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+}
 .card-qr-col {
     width: 105px;
     text-align: center;
@@ -735,6 +755,27 @@ include __DIR__ . '/includes/header.php';
         letter-spacing: 0.2pt !important;
         line-height: 1.1 !important;
     }
+    .card-insurance-tag {
+        background: #ecfdf5 !important;
+        border: 0.3pt solid #10b981 !important;
+        color: #065f46 !important;
+        border-radius: 0.6mm !important;
+        font-size: 3.5pt !important;
+        font-weight: 700 !important;
+        padding: 0.3mm 0.8mm !important;
+        margin-top: 0.4mm !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 0.4mm !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
+    }
+    .card-eligibility-badge {
+        font-size: 3.6pt !important;
+        color: #4ade80 !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.1pt !important;
+    }
 
     /* QR Code Column (Right) */
     .card-qr-col {
@@ -814,17 +855,17 @@ include __DIR__ . '/includes/header.php';
         margin-bottom: 0.6mm !important;
     }
     .card-back-rules {
-        font-size: 4.1pt !important;
+        font-size: 3.5pt !important;
         color: #334155 !important;
-        line-height: 1.2 !important;
-        margin: 0.6mm 0 !important;
+        line-height: 1.18 !important;
+        margin: 0.4mm 0 !important;
     }
     .card-back-rules ul {
-        padding-left: 3mm !important;
+        padding-left: 2.5mm !important;
         margin: 0 !important;
     }
     .card-back-rules li {
-        margin-bottom: 0.3mm !important;
+        margin-bottom: 0.2mm !important;
     }
     .card-back-bottom {
         display: flex !important;
@@ -960,13 +1001,14 @@ include __DIR__ . '/includes/header.php';
               <img src="<?php echo BASE_URL; ?>/images/rejuvenate-logo.png" alt="Rejuvenate Digital Health" class="print-sheet-logo" onerror="this.src='https://rejuvenatedigitalhealth.com/admin/uploads/logo/logo_header_691a7abe49524.png'">
               <div class="print-gov-title">
                 <h2>REJUVENATE DIGITAL HEALTH &bull; रीजूवेनेट डिजिटल हेल्थ</h2>
-                <p>Digital Citizen Health Card &bull; https://rejuvenatedigitalhealth.com</p>
+                <p>Ayushman Bharat (PM-JAY) Insurance Documentation &bull; Beneficiary Eligibility Verification Pass</p>
               </div>
             </div>
             <div class="print-meta-strip">
               <div><strong>कार्ड धारक / Name:</strong> <?php echo htmlspecialchars($record['full_name']); ?></div>
               <div><strong>आवेदन क्रमांक / App No:</strong> <?php echo htmlspecialchars($record['application_no']); ?></div>
               <div><strong>कार्ड आईडी / Card ID:</strong> <?php echo htmlspecialchars($record['card_id']); ?></div>
+              <div><strong>पात्रता स्थिति / Status:</strong> <span style="color: #059669; font-weight: 700;">DOCUMENT &amp; ELIGIBILITY VERIFIED</span></div>
               <div><strong>प्रिंट दिनांक / Date:</strong> <?php echo date('d-m-Y h:i A'); ?></div>
             </div>
           </div>
@@ -986,7 +1028,7 @@ include __DIR__ . '/includes/header.php';
                 </div>
                 <div class="card-header-titles">
                   <h4>REJUVENATE DIGITAL HEALTH</h4>
-                  <p>Digital Health Facilitation Pass &bull; Smart Health ID</p>
+                  <p>Ayushman Bharat (PM-JAY) Facilitation &bull; Beneficiary Pass</p>
                 </div>
               </div>
               <div class="card-header-badge-right">
@@ -1036,6 +1078,11 @@ include __DIR__ . '/includes/header.php';
                 <?php if (!empty($record['pmjay_letter_no'])): ?>
                   <div class="card-meta-line"><strong>PMJAY Ref:</strong> <?php echo htmlspecialchars($record['pmjay_letter_no']); ?></div>
                 <?php endif; ?>
+
+                <!-- Ayushman Bharat Insurance Documentation & Eligibility Badge -->
+                <div class="card-insurance-tag">
+                  <i class="fas fa-shield-alt text-success"></i> <strong>PM-JAY Health Insurance:</strong> Doc &amp; Eligibility Verified
+                </div>
               </div>
 
               <!-- Right: Encrypted QR Code -->
@@ -1053,6 +1100,7 @@ include __DIR__ . '/includes/header.php';
             <!-- Bottom Strip -->
             <div class="card-footer-strip">
               <span><strong>CARD ID:</strong> <?php echo htmlspecialchars($record['card_id']); ?></span>
+              <span class="card-eligibility-badge"><i class="fas fa-check-circle text-success"></i> PM-JAY STATUS: VERIFIED</span>
               <span><strong>APP NO:</strong> <?php echo htmlspecialchars($record['application_no']); ?></span>
             </div>
           </div>
@@ -1068,8 +1116,8 @@ include __DIR__ . '/includes/header.php';
           <div id="pvc-card-back" class="pvc-smart-card pvc-smart-card-back">
             <div class="card-header-bar" style="background: #1e293b; border-bottom: 2px solid #0073cb;">
               <div class="card-header-titles">
-                <h4>Cardholder Residential Record & Terms</h4>
-                <p>Rejuvenate Digital Health • Citizen Verification Pass</p>
+                <h4>Ayushman (PM-JAY) Insurance &amp; Eligibility Terms</h4>
+                <p>Rejuvenate Digital Health • Status Verification Record</p>
               </div>
               <div style="font-size: 0.72rem; color: #94a3b8; font-family: monospace;">
                 rejuvenatedigitalhealth.com
@@ -1087,9 +1135,9 @@ include __DIR__ . '/includes/header.php';
 
               <div class="card-back-rules">
                 <ul style="padding-left: 14px; margin: 0;">
-                  <li>यह डिजिटल हेल्थ स्मार्ट आईडी कार्ड Rejuvenate Digital Health (rejuvenatedigitalhealth.com) द्वारा नागरिक सुविधा हेतु जारी किया गया है।</li>
-                  <li>कार्ड पर मौजूद QR कोड AES-256 मिलिट्री ग्रेड एन्क्रिप्टेड है, जिसे केवल अधिकृत Admin Scanner द्वारा ही पढ़ा जा सकता है।</li>
-                  <li>किसी भी चिकित्सा सहायता हेतु राष्ट्रीय स्वास्थ्य हेल्पलाइन <strong>14555</strong> या आपातकालीन <strong>108</strong> पर संपर्क करें।</li>
+                  <li><strong>योजना दस्तावेज एवं पात्रता सत्यापन:</strong> यह कार्ड नागरिक के आयुष्मान भारत (PM-JAY) स्वास्थ्य बीमा से जुड़े आवश्यक पहचान दस्तावेजों की जानकारी तथा पात्रता स्थिति (Eligibility Status) का प्राधिकृत डिजिटल रिकॉर्ड प्रदान करता है।</li>
+                  <li><strong>डिजिटल सत्यापन एवं सुरक्षा:</strong> कार्ड पर उपलब्ध AES-256 एन्क्रिप्टेड QR कोड Rejuvenate Digital Health द्वारा नागरिक की पात्रता, ABHA संख्या व संबद्ध दस्तावेजों को त्वरित और सुरक्षित रूप से सत्यापित (Verify) करने हेतु प्रयुक्त होता है।</li>
+                  <li><strong>कैशलेस उपचार मार्गदर्शन:</strong> PM-JAY योजना अंतर्गत प्रति वर्ष ₹5 लाख तक के कैशलेस उपचार मार्गदर्शन हेतु नजदीकी संबद्ध अस्पताल अथवा हेल्पलाइन <strong>14555</strong> / <strong>108</strong> पर संपर्क करें।</li>
                 </ul>
               </div>
 
@@ -1115,7 +1163,7 @@ include __DIR__ . '/includes/header.php';
             </div>
 
             <div class="card-footer-strip" style="background: #1e293b;">
-              <span>Emergency Helpline: 14555 / 108</span>
+              <span>PM-JAY Document &amp; Eligibility Desk</span>
               <span>www.rejuvenatedigitalhealth.com</span>
             </div>
           </div>
@@ -1124,7 +1172,7 @@ include __DIR__ . '/includes/header.php';
           <!-- Official Printable Sheet Footer -->
           <div class="print-sheet-footer">
             <p><strong>Rejuvenate Digital Health Facilitation Services</strong> &bull; https://rejuvenatedigitalhealth.com</p>
-            <p>कार्ड पर मौजूद QR कोड AES-256 एन्क्रिप्टेड है एवं केवल अधिकृत एडमिन स्कैनर द्वारा सत्यापन योग्य है &bull; आपातकालीन हेल्पलाइन: <strong>14555</strong> / <strong>108</strong></p>
+            <p>यह कार्ड नागरिक के आयुष्मान भारत (PM-JAY) स्वास्थ्य बीमा दस्तावेजों एवं पात्रता स्थिति का प्राधिकृत डिजिटल सत्यापन अभिलेख है &bull; 256-Bit Encrypted Data &bull; आपातकालीन हेल्पलाइन: <strong>14555</strong> / <strong>108</strong></p>
           </div>
 
         </div>
