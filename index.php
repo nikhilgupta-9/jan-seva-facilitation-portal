@@ -78,12 +78,12 @@ include __DIR__ . '/includes/header.php';
       }
     },
     {
-      "@type": "GovernmentOrganization",
+      "@type": "Organization",
       "@id": "<?= BASE_URL ?>/#organization",
       "name": "<?= APP_NAME ?>",
       "url": "<?= BASE_URL ?>/",
-      "logo": "<?= BASE_URL ?>/img/favicon.ico",
-      "description": "Independent civic public facilitator simplifying citizen access to digital passes and government welfare schemes."
+      "logo": "<?= BASE_URL ?>/img/logo.png",
+      "description": "Independent civic public facilitator simplifying citizen access to digital passes and government welfare schemes under Rejuvenate Digital Health."
     }
   ]
 }

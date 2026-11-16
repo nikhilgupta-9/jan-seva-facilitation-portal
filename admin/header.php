@@ -46,9 +46,12 @@ $admin_nav_items = [
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title><?php echo isset($page_title) ? $page_title . ' | Admin Console' : 'Admin Console | ' . APP_NAME; ?></title>
 
-<!-- Fonts & Assets -->
-<link rel="icon" href="<?php echo BASE_URL; ?>/img/favicon.svg" type="image/svg+xml">
-<link rel="alternate icon" href="<?php echo BASE_URL; ?>/img/favicon.ico" type="image/x-icon">
+<!-- Favicon (with solid white background) -->
+<link rel="icon" type="image/svg+xml" href="<?php echo BASE_URL; ?>/img/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="<?php echo BASE_URL; ?>/img/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="<?php echo BASE_URL; ?>/img/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="<?php echo BASE_URL; ?>/img/apple-touch-icon.png">
+<link rel="shortcut icon" href="<?php echo BASE_URL; ?>/img/favicon.ico">
 <link rel="preconnect" href="https://cdnjs.cloudflare.com">
 <link href="<?php echo BASE_URL; ?>/css/bootstrap.min.css" rel="stylesheet">
 <!-- Font Awesome loaded non-blocking (loadCSS pattern) so first paint & camera init on the scanner page don't wait on this CDN request -->
@@ -497,8 +500,8 @@ $admin_nav_items = [
 <!-- 1. Sidebar -->
 <aside class="admin-sidebar" id="admin-sidebar">
   <a href="<?php echo BASE_URL; ?>/admin/index.php" class="admin-sidebar-brand">
-    <div class="admin-sidebar-brand-icon">
-      <i class="fas fa-shield-alt"></i>
+    <div class="admin-sidebar-brand-icon" style="background: #ffffff; padding: 4px; box-shadow: 0 2px 6px rgba(0,0,0,0.12);">
+      <img src="<?php echo BASE_URL; ?>/img/logo-emblem.png" alt="Logo" style="width: 28px; height: 28px; object-fit: contain;">
     </div>
     <h1 class="admin-sidebar-brand-title">
       <?php echo htmlspecialchars(APP_NAME); ?>

@@ -930,7 +930,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     "currency": orderRes.currency,
                     "name": "<?= APP_NAME ?>",
                     "description": "Facilitation Fee for " + orderRes.service_name,
-                    "image": "<?= BASE_URL ?>/img/favicon.ico",
+                    "image": "<?= BASE_URL ?>/img/favicon-192x192.png",
                     "prefill": {
                         "name": orderRes.user_name,
                         "contact": orderRes.user_phone

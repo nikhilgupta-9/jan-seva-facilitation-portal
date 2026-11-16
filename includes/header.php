@@ -22,9 +22,12 @@ $activeNav = $activeNav ?? '';
     <link rel="canonical" href="<?= htmlspecialchars($canonicalUrl) ?>">
     <?php endif; ?>
 
-    <!-- Favicon (logo emblem) -->
-    <link href="<?= BASE_URL ?>/img/favicon.svg" rel="icon" type="image/svg+xml">
-    <link href="<?= BASE_URL ?>/img/favicon.ico" rel="alternate icon">
+    <!-- Favicon (with solid white background) -->
+    <link rel="icon" type="image/svg+xml" href="<?= BASE_URL ?>/img/favicon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="<?= BASE_URL ?>/img/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="<?= BASE_URL ?>/img/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="<?= BASE_URL ?>/img/apple-touch-icon.png">
+    <link rel="shortcut icon" href="<?= BASE_URL ?>/img/favicon.ico">
 
     <!-- Google Web Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -88,15 +91,8 @@ $activeNav = $activeNav ?? '';
         <div class="container">
             <div class="header-center d-flex py-1 align-items-center justify-content-between">
                 <div>
-                    <a href="<?= BASE_URL ?>/index.php" class="navbar-brand ms-4 ms-lg-0 d-none d-lg-flex align-items-center gap-3 text-decoration-none">
-                        <div class="brand-emblem-icon d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; border-radius: 12px; background: #1C1B3A; color: #ffc107; font-size: 1.5rem; flex-shrink: 0; box-shadow: 0 4px 10px rgba(28,27,58,0.15);">
-                            <i class="fa-solid fa-landmark-dome"></i>
-                        </div>
-                        <div class="d-flex flex-column text-start">
-                            <span class="hindi-brand text-muted" style="font-size: 0.74rem; font-weight: 600; line-height: 1.2; letter-spacing: 0.2px;"><?= htmlspecialchars(APP_NAME_HI) ?></span>
-                            <span class="fs-4 fw-bold text-primary mb-0" style="line-height: 1.2; letter-spacing: -0.3px;"><?= htmlspecialchars(APP_NAME) ?></span>
-                            <small class="text-secondary" style="font-size: 0.7rem; letter-spacing: 0.2px;"><?= htmlspecialchars(APP_TAGLINE) ?></small>
-                        </div>
+                    <a href="<?= BASE_URL ?>/index.php" class="navbar-brand ms-4 ms-lg-0 d-none d-lg-flex align-items-center text-decoration-none py-1">
+                        <img src="<?= BASE_URL ?>/img/logo.png" alt="<?= htmlspecialchars(APP_NAME) ?>" style="height: 60px; width: auto; max-width: 270px; object-fit: contain;">
                     </a>
                 </div>
                 <div class="center-text"></div>
@@ -116,13 +112,9 @@ $activeNav = $activeNav ?? '';
     <!-- Navbar Start -->
     <div class="container-fluid p-0 site-navbar-sticky-wrap">
         <nav class="navbar navbar-expand-lg navbar-dark px-lg-5">
-            <a href="<?= BASE_URL ?>/index.php" class="navbar-brand ms-3 ms-lg-0 d-flex d-lg-none align-items-center gap-2 text-decoration-none">
-                <div class="brand-emblem-icon d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; border-radius: 8px; background: rgba(255,255,255,0.12); color: #ffc107; font-size: 1.15rem; flex-shrink: 0;">
-                    <i class="fa-solid fa-landmark-dome"></i>
-                </div>
-                <div class="d-flex flex-column text-start">
-                    <span class="fs-6 fw-bold text-white mb-0" style="line-height: 1.15;"><?= htmlspecialchars(APP_NAME) ?></span>
-                    <small class="text-white-50" style="font-size: 0.65rem;"><?= htmlspecialchars(APP_TAGLINE) ?></small>
+            <a href="<?= BASE_URL ?>/index.php" class="navbar-brand ms-3 ms-lg-0 d-flex d-lg-none align-items-center text-decoration-none py-1">
+                <div class="d-inline-flex align-items-center bg-white px-2 py-1 rounded shadow-sm">
+                    <img src="<?= BASE_URL ?>/img/logo.png" alt="<?= htmlspecialchars(APP_NAME) ?>" style="height: 36px; width: auto; max-width: 170px; object-fit: contain; display: block;">
                 </div>
             </a>
             <button type="button" class="navbar-toggler custom-hamburger me-4" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">

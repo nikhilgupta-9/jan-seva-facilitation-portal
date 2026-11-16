@@ -72,13 +72,9 @@
                 <!-- Col 1: Portal Identity & Contact Desk -->
                 <div class="col-lg-4 col-md-6">
                     <div class="footer-brand-box mb-3">
-                        <div class="d-flex align-items-center gap-2 mb-2">
-                            <div class="footer-emblem-badge text-warning fs-3">
-                                <i class="fa-solid fa-landmark-dome"></i>
-                            </div>
-                            <div>
-                                <span class="d-block text-warning small fw-bold" style="font-size: 0.72rem;"><?= htmlspecialchars(APP_NAME_HI) ?></span>
-                                <h5 class="text-white fw-bold mb-0"><?= htmlspecialchars(APP_NAME) ?></h5>
+                        <div class="mb-3">
+                            <div class="d-inline-flex align-items-center bg-white px-3 py-2 rounded-3 shadow-sm">
+                                <img src="<?= BASE_URL ?>/img/logo.png" alt="<?= htmlspecialchars(APP_NAME) ?>" style="height: 48px; width: auto; max-width: 220px; display: block;">
                             </div>
                         </div>
                         <p class="text-white-50 small mb-3 lh-sm">
